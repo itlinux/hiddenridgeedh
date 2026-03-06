@@ -1,111 +1,112 @@
+import asyncio
 from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail, Email, To, Content, HtmlContent
+from sendgrid.helpers.mail import Mail
+
 from database import get_settings
-from typing import List, Optional
-import logging
-
-logger = logging.getLogger(__name__)
 
 
-def get_sg_client():
+def _build_html(title: str, body: str) -> str:
+    return f"""
+    <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto;">
+        <div style="background-color: #1B2E1F; padding: 24px; text-align: center;">
+            <h1 style="color: #C9A84C; margin: 0; font-size: 24px;">Hidden Ridge EDH</h1>
+        </div>
+        <div style="padding: 32px 24px; background-color: #F5F0E8;">
+            <h2 style="color: #1B2E1F; margin-top: 0;">{title}</h2>
+            <div style="color: #333; line-height: 1.6;">{body}</div>
+        </div>
+        <div style="background-color: #1B2E1F; padding: 16px; text-align: center;">
+            <p style="color: #8B7355; margin: 0; font-size: 12px;">
+                Hidden Ridge &middot; El Dorado Hills, CA
+            </p>
+        </div>
+    </div>
+    """
+
+
+async def _send_email(to_email: str, subject: str, html_content: str):
     settings = get_settings()
-    return SendGridAPIClient(settings.sendgrid_api_key), settings
+    if not settings.sendgrid_api_key:
+        return
 
-
-async def send_email(to_email: str, to_name: str, subject: str, html_content: str):
-    sg, settings = get_sg_client()
     message = Mail(
         from_email=(settings.from_email, settings.from_name),
-        to_emails=To(to_email, to_name),
+        to_emails=to_email,
         subject=subject,
-        html_content=html_content
+        html_content=html_content,
+    )
+
+    def _send():
+        sg = SendGridAPIClient(settings.sendgrid_api_key)
+        sg.send(message)
+
+    await asyncio.to_thread(_send)
+
+
+async def send_pending_notification(to_email: str, full_name: str):
+    html = _build_html(
+        "Registration Received",
+        f"""
+        <p>Hi {full_name},</p>
+        <p>Thank you for registering with the Hidden Ridge community portal.
+        Your account is currently <strong>pending approval</strong> by a community administrator.</p>
+        <p>You'll receive another email once your account has been approved.</p>
+        <p>Welcome to the neighborhood!</p>
+        """,
     )
     try:
-        sg.send(message)
-        logger.info(f"Email sent to {to_email}: {subject}")
-    except Exception as e:
-        logger.error(f"Failed to send email to {to_email}: {e}")
-        raise
+        await _send_email(to_email, "Hidden Ridge EDH — Registration Pending", html)
+    except Exception:
+        pass
 
 
-async def send_bulk_email(recipients: List[dict], subject: str, html_content: str):
-    """Send newsletter to multiple recipients"""
-    sg, settings = get_sg_client()
-    errors = []
-    for r in recipients:
-        try:
-            message = Mail(
-                from_email=(settings.from_email, settings.from_name),
-                to_emails=To(r["email"], r.get("name", "")),
-                subject=subject,
-                html_content=html_content
-            )
-            sg.send(message)
-        except Exception as e:
-            errors.append({"email": r["email"], "error": str(e)})
-    return errors
+async def send_admin_new_user_alert(
+    admin_email: str, user_name: str, user_email: str, app_url: str
+):
+    html = _build_html(
+        "New Registration",
+        f"""
+        <p>A new user has registered on the Hidden Ridge community portal:</p>
+        <ul>
+            <li><strong>Name:</strong> {user_name}</li>
+            <li><strong>Email:</strong> {user_email}</li>
+        </ul>
+        <p><a href="{app_url}/edh" style="color: #C9A84C;">Review in Admin Dashboard</a></p>
+        """,
+    )
+    try:
+        await _send_email(admin_email, "Hidden Ridge EDH — New Registration", html)
+    except Exception:
+        pass
 
 
-async def send_approval_notification(user_email: str, user_name: str):
+async def send_approval_notification(to_email: str, full_name: str):
     settings = get_settings()
-    html = f"""
-    <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #FAFAF7;">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="color: #1B2E1F; font-size: 28px; margin: 0;">Hidden Ridge EDH</h1>
-        <p style="color: #8B7355; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">Community Portal</p>
-      </div>
-      <div style="background: white; padding: 32px; border-radius: 8px; border-left: 4px solid #C9A84C;">
-        <h2 style="color: #1B2E1F;">Welcome to the community, {user_name}!</h2>
-        <p style="color: #4A5568; line-height: 1.7;">
-          Your registration has been approved. You now have full access to the Hidden Ridge EDH community portal — blogs, the photo gallery, events, and our neighborhood forum.
-        </p>
-        <div style="text-align: center; margin-top: 32px;">
-          <a href="{settings.app_url}/login" style="background: #1B2E1F; color: #C9A84C; padding: 14px 32px; text-decoration: none; border-radius: 4px; font-family: Georgia, serif; letter-spacing: 1px;">
-            Sign In Now
-          </a>
-        </div>
-      </div>
-      <p style="color: #9CA3AF; font-size: 12px; text-align: center; margin-top: 24px;">
-        Hidden Ridge EDH · El Dorado Hills, CA
-      </p>
-    </div>
-    """
-    await send_email(user_email, user_name, "Welcome to Hidden Ridge EDH — You're Approved!", html)
+    html = _build_html(
+        "Account Approved!",
+        f"""
+        <p>Hi {full_name},</p>
+        <p>Great news! Your Hidden Ridge community account has been <strong>approved</strong>.</p>
+        <p>You can now log in and access the forum, photo gallery, events, and member directory.</p>
+        <p><a href="{settings.app_url}/login" style="color: #C9A84C;">Sign In Now</a></p>
+        """,
+    )
+    try:
+        await _send_email(to_email, "Hidden Ridge EDH — Account Approved", html)
+    except Exception:
+        pass
 
 
-async def send_pending_notification(user_email: str, user_name: str):
-    html = f"""
-    <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #FAFAF7;">
-      <div style="text-align: center; margin-bottom: 32px;">
-        <h1 style="color: #1B2E1F; font-size: 28px; margin: 0;">Hidden Ridge EDH</h1>
-        <p style="color: #8B7355; font-size: 14px; letter-spacing: 2px; text-transform: uppercase;">Community Portal</p>
-      </div>
-      <div style="background: white; padding: 32px; border-radius: 8px; border-left: 4px solid #C9A84C;">
-        <h2 style="color: #1B2E1F;">Registration Received</h2>
-        <p style="color: #4A5568; line-height: 1.7;">
-          Thank you for registering, {user_name}. Your account is pending approval by a community administrator. You'll receive an email as soon as your account is approved — typically within 24–48 hours.
-        </p>
-      </div>
-      <p style="color: #9CA3AF; font-size: 12px; text-align: center; margin-top: 24px;">
-        Hidden Ridge EDH · El Dorado Hills, CA
-      </p>
-    </div>
-    """
-    await send_email(user_email, user_name, "Hidden Ridge EDH — Registration Pending Approval", html)
+async def send_newsletter(subscribers: list[str], subject: str, html_content: str):
+    settings = get_settings()
+    if not settings.sendgrid_api_key:
+        return 0
 
-
-async def send_admin_new_user_alert(admin_email: str, new_user_name: str, new_user_email: str, app_url: str):
-    html = f"""
-    <div style="font-family: Georgia, serif; max-width: 600px; margin: 0 auto; padding: 40px; background: #FAFAF7;">
-      <div style="background: white; padding: 32px; border-radius: 8px; border-left: 4px solid #C9A84C;">
-        <h2 style="color: #1B2E1F;">New Member Registration</h2>
-        <p style="color: #4A5568;"><strong>{new_user_name}</strong> ({new_user_email}) has registered and is awaiting approval.</p>
-        <div style="text-align: center; margin-top: 24px;">
-          <a href="{app_url}/admin/members" style="background: #1B2E1F; color: #C9A84C; padding: 12px 28px; text-decoration: none; border-radius: 4px;">
-            Review in Admin Portal
-          </a>
-        </div>
-      </div>
-    </div>
-    """
-    await send_email(admin_email, "Admin", f"New Registration: {new_user_name}", html)
+    sent = 0
+    for email in subscribers:
+        try:
+            await _send_email(email, subject, html_content)
+            sent += 1
+        except Exception:
+            continue
+    return sent

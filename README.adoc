@@ -1,0 +1,247 @@
+= Hidden Ridge EDH
+:toc: macro
+:toc-title: Contents
+
+> Private neighborhood portal for Hidden Ridge, El Dorado Hills, CA
+
+*hiddenridgeedh.com* · Next.js 14 + FastAPI + MongoDB
+
+---
+
+toc::[]
+
+== Features
+
+[cols="1,3"]
+|===
+| Feature | Description
+
+| Blog / News | Admin-authored posts with rich text, categories, tags, cover images
+| Photo Gallery | Member-uploaded photos with auto-thumbnails, tags, lightbox
+| Events Calendar | Create events, RSVP, max attendees, status tracking
+| Forum | Threaded discussions, pinning, locking
+| Member Directory | Approved neighbor profiles (login required)
+| Newsletter | SendGrid integration, per-subscriber unsubscribe tokens
+| Role-based Access | Super Admin → Content Admin → Approved Member → Pending
+|===
+
+== Roles
+
+[cols="1,3"]
+|===
+| Role | Can Do
+
+| `super_admin` | Everything — approve members, manage roles, send newsletters, all CRUD
+| `content_admin` | Create/edit/delete posts, events, gallery; moderate forum; lock threads
+| `member` | Read all content, create forum threads/replies, upload gallery photos, RSVP
+| `pending` | Registered but awaiting approval — cannot access member content
+|===
+
+== Tech Stack
+
+* *Frontend:* Next.js 14 (App Router), TypeScript, Tailwind CSS
+* *Backend:* FastAPI (Python 3.13), Motor (async MongoDB driver)
+* *Database:* MongoDB (system instance on port 27017, db: `hiddenridgeedh`)
+* *Email:* SendGrid
+* *Images:* Pillow (auto-thumbnail generation), served via Nginx
+* *Auth:* JWT (python-jose), bcrypt
+* *Server:* Rocky Linux, Nginx, systemd, Let's Encrypt TLS
+
+== Ports
+
+[cols="1,1"]
+|===
+| Service | Port
+
+| Frontend (Next.js) | 3000
+| Backend (FastAPI) | 8003
+| MongoDB | 27017
+|===
+
+== Project Structure
+
+....
+hiddenridgeedh/
+├── backend/
+│   ├── main.py                 # FastAPI app entry point
+│   ├── database.py             # MongoDB connection + indexes
+│   ├── requirements.txt
+│   ├── .env.example
+│   ├── models/
+│   │   └── schemas.py          # All Pydantic models
+│   ├── middleware/
+│   │   └── auth.py             # JWT + role guards
+│   ├── routes/
+│   │   ├── auth.py             # Register, login, /me
+│   │   ├── posts.py            # Blog CRUD
+│   │   ├── events.py           # Events + RSVP
+│   │   ├── forum.py            # Threads + replies
+│   │   ├── gallery.py          # Photo upload + thumbnails
+│   │   ├── newsletter.py       # Subscribe + send
+│   │   └── members.py          # Member directory + approvals
+│   └── utils/
+│       └── email.py            # SendGrid email helpers
+├── frontend/
+│   ├── app/
+│   │   ├── layout.tsx          # Root layout, AuthProvider, Toaster
+│   │   ├── page.tsx            # Homepage (public)
+│   │   ├── login/page.tsx
+│   │   ├── register/page.tsx
+│   │   ├── blog/               # Blog listing + post detail
+│   │   ├── events/             # Events listing + detail with RSVP
+│   │   ├── gallery/            # Photo gallery with lightbox
+│   │   ├── forum/              # Forum threads + replies (login required)
+│   │   ├── members/            # Member directory + profiles (login required)
+│   │   ├── profile/            # Edit own profile (login required)
+│   │   └── edh/                # Admin dashboard
+│   ├── components/
+│   │   └── layout/             # Navbar.tsx, Footer.tsx
+│   ├── lib/
+│   │   ├── api.ts              # Axios API client
+│   │   └── auth.tsx            # Auth context + useAuth hook
+│   ├── styles/globals.css
+│   └── tailwind.config.js
+├── nginx/
+│   └── hiddenridgeedh.conf     # Nginx reverse proxy config
+└── deploy/
+    ├── hredh-backend.service   # systemd unit for FastAPI
+    ├── hredh-frontend.service  # systemd unit for Next.js
+    ├── deploy.sh               # First-time deploy script
+    └── update.sh               # Pull + restart script
+....
+
+== Setup
+
+=== 1. Environment Variables
+
+[source,bash]
+----
+cp backend/.env.example backend/.env
+# Edit backend/.env with your values
+----
+
+Key variables:
+
+* `SECRET_KEY` — generate with `openssl rand -hex 32`
+* `MONGODB_URL` — default `mongodb://localhost:27017`
+* `MONGODB_DB` — default `hiddenridgeedh`
+* `SENDGRID_API_KEY` — from SendGrid dashboard
+* `ADMIN_EMAIL` — your email for admin alerts
+* `BOOTSTRAP_SECRET` — secret for initial admin bootstrap
+
+=== 2. Development
+
+*Backend:*
+
+[source,bash]
+----
+cd backend
+python -m venv ../venv
+source ../venv/bin/activate
+pip install -r requirements.txt
+uvicorn main:app --host 127.0.0.1 --port 8003 --reload
+----
+
+*Frontend:*
+
+[source,bash]
+----
+cd frontend
+npm install
+echo "NEXT_PUBLIC_API_URL=http://localhost:8003" > .env.local
+npm run dev
+----
+
+* Frontend: http://localhost:3000
+* Backend API: http://localhost:8003
+* API Docs: http://localhost:8003/docs
+
+=== 3. Bootstrap Super Admin
+
+After first start, create the super admin account:
+
+[source,bash]
+----
+curl -X POST "http://localhost:8003/api/edh/bootstrap?secret=YOUR_BOOTSTRAP_SECRET"
+----
+
+Then log in and change the default password.
+
+== Production Deployment (Rocky Linux)
+
+=== TLS Certificate
+
+[source,bash]
+----
+certbot --nginx -d hiddenridgeedh.com -d www.hiddenridgeedh.com
+----
+
+=== Nginx
+
+[source,bash]
+----
+cp nginx/hiddenridgeedh.conf /etc/nginx/conf.d/
+nginx -t && systemctl reload nginx
+----
+
+=== systemd Services
+
+*Backend:*
+
+[source,bash]
+----
+cp deploy/hredh-backend.service /etc/systemd/system/
+systemctl enable --now hredh-backend
+----
+
+*Frontend:*
+
+[source,bash]
+----
+cd frontend && npm run build
+cp deploy/hredh-frontend.service /etc/systemd/system/
+systemctl enable --now hredh-frontend
+----
+
+=== Deploy Updates
+
+[source,bash]
+----
+sudo bash deploy/update.sh
+----
+
+== MongoDB Collections
+
+[cols="1,2"]
+|===
+| Collection | Purpose
+
+| `users` | Members, roles, approval status
+| `posts` | Blog posts with slugs
+| `events` | Community events + attendees
+| `forum_threads` | Forum discussions
+| `forum_replies` | Thread replies
+| `gallery_items` | Photo metadata
+| `newsletter_subscribers` | Email list with unsubscribe tokens
+| `newsletter_sends` | Send history / audit log
+|===
+
+== Design System
+
+Colors defined in `tailwind.config.js`:
+
+[cols="1,1,2"]
+|===
+| Token | Hex | Usage
+
+| `forest-800` | `#1B2E1F` | Primary backgrounds, headers
+| `gold-400` | `#C9A84C` | Accents, CTAs, highlights
+| `cream-100` | `#F5F0E8` | Page backgrounds, light surfaces
+| `bark-400` | `#8B7355` | Muted text, section labels
+|===
+
+Fonts: *Playfair Display* (headings) · *Lora* (body) · *DM Sans* (UI/labels)
+
+---
+
+_Built for Vonnie & Remo — Hidden Ridge EDH, El Dorado Hills, CA_

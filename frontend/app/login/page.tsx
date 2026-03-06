@@ -46,7 +46,7 @@ export default function LoginPage() {
           </div>
           <h2 className="font-serif text-4xl text-cream-100 mb-4">Hidden Ridge EDH</h2>
           <div className="w-12 h-px bg-gold-400 mx-auto mb-4" />
-          <p className="text-forest-300 font-body text-lg">Your community portal</p>
+          <p className="text-forest-300 font-body text-lg">El Dorado Hills, California</p>
           <p className="text-forest-400 font-body text-sm mt-2">El Dorado Hills, California</p>
         </div>
       </div>

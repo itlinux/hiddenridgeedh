@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { Mail, MapPin } from 'lucide-react';
 
@@ -15,11 +17,11 @@ export default function Footer() {
               </div>
               <div>
                 <div className="font-serif text-xl text-cream-100">Hidden Ridge EDH</div>
-                <div className="text-gold-400 text-xs tracking-[0.2em] uppercase">Community Portal</div>
+                <div className="text-gold-400 text-xs tracking-[0.2em] uppercase">El Dorado Hills</div>
               </div>
             </div>
             <p className="text-forest-300 font-body text-sm leading-relaxed">
-              A private portal for the residents of Hidden Ridge, El Dorado Hills — connecting neighbors, celebrating community, and keeping everyone informed.
+              Connecting neighbors, celebrating community, and keeping everyone informed in Hidden Ridge, El Dorado Hills.
             </p>
             <div className="flex items-center gap-2 mt-4 text-forest-300 text-sm">
               <MapPin size={14} className="text-gold-400" />

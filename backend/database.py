@@ -1,66 +1,60 @@
+from pydantic_settings import BaseSettings, SettingsConfigDict
 from motor.motor_asyncio import AsyncIOMotorClient
-from pydantic_settings import BaseSettings
-from functools import lru_cache
-import os
+
+_settings = None
+_client = None
+_db = None
 
 
 class Settings(BaseSettings):
+    secret_key: str = "dev-secret-change-in-prod"
     mongodb_url: str = "mongodb://localhost:27017"
     mongodb_db: str = "hiddenridgeedh"
-    secret_key: str = "change-this-in-production"
-    algorithm: str = "HS256"
-    access_token_expire_minutes: int = 1440
     sendgrid_api_key: str = ""
     from_email: str = "noreply@hiddenridgeedh.com"
     from_name: str = "Hidden Ridge EDH"
-    app_url: str = "https://hiddenridgeedh.com"
+    app_url: str = "http://localhost:3000"
     admin_email: str = ""
     environment: str = "development"
     upload_dir: str = "./uploads"
-    max_upload_size_mb: int = 10
+    bootstrap_secret: str = ""
 
-    class Config:
-        env_file = ".env"
-
-
-@lru_cache()
-def get_settings():
-    return Settings()
+    model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 
-class Database:
-    client: AsyncIOMotorClient = None
-    db = None
-
-
-db_instance = Database()
+def get_settings() -> Settings:
+    global _settings
+    if _settings is None:
+        _settings = Settings()
+    return _settings
 
 
 async def connect_db():
-    settings = get_settings()
-    db_instance.client = AsyncIOMotorClient(settings.mongodb_url)
-    db_instance.db = db_instance.client[settings.mongodb_db]
-    # Create indexes
-    await create_indexes()
-    print(f"Connected to MongoDB: {settings.mongodb_db}")
+    global _client, _db, _settings
+    _settings = Settings()
+    _client = AsyncIOMotorClient(_settings.mongodb_url)
+    _db = _client[_settings.mongodb_db]
+    await _create_indexes()
 
 
 async def disconnect_db():
-    if db_instance.client:
-        db_instance.client.close()
-
-
-async def create_indexes():
-    db = db_instance.db
-    await db.users.create_index("email", unique=True)
-    await db.users.create_index("username", unique=True)
-    await db.posts.create_index([("slug", 1)], unique=True)
-    await db.posts.create_index([("status", 1), ("created_at", -1)])
-    await db.forum_threads.create_index([("category", 1), ("created_at", -1)])
-    await db.events.create_index([("start_date", 1)])
-    await db.newsletter_subscribers.create_index("email", unique=True)
-    await db.gallery_items.create_index([("created_at", -1)])
+    global _client
+    if _client:
+        _client.close()
 
 
 def get_db():
-    return db_instance.db
+    return _db
+
+
+async def _create_indexes():
+    await _db.users.create_index("email", unique=True)
+    await _db.users.create_index("username", unique=True)
+    await _db.posts.create_index("slug", unique=True)
+    await _db.posts.create_index("created_at")
+    await _db.events.create_index("start_date")
+    await _db.forum_threads.create_index("created_at")
+    await _db.forum_threads.create_index("last_activity")
+    await _db.forum_replies.create_index("thread_id")
+    await _db.gallery.create_index("created_at")
+    await _db.newsletter_subscribers.create_index("email", unique=True)

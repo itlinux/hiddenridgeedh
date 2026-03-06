@@ -27,6 +27,10 @@ app = FastAPI(
 
 settings = get_settings()
 
+# Ensure upload directories exist before StaticFiles mount
+os.makedirs(settings.upload_dir, exist_ok=True)
+os.makedirs(f"{settings.upload_dir}/thumbnails", exist_ok=True)
+
 # CORS
 origins = [
     "http://localhost:3000",
@@ -68,7 +72,7 @@ async def health():
 
 
 # Admin bootstrap — run once to create the super admin
-@app.post("/api/admin/bootstrap", include_in_schema=False)
+@app.post("/api/edh/bootstrap", include_in_schema=False)
 async def bootstrap_admin(secret: str):
     """Create the initial super admin account. Disable after first use."""
     if settings.environment != "development" and secret != os.environ.get("BOOTSTRAP_SECRET"):

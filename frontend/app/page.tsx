@@ -1,3 +1,5 @@
+'use client';
+
 import Link from 'next/link';
 import { ArrowRight, Trees, Users, Calendar, MessageSquare, Camera, Mail } from 'lucide-react';
 
@@ -6,13 +8,10 @@ export default function HomePage() {
     <div className="bg-cream-50">
 
       {/* Hero */}
-      <section className="relative bg-forest-800 overflow-hidden">
-        <div className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage: 'repeating-linear-gradient(45deg, #C9A84C 0, #C9A84C 1px, transparent 0, transparent 50%)',
-            backgroundSize: '20px 20px',
-          }}
-        />
+      <section className="relative overflow-hidden min-h-[80vh] flex items-center justify-center"
+        style={{ backgroundImage: 'url(/images/hero-bg.webp)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}
+      >
+        <div className="absolute inset-0 bg-forest-800/50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
           <p className="section-label text-gold-400 mb-6">Welcome to</p>
           <h1 className="font-serif text-5xl sm:text-7xl text-cream-100 leading-tight mb-6">
@@ -21,7 +20,7 @@ export default function HomePage() {
           </h1>
           <div className="divider-gold" />
           <p className="font-body text-forest-300 text-xl max-w-2xl mx-auto mt-6 leading-relaxed">
-            Your private community portal — connecting neighbors, sharing news, celebrating our neighborhood.
+            Connecting neighbors, sharing news, and celebrating our neighborhood.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
             <Link href="/register" className="btn-gold text-base px-8 py-4">

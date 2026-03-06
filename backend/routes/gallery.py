@@ -1,125 +1,109 @@
-from fastapi import APIRouter, HTTPException, Depends, UploadFile, File, Form, Query
-from datetime import datetime
-from bson import ObjectId
-from typing import Optional, List
-import aiofiles
 import os
 import uuid
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
+from datetime import datetime
+from bson import ObjectId
 from PIL import Image
-import io
+
 from database import get_db, get_settings
-from middleware.auth import get_approved_user, get_content_admin
+from middleware.auth import require_member, require_content_admin, get_current_user
 
 router = APIRouter(prefix="/api/gallery", tags=["gallery"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
-THUMBNAIL_SIZE = (400, 300)
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
-def serialize(doc: dict) -> dict:
-    doc["id"] = str(doc["_id"])
-    del doc["_id"]
-    return doc
+def serialize_item(item: dict) -> dict:
+    item["id"] = str(item["_id"])
+    del item["_id"]
+    return item
 
 
-async def save_image(file: UploadFile, settings) -> tuple[str, str]:
-    os.makedirs(settings.upload_dir, exist_ok=True)
-    os.makedirs(f"{settings.upload_dir}/thumbnails", exist_ok=True)
-
-    ext = file.filename.rsplit(".", 1)[-1].lower()
-    filename = f"{uuid.uuid4()}.{ext}"
-    thumb_filename = f"thumb_{filename}"
-
-    file_path = f"{settings.upload_dir}/{filename}"
-    thumb_path = f"{settings.upload_dir}/thumbnails/{thumb_filename}"
-
-    content = await file.read()
-
-    # Save original
-    async with aiofiles.open(file_path, "wb") as f:
-        await f.write(content)
-
-    # Create thumbnail
-    img = Image.open(io.BytesIO(content))
-    img.thumbnail(THUMBNAIL_SIZE, Image.LANCZOS)
-    img.save(thumb_path, optimize=True, quality=85)
-
-    return f"/uploads/{filename}", f"/uploads/thumbnails/{thumb_filename}"
-
-
-@router.get("/")
+@router.get("")
 async def list_gallery(
-    page: int = Query(1, ge=1),
-    per_page: int = Query(12, ge=1, le=50),
-    tag: Optional[str] = None,
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    tag: str | None = None,
 ):
     db = get_db()
     query = {}
     if tag:
         query["tags"] = tag
-    total = await db.gallery_items.count_documents(query)
-    skip = (page - 1) * per_page
-    cursor = db.gallery_items.find(query).sort("created_at", -1).skip(skip).limit(per_page)
-    items = [serialize(i) async for i in cursor]
-    return {"items": items, "total": total, "page": page, "per_page": per_page, "pages": -(-total // per_page)}
+
+    total = await db.gallery.count_documents(query)
+    cursor = db.gallery.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    items = [serialize_item(i) async for i in cursor]
+    return {"items": items, "total": total}
 
 
-@router.post("/", status_code=201)
+@router.post("/upload", status_code=201)
 async def upload_photo(
     file: UploadFile = File(...),
     title: str = Form(...),
-    description: Optional[str] = Form(None),
-    tags: Optional[str] = Form(None),  # comma-separated
-    location_hint: Optional[str] = Form(None),
-    current_user=Depends(get_approved_user)
+    description: str = Form(""),
+    tags: str = Form(""),
+    current_user: dict = Depends(require_member),
 ):
-    settings = get_settings()
-
     if file.content_type not in ALLOWED_TYPES:
-        raise HTTPException(400, f"Invalid file type. Allowed: JPEG, PNG, WebP, GIF")
+        raise HTTPException(400, "File type not allowed. Use JPEG, PNG, WebP, or GIF.")
 
-    max_bytes = settings.max_upload_size_mb * 1024 * 1024
-    content = await file.read()
-    if len(content) > max_bytes:
-        raise HTTPException(400, f"File too large. Max {settings.max_upload_size_mb}MB")
-    await file.seek(0)
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(400, "File too large. Maximum 10MB.")
 
-    image_url, thumbnail_url = await save_image(file, settings)
+    settings = get_settings()
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in file.filename else "jpg"
+    filename = f"{uuid.uuid4()}.{ext}"
+    file_path = os.path.join(settings.upload_dir, filename)
+    thumb_path = os.path.join(settings.upload_dir, "thumbnails", filename)
+
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    img = Image.open(file_path)
+    img.thumbnail((300, 300))
+    img.save(thumb_path, quality=85)
+
+    tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
 
     db = get_db()
-    tag_list = [t.strip() for t in tags.split(",")] if tags else []
-
-    doc = {
+    item_doc = {
         "title": title,
         "description": description,
         "tags": tag_list,
-        "location_hint": location_hint,
-        "image_url": image_url,
-        "thumbnail_url": thumbnail_url,
+        "image_url": f"/uploads/{filename}",
+        "thumbnail_url": f"/uploads/thumbnails/{filename}",
         "uploaded_by": str(current_user["_id"]),
-        "uploader_name": current_user["full_name"],
+        "uploader_name": current_user.get("full_name", current_user.get("username")),
         "created_at": datetime.utcnow(),
     }
-    result = await db.gallery_items.insert_one(doc)
-    doc["id"] = str(result.inserted_id)
-    del doc["_id"]
-    return doc
+    result = await db.gallery.insert_one(item_doc)
+    item_doc["id"] = str(result.inserted_id)
+    return serialize_item(item_doc)
 
 
-@router.delete("/{item_id}")
-async def delete_photo(item_id: str, current_user=Depends(get_content_admin)):
+@router.delete("/{item_id}", status_code=204)
+async def delete_photo(
+    item_id: str,
+    current_user: dict = Depends(get_current_user),
+):
     db = get_db()
-    item = await db.gallery_items.find_one({"_id": ObjectId(item_id)})
+    item = await db.gallery.find_one({"_id": ObjectId(item_id)})
     if not item:
-        raise HTTPException(404, "Photo not found")
+        raise HTTPException(404, "Gallery item not found")
+
+    is_owner = item.get("uploaded_by") == str(current_user["_id"])
+    is_admin = current_user.get("role") in ("content_admin", "super_admin")
+    if not is_owner and not is_admin:
+        raise HTTPException(403, "Not authorized to delete this item")
 
     settings = get_settings()
-    for url in [item.get("image_url"), item.get("thumbnail_url")]:
+    for url_field in ("image_url", "thumbnail_url"):
+        url = item.get(url_field, "")
         if url:
-            try:
-                os.remove(f".{url}")
-            except FileNotFoundError:
-                pass
+            path = os.path.join(settings.upload_dir, url.replace("/uploads/", "", 1))
+            if os.path.exists(path):
+                os.remove(path)
 
-    await db.gallery_items.delete_one({"_id": ObjectId(item_id)})
-    return {"message": "Photo deleted"}
+    await db.gallery.delete_one({"_id": ObjectId(item_id)})
