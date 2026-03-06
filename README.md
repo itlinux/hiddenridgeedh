@@ -89,102 +89,104 @@ hiddenridgeedh/
 │   └── tailwind.config.js
 ├── nginx/
 │   └── hiddenridgeedh.conf     # Nginx reverse proxy config
-├── docker-compose.yml
+├── deploy/
+│   ├── hredh-backend.service   # systemd service for FastAPI
+│   ├── hredh-frontend.service  # systemd service for Next.js
+│   ├── deploy.sh               # Full first-time deploy script
+│   └── update.sh               # Pull & restart script
 └── README.md
 ```
 
 ---
 
-## Setup
+## Setup & Deployment
 
-### 1. Environment Variables
+### Prerequisites (Rocky Linux)
+- Python 3.13
+- Node.js 20+
+- MongoDB (system service, already running)
+- Nginx (already configured)
+- certbot
 
+### Quick Deploy
+
+```bash
+git clone git@github.com:itlinux/hiddenridgeedh.git /var/www/hiddenridgeedh
+cd /var/www/hiddenridgeedh
+sudo bash deploy/deploy.sh
+```
+
+### Manual Setup
+
+**1. Environment:**
 ```bash
 cp backend/.env.example backend/.env
-# Edit backend/.env with your values
+# Edit backend/.env — key values:
+#   SECRET_KEY  →  openssl rand -hex 32
+#   SENDGRID_API_KEY  →  from SendGrid dashboard
+#   ADMIN_EMAIL →  remo@hiddenridgeedh.com
 ```
 
-Key variables:
-- `SECRET_KEY` — generate with `openssl rand -hex 32`
-- `SENDGRID_API_KEY` — from SendGrid dashboard
-- `ADMIN_EMAIL` — your email for admin alerts
-
-### 2. Development (Docker)
-
+**2. Backend:**
 ```bash
-docker-compose up -d
-```
-
-- Frontend: http://localhost:3000
-- Backend API: http://localhost:8000
-- API Docs: http://localhost:8000/docs
-
-### 3. Bootstrap Super Admin
-
-After first start, create the Remo super admin account:
-
-```bash
-curl -X POST "http://localhost:8000/api/admin/bootstrap?secret=YOUR_BOOTSTRAP_SECRET"
-```
-
-Then immediately log in and change the password from `ChangeThisPassword123!`.
-
-### 4. Development (Manual)
-
-**Backend:**
-```bash
-cd backend
-python -m venv venv
+python3.13 -m venv venv
 source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env   # fill in values
-uvicorn main:app --reload --port 8000
+pip install -r backend/requirements.txt
+cd backend
+uvicorn main:app --host 127.0.0.1 --port 8003 --reload
 ```
 
-**Frontend:**
+**3. Frontend:**
 ```bash
 cd frontend
+echo "NEXT_PUBLIC_API_URL=https://hiddenridgeedh.com" > .env.local
 npm install
-echo "NEXT_PUBLIC_API_URL=http://localhost:8000" > .env.local
-npm run dev
-```
-
----
-
-## Production Deployment (Rocky Linux / Nginx)
-
-### SSL Certificate
-```bash
-certbot --nginx -d hiddenridgeedh.com -d www.hiddenridgeedh.com
-```
-
-### Nginx
-```bash
-cp nginx/hiddenridgeedh.conf /etc/nginx/conf.d/
-nginx -t && systemctl reload nginx
-```
-
-### Backend (systemd)
-```bash
-# /etc/systemd/system/hredh-backend.service
-[Unit]
-Description=Hidden Ridge EDH Backend
-After=network.target
-
-[Service]
-User=www-data
-WorkingDirectory=/var/www/hiddenridgeedh/backend
-ExecStart=/var/www/hiddenridgeedh/venv/bin/uvicorn main:app --host 127.0.0.1 --port 8000 --workers 2
-Restart=always
-
-[Install]
-WantedBy=multi-user.target
-```
-
-### Frontend (PM2)
-```bash
 npm run build
-pm2 start npm --name "hredh-frontend" -- start
+node_modules/.bin/next start
+```
+
+**4. Systemd Services:**
+```bash
+sudo cp deploy/hredh-backend.service /etc/systemd/system/
+sudo cp deploy/hredh-frontend.service /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable --now hredh-backend hredh-frontend
+```
+
+**5. Nginx:**
+```bash
+sudo cp nginx/hiddenridgeedh.conf /etc/nginx/conf.d/
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+**6. SSL:**
+```bash
+sudo certbot --nginx -d hiddenridgeedh.com -d www.hiddenridgeedh.com
+```
+
+**7. Bootstrap Super Admin:**
+```bash
+curl -X POST "https://hiddenridgeedh.com/api/admin/bootstrap?secret=YOUR_SECRET"
+# Then log in and change password from: ChangeThisPassword123!
+```
+
+### Updates
+```bash
+sudo bash deploy/update.sh
+```
+
+### Useful Commands
+```bash
+# Logs
+journalctl -u hredh-backend -f
+journalctl -u hredh-frontend -f
+
+# Status / Restart
+systemctl status hredh-backend hredh-frontend
+systemctl restart hredh-backend hredh-frontend
+
+# API Docs (dev)
+http://localhost:8003/docs
 ```
 
 ---

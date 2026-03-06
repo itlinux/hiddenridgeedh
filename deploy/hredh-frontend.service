@@ -1,0 +1,23 @@
+[Unit]
+Description=Hidden Ridge EDH — Next.js Frontend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+Group=www-data
+WorkingDirectory=/var/www/hiddenridgeedh/frontend
+Environment=NODE_ENV=production
+Environment=PORT=3000
+EnvironmentFile=/var/www/hiddenridgeedh/frontend/.env.local
+ExecStart=/usr/bin/node_modules/.bin/next start
+# If next is installed locally:
+# ExecStart=/usr/bin/node /var/www/hiddenridgeedh/frontend/node_modules/.bin/next start
+Restart=always
+RestartSec=5
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=hredh-frontend
+
+[Install]
+WantedBy=multi-user.target

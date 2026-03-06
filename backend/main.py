@@ -34,7 +34,7 @@ origins = [
     "https://www.hiddenridgeedh.com",
 ]
 if settings.environment == "development":
-    origins.append("http://localhost:3001")
+    origins.append("http://localhost:8003")
 
 app.add_middleware(
     CORSMiddleware,
