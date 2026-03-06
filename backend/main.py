@@ -72,7 +72,7 @@ async def health():
 
 
 # Admin bootstrap — run once to create the super admin
-@app.post("/api/admin/bootstrap", include_in_schema=False)
+@app.post("/api/edh/bootstrap", include_in_schema=False)
 async def bootstrap_admin(secret: str):
     """Create the initial super admin account. Disable after first use."""
     if settings.environment != "development" and secret != os.environ.get("BOOTSTRAP_SECRET"):

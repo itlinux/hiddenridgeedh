@@ -71,7 +71,7 @@ async def send_admin_new_user_alert(
             <li><strong>Name:</strong> {user_name}</li>
             <li><strong>Email:</strong> {user_email}</li>
         </ul>
-        <p><a href="{app_url}/admin" style="color: #C9A84C;">Review in Admin Dashboard</a></p>
+        <p><a href="{app_url}/edh" style="color: #C9A84C;">Review in Admin Dashboard</a></p>
         """,
     )
     try:

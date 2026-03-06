@@ -80,8 +80,8 @@ export default function Navbar() {
                       <User size={14} /> My Profile
                     </Link>
                     {isAdmin && (
-                      <Link href="/admin" className="flex items-center gap-2 px-4 py-2 text-sm text-forest-700 hover:bg-cream-50 font-sans" onClick={() => setProfileOpen(false)}>
-                        <Shield size={14} /> Admin Portal
+                      <Link href="/edh" className="flex items-center gap-2 px-4 py-2 text-sm text-forest-700 hover:bg-cream-50 font-sans" onClick={() => setProfileOpen(false)}>
+                        <Shield size={14} /> Dashboard
                       </Link>
                     )}
                     <hr className="my-1 border-cream-200" />

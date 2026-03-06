@@ -10,10 +10,10 @@ export const metadata: Metadata = {
     default: 'Hidden Ridge EDH',
     template: '%s | Hidden Ridge EDH',
   },
-  description: 'The community portal for Hidden Ridge, El Dorado Hills',
+  description: 'Hidden Ridge — El Dorado Hills, California',
   openGraph: {
     title: 'Hidden Ridge EDH',
-    description: 'The community portal for Hidden Ridge, El Dorado Hills',
+    description: 'Hidden Ridge — El Dorado Hills, California',
     url: 'https://hiddenridgeedh.com',
     siteName: 'Hidden Ridge EDH',
   },
