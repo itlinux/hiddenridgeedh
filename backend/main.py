@@ -27,6 +27,10 @@ app = FastAPI(
 
 settings = get_settings()
 
+# Ensure upload directories exist before StaticFiles mount
+os.makedirs(settings.upload_dir, exist_ok=True)
+os.makedirs(f"{settings.upload_dir}/thumbnails", exist_ok=True)
+
 # CORS
 origins = [
     "http://localhost:3000",
