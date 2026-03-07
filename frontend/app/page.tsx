@@ -95,6 +95,9 @@ export default function HomePage() {
         </div>
       </section>
 
+      {/* Divider */}
+      <div className="bg-forest-700 h-px mx-auto max-w-7xl" />
+
       {/* Membership CTA */}
       <section className="py-24">
         <div className="max-w-3xl mx-auto px-4 text-center">
