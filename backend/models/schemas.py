@@ -121,6 +121,12 @@ class EventUpdate(BaseModel):
 
 # --- Forum ---
 
+class ForumCategoryCreate(BaseModel):
+    value: str = Field(..., min_length=1, max_length=50, pattern=r"^[a-z0-9-]+$")
+    label: str = Field(..., min_length=1, max_length=50)
+    color: str = Field("bg-forest-600 text-cream-100", max_length=100)
+
+
 class ThreadCreate(BaseModel):
     title: str = Field(..., min_length=3, max_length=200)
     content: str = Field(..., min_length=5, max_length=20000)
