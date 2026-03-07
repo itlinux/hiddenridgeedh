@@ -27,7 +27,7 @@ class Settings(BaseSettings):
     turnstile_secret_key: str = ""
     login_max_attempts: int = 5
     login_block_minutes: int = 15
-    login_whitelist_ips: str = ""  # comma-separated IPs e.g. "1.2.3.4,5.6.7.8"
+    login_whitelist_ips: str = ""  # comma-separated CIDR e.g. "208.53.44.225/32, 10.10.10.0/24"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

@@ -1,9 +1,12 @@
 """
 Login rate limiting — blocks IPs for a configurable duration after too many
 failed login attempts.  Uses an in-memory store (resets on server restart).
+
+Whitelist supports CIDR notation (e.g. "208.53.44.225/32, 10.10.10.0/24").
 """
 
 from datetime import datetime, timedelta
+from ipaddress import ip_address, ip_network
 from typing import Dict, Tuple
 import threading
 
@@ -13,6 +16,29 @@ _lock = threading.Lock()
 
 DEFAULT_MAX_ATTEMPTS = 5
 DEFAULT_BLOCK_MINUTES = 15
+
+
+def _is_whitelisted(ip: str, whitelist: list[str] | None) -> bool:
+    """Check if an IP matches any entry in the whitelist (supports CIDR)."""
+    if not whitelist:
+        return False
+    try:
+        addr = ip_address(ip)
+    except ValueError:
+        return False
+    for entry in whitelist:
+        entry = entry.strip()
+        if not entry:
+            continue
+        try:
+            network = ip_network(entry, strict=False)
+            if addr in network:
+                return True
+        except ValueError:
+            # Fallback: plain IP string comparison
+            if ip == entry:
+                return True
+    return False
 
 
 def _cleanup_old_entries():
@@ -36,7 +62,7 @@ def is_ip_blocked(ip: str, max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     Returns:
         (is_blocked, remaining_seconds)
     """
-    if whitelist and ip in whitelist:
+    if _is_whitelisted(ip, whitelist):
         return False, 0
 
     with _lock:
@@ -69,7 +95,7 @@ def record_failed_login(ip: str, max_attempts: int = DEFAULT_MAX_ATTEMPTS,
     Returns:
         (now_blocked, remaining_seconds)  — remaining is 0 if not blocked.
     """
-    if whitelist and ip in whitelist:
+    if _is_whitelisted(ip, whitelist):
         return False, 0
 
     with _lock:
