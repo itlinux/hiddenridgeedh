@@ -23,7 +23,7 @@ interface Event {
 export default function EventsPage() {
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
-  const [view, setView] = useState<'list' | 'calendar'>('list');
+  const [view, setView] = useState<'list' | 'calendar'>('calendar');
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
 
   useEffect(() => {
