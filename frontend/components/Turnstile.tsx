@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useCallback } from 'react';
 
-const SITE_KEY = '0x4AAAAAACX5zPRry72pjXTd';
+const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
 interface TurnstileProps {
   onVerify: (token: string) => void;
@@ -61,6 +61,8 @@ export default function Turnstile({ onVerify }: TurnstileProps) {
       }
     };
   }, []);
+
+  if (!SITE_KEY) return null;
 
   return <div ref={containerRef} className="mt-2" />;
 }
