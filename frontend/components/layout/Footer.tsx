@@ -1,9 +1,31 @@
 'use client';
 
+import { useState } from 'react';
 import Link from 'next/link';
-import { Mail, MapPin } from 'lucide-react';
+import { Mail, MapPin, Loader2 } from 'lucide-react';
+import { toast } from 'sonner';
+import { newsletterApi } from '@/lib/api';
 
 export default function Footer() {
+  const [footerEmail, setFooterEmail] = useState('');
+  const [footerLoading, setFooterLoading] = useState(false);
+
+  const handleFooterSubscribe = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!footerEmail) return;
+    setFooterLoading(true);
+    try {
+      await newsletterApi.subscribe({ email: footerEmail });
+      toast.success('Subscribed! Check your inbox for a confirmation.');
+      setFooterEmail('');
+    } catch (err: any) {
+      const msg = err.response?.data?.detail || 'Failed to subscribe. Please try again.';
+      toast.error(msg);
+    } finally {
+      setFooterLoading(false);
+    }
+  };
+
   return (
     <footer className="bg-forest-800 text-cream-200 border-t border-forest-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -55,15 +77,18 @@ export default function Footer() {
             <p className="text-forest-300 text-sm font-body mb-4">
               Subscribe to the Hidden Ridge newsletter for neighborhood updates and announcements.
             </p>
-            <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
+            <form className="flex gap-2" onSubmit={handleFooterSubscribe}>
               <input
                 type="email"
                 placeholder="your@email.com"
+                value={footerEmail}
+                onChange={(e) => setFooterEmail(e.target.value)}
+                required
                 className="flex-1 bg-forest-700 border border-forest-600 text-cream-100 px-3 py-2 text-sm font-sans
                            placeholder:text-forest-400 focus:outline-none focus:border-gold-400 rounded-sm"
               />
-              <button type="submit" className="bg-gold-400 text-forest-800 px-4 py-2 hover:bg-gold-500 transition-colors rounded-sm">
-                <Mail size={16} />
+              <button type="submit" disabled={footerLoading} className="bg-gold-400 text-forest-800 px-4 py-2 hover:bg-gold-500 transition-colors rounded-sm">
+                {footerLoading ? <Loader2 size={16} className="animate-spin" /> : <Mail size={16} />}
               </button>
             </form>
             <p className="text-forest-400 text-xs mt-3">Resident members only. Unsubscribe anytime.</p>

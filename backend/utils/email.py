@@ -131,6 +131,39 @@ async def send_approval_notification(to_email: str, full_name: str):
         pass
 
 
+async def send_newsletter_subscribe_confirmation(to_email: str, unsubscribe_token: str):
+    settings = get_settings()
+    unsub_url = f"{settings.app_url}/api/newsletter/unsubscribe?token={unsubscribe_token}"
+    html = _build_html(
+        "Welcome to the Newsletter!",
+        f"""
+        <p>You've been subscribed to the <strong>Hidden Ridge EDH</strong> neighborhood newsletter.</p>
+        <p>You'll receive neighborhood updates, event reminders, and important announcements directly in your inbox.</p>
+        <p>If you didn't subscribe, or wish to unsubscribe, click below:</p>
+        <p><a href="{unsub_url}" style="color: #C9A84C;">Unsubscribe</a></p>
+        """,
+    )
+    try:
+        await _send_email(to_email, "Hidden Ridge EDH — Newsletter Subscription Confirmed", html)
+    except Exception:
+        pass
+
+
+async def send_newsletter_unsubscribe_confirmation(to_email: str):
+    html = _build_html(
+        "You've Been Unsubscribed",
+        """
+        <p>You've been unsubscribed from the <strong>Hidden Ridge EDH</strong> newsletter.</p>
+        <p>You will no longer receive neighborhood newsletter emails.</p>
+        <p>If this was a mistake, you can re-subscribe anytime on our website.</p>
+        """,
+    )
+    try:
+        await _send_email(to_email, "Hidden Ridge EDH — Unsubscribed", html)
+    except Exception:
+        pass
+
+
 async def send_newsletter(subscribers: list[str], subject: str, html_content: str):
     settings = get_settings()
     provider = settings.email_provider.lower()

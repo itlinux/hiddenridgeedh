@@ -5,7 +5,7 @@ from datetime import datetime
 from database import get_db
 from models.schemas import NewsletterSubscribe, NewsletterSend
 from middleware.auth import require_super_admin
-from utils.email import send_newsletter
+from utils.email import send_newsletter, send_newsletter_subscribe_confirmation, send_newsletter_unsubscribe_confirmation
 from utils.turnstile import verify_turnstile
 
 router = APIRouter(prefix="/api/newsletter", tags=["newsletter"])
@@ -27,26 +27,31 @@ async def subscribe(data: NewsletterSubscribe):
             {"email": data.email},
             {"$set": {"is_active": True, "subscribed_at": datetime.utcnow()}},
         )
+        await send_newsletter_subscribe_confirmation(data.email, existing["unsubscribe_token"])
         return {"message": "Subscription reactivated"}
 
+    unsub_token = secrets.token_urlsafe(32)
     await db.newsletter_subscribers.insert_one({
         "email": data.email,
         "subscribed_at": datetime.utcnow(),
-        "unsubscribe_token": secrets.token_urlsafe(32),
+        "unsubscribe_token": unsub_token,
         "is_active": True,
     })
+    await send_newsletter_subscribe_confirmation(data.email, unsub_token)
     return {"message": "Subscribed successfully"}
 
 
 @router.get("/unsubscribe")
 async def unsubscribe(token: str = Query(...)):
     db = get_db()
-    result = await db.newsletter_subscribers.update_one(
-        {"unsubscribe_token": token},
+    sub = await db.newsletter_subscribers.find_one({"unsubscribe_token": token})
+    if not sub:
+        raise HTTPException(404, "Invalid unsubscribe link")
+    await db.newsletter_subscribers.update_one(
+        {"_id": sub["_id"]},
         {"$set": {"is_active": False}},
     )
-    if result.matched_count == 0:
-        raise HTTPException(404, "Invalid unsubscribe link")
+    await send_newsletter_unsubscribe_confirmation(sub["email"])
     return {"message": "You have been unsubscribed"}
 
 
