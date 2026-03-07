@@ -123,6 +123,7 @@ class GalleryItemCreate(BaseModel):
 
 class NewsletterSubscribe(BaseModel):
     email: EmailStr
+    turnstile_token: str | None = None
 
 
 class NewsletterSend(BaseModel):

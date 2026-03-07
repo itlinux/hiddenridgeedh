@@ -5,17 +5,19 @@ import Link from 'next/link';
 import { ArrowRight, Trees, Users, Calendar, MessageSquare, Camera, Mail, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { newsletterApi } from '@/lib/api';
+import Turnstile from '@/components/Turnstile';
 
 export default function HomePage() {
   const [nlEmail, setNlEmail] = useState('');
   const [nlLoading, setNlLoading] = useState(false);
+  const [nlTurnstileToken, setNlTurnstileToken] = useState('');
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!nlEmail) return;
     setNlLoading(true);
     try {
-      await newsletterApi.subscribe({ email: nlEmail });
+      await newsletterApi.subscribe({ email: nlEmail, turnstile_token: nlTurnstileToken || undefined });
       toast.success('Subscribed! Check your inbox for a confirmation.');
       setNlEmail('');
     } catch (err: any) {
@@ -167,6 +169,9 @@ export default function HomePage() {
             {nlLoading ? <><Loader2 size={16} className="animate-spin" /> Subscribing...</> : 'Subscribe'}
           </button>
         </form>
+        <div className="flex justify-center mt-3">
+          <Turnstile onVerify={setNlTurnstileToken} />
+        </div>
         <p className="text-forest-400 text-xs mt-4 font-sans">No spam. Unsubscribe anytime.</p>
       </section>
     </div>

@@ -6,12 +6,16 @@ from database import get_db
 from models.schemas import NewsletterSubscribe, NewsletterSend
 from middleware.auth import require_super_admin
 from utils.email import send_newsletter
+from utils.turnstile import verify_turnstile
 
 router = APIRouter(prefix="/api/newsletter", tags=["newsletter"])
 
 
 @router.post("/subscribe", status_code=201)
 async def subscribe(data: NewsletterSubscribe):
+    if data.turnstile_token:
+        await verify_turnstile(data.turnstile_token)
+
     db = get_db()
     existing = await db.newsletter_subscribers.find_one({"email": data.email})
 
