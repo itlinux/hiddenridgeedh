@@ -135,7 +135,7 @@ function EventCard({ event }: { event: Event }) {
         </div>
       </div>
       <div className="flex-1">
-        <h2 className="font-serif text-xl text-forest-800 mb-2 group-hover:text-forest-600 transition-colors">
+        <h2 className="font-serif text-2xl font-bold text-forest-800 mb-2 group-hover:text-forest-600 transition-colors">
           {event.title}
         </h2>
         {event.description && (
