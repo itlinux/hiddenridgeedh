@@ -92,6 +92,13 @@ export const newsletterApi = {
   deleteSubscriber: (id: string) => api.delete(`/api/newsletter/subscribers/${id}`),
 };
 
+// ─── Alerts ──────────────────────────────────────────────────────────────────
+export const alertsApi = {
+  list: (params?: any) => api.get('/api/alerts', { params }),
+  create: (data: { message: string; category?: string }) => api.post('/api/alerts', data),
+  delete: (id: string) => api.delete(`/api/alerts/${id}`),
+};
+
 // ─── Members ──────────────────────────────────────────────────────────────────
 export const membersApi = {
   list: (params?: any) => api.get('/api/members', { params }),

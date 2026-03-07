@@ -151,6 +151,13 @@ class NewsletterSend(BaseModel):
     content: str = Field(..., min_length=10, max_length=100000)
 
 
+# --- Alerts ---
+
+class AlertCreate(BaseModel):
+    message: str = Field(..., min_length=5, max_length=1000)
+    category: str = Field("general", max_length=50)  # general, safety, wildlife, traffic, etc.
+
+
 # --- Members ---
 
 class RoleUpdate(BaseModel):

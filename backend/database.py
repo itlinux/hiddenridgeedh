@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     login_max_attempts: int = 5
     login_block_minutes: int = 15
     login_whitelist_ips: str = ""  # comma-separated CIDR e.g. "208.53.44.225/32, 10.10.10.0/24"
+    twilio_account_sid: str = ""
+    twilio_auth_token: str = ""
+    twilio_phone_number: str = ""  # Your Twilio number (e.g. +19165551234)
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
@@ -68,3 +71,4 @@ async def _create_indexes():
     await _db.forum_replies.create_index("thread_id")
     await _db.gallery.create_index("created_at")
     await _db.newsletter_subscribers.create_index("email", unique=True)
+    await _db.alerts.create_index("created_at")
