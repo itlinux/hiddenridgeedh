@@ -15,11 +15,11 @@ interface Event {
   description?: string;
   content?: string;
   location?: string;
-  event_date: string;
+  start_date: string;
   end_date?: string;
   max_attendees?: number;
-  rsvp_count?: number;
-  rsvps?: string[];
+  attendee_count?: number;
+  attendees?: string[];
   cover_image?: string;
   created_by_name?: string;
 }
@@ -40,14 +40,20 @@ export default function EventDetailPage() {
     }
   }, [id]);
 
+  const hasRsvpd = user && event?.attendees?.includes(user.id);
+
   const handleRsvp = async () => {
     if (!user || !event) return;
     setRsvpLoading(true);
     try {
-      await eventsApi.rsvp(event.id);
+      if (hasRsvpd) {
+        await eventsApi.cancelRsvp(event.id);
+      } else {
+        await eventsApi.rsvp(event.id);
+      }
       const res = await eventsApi.get(event.id);
       setEvent(res.data);
-      toast.success('RSVP updated!');
+      toast.success(hasRsvpd ? 'RSVP cancelled' : 'RSVP confirmed!');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'RSVP failed');
     } finally {
@@ -65,8 +71,6 @@ export default function EventDetailPage() {
     </div>
   );
 
-  const hasRsvpd = user && event.rsvps?.includes(user.id);
-
   return (
     <div className="min-h-screen bg-cream-50">
       <div className="max-w-3xl mx-auto px-4 py-12">
@@ -79,11 +83,11 @@ export default function EventDetailPage() {
         <div className="flex flex-wrap gap-6 text-forest-500 text-sm font-sans mb-8">
           <span className="flex items-center gap-2">
             <Calendar size={14} className="text-gold-500" />
-            {format(new Date(event.event_date), 'EEEE, MMMM d, yyyy')}
+            {format(new Date(event.start_date), 'EEEE, MMMM d, yyyy')}
           </span>
           <span className="flex items-center gap-2">
             <Clock size={14} className="text-gold-500" />
-            {format(new Date(event.event_date), 'h:mm a')}
+            {format(new Date(event.start_date), 'h:mm a')}
           </span>
           {event.location && (
             <span className="flex items-center gap-2">
@@ -94,7 +98,7 @@ export default function EventDetailPage() {
           {event.max_attendees && (
             <span className="flex items-center gap-2">
               <Users size={14} className="text-gold-500" />
-              {event.rsvp_count || 0}/{event.max_attendees} attending
+              {event.attendee_count || 0}/{event.max_attendees} attending
             </span>
           )}
         </div>
