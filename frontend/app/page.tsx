@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Trees, Users, Calendar, MessageSquare, Camera, Loader2 } from 'lucide-react';
+import { ArrowRight, Trees, Users, Calendar, MessageSquare, Camera, ShieldAlert, Wrench, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { newsletterApi } from '@/lib/api';
 import Turnstile from '@/components/Turnstile';
@@ -99,6 +99,20 @@ export default function HomePage() {
               title: 'Member Directory',
               desc: 'Get to know your neighbors. Browse profiles of approved Hidden Ridge residents.',
               href: '/members',
+              color: 'text-forest-600',
+            },
+            {
+              icon: ShieldAlert,
+              title: 'Safety & Alerts',
+              desc: 'Stay safe with neighborhood alerts, emergency contacts, crime watch updates, and important safety notices.',
+              href: '/safety',
+              color: 'text-gold-500',
+            },
+            {
+              icon: Wrench,
+              title: 'Local Resources',
+              desc: 'Find trusted contractors, landscapers, handymen, and local service providers recommended by your neighbors.',
+              href: '/resources',
               color: 'text-forest-600',
             },
           ].map((feature) => (
