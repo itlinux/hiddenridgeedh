@@ -23,6 +23,7 @@ def serialize_user(user: dict) -> dict:
     user.pop("totp_secret", None)
     user.pop("totp_backup_codes", None)
     user["totp_enabled"] = user.get("totp_enabled", False)
+    user["sms_opt_in"] = user.get("sms_opt_in", False)
     return user
 
 
@@ -46,6 +47,7 @@ async def register(data: UserCreate):
         "address": data.address,
         "bio": data.bio,
         "phone": data.phone,
+        "sms_opt_in": data.sms_opt_in,
         "avatar_url": None,
         "password_hash": hash_password(data.password),
         "role": UserRole.PENDING,

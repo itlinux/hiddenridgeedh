@@ -23,6 +23,7 @@ class UserCreate(BaseModel):
     address: Optional[str] = None
     bio: Optional[str] = None
     phone: Optional[str] = None
+    sms_opt_in: bool = False
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     turnstile_token: Optional[str] = None

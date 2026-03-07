@@ -12,6 +12,7 @@ export default function ProfilePage() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [smsOptIn, setSmsOptIn] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     username: '',
@@ -37,6 +38,7 @@ export default function ProfilePage() {
         latitude: user.latitude?.toString() || '',
         longitude: user.longitude?.toString() || '',
       });
+      setSmsOptIn(user.sms_opt_in || false);
     }
   }, [user, authLoading]);
 
@@ -46,6 +48,7 @@ export default function ProfilePage() {
     try {
       const payload = {
         ...form,
+        sms_opt_in: smsOptIn,
         latitude: form.latitude ? parseFloat(form.latitude) : null,
         longitude: form.longitude ? parseFloat(form.longitude) : null,
       };
@@ -129,6 +132,18 @@ export default function ProfilePage() {
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="input-field w-full"
               />
+            </div>
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="sms_opt_in_profile"
+                checked={smsOptIn}
+                onChange={(e) => setSmsOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
+              />
+              <label htmlFor="sms_opt_in_profile" className="text-forest-600 font-sans text-sm leading-relaxed cursor-pointer">
+                Receive <strong>SMS notifications</strong> for emergencies and urgent neighborhood alerts.
+              </label>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>

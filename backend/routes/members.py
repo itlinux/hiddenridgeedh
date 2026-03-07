@@ -25,6 +25,7 @@ def serialize_member(user: dict, include_email: bool = False) -> dict:
     if include_email:
         member["email"] = user.get("email")
         member["phone"] = user.get("phone")
+        member["sms_opt_in"] = user.get("sms_opt_in", False)
         member["is_active"] = user.get("is_active")
         member["is_approved"] = user.get("is_approved")
         member["created_at"] = user.get("created_at")

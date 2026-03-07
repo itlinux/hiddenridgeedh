@@ -14,6 +14,7 @@ interface User {
   latitude?: number;
   longitude?: number;
   totp_enabled?: boolean;
+  sms_opt_in?: boolean;
 }
 
 interface LoginResult {

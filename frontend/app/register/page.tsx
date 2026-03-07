@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [smsOptIn, setSmsOptIn] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -36,6 +37,7 @@ export default function RegisterPage() {
     try {
       await authApi.register({
         ...form,
+        sms_opt_in: smsOptIn,
         turnstile_token: turnstileToken || undefined,
       });
       setSuccess(true);
@@ -186,6 +188,27 @@ export default function RegisterPage() {
                 className="input-field"
                 placeholder="(916) 555-0123"
               />
+            </div>
+
+            {/* SMS opt-in */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="sms_opt_in"
+                checked={smsOptIn}
+                onChange={(e) => setSmsOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
+              />
+              <div>
+                <label htmlFor="sms_opt_in" className="text-forest-600 font-sans text-sm leading-relaxed cursor-pointer">
+                  I&apos;d like to receive <strong>SMS notifications</strong> for emergencies
+                  and urgent neighborhood alerts. <span className="text-forest-400 text-xs">(Requires phone number)</span>
+                </label>
+                <p className="text-forest-400 font-sans text-xs mt-1">
+                  We will never spam you or share your number. SMS is only used for emergencies and is never
+                  sent to members who have not opted in.
+                </p>
+              </div>
             </div>
 
             <Turnstile onVerify={setTurnstileToken} />
