@@ -34,7 +34,7 @@ interface Thread {
 }
 
 export default function ForumPage() {
-  const { user } = useAuth();
+  const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [threads, setThreads] = useState<Thread[]>([]);
   const [loading, setLoading] = useState(true);
@@ -59,6 +59,7 @@ export default function ForumPage() {
   };
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) {
       router.push('/login');
       return;
@@ -68,7 +69,7 @@ export default function ForumPage() {
       .then(res => setCategories(res.data.categories || []))
       .catch(() => setCategories([]));
     loadThreads(activeCategory);
-  }, [user]);
+  }, [user, authLoading]);
 
   useEffect(() => {
     if (user) loadThreads(activeCategory);
@@ -111,7 +112,7 @@ export default function ForumPage() {
     return cat ? cat.color : 'bg-forest-200 text-forest-700';
   };
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
 
   return (
     <div className="min-h-screen bg-cream-50">

@@ -31,7 +31,7 @@ interface Thread {
 
 export default function ThreadDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user, isSuperAdmin } = useAuth();
+  const { user, isSuperAdmin, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const [thread, setThread] = useState<Thread | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
@@ -40,9 +40,10 @@ export default function ThreadDetailPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
+    if (authLoading) return;
     if (!user) { router.push('/login'); return; }
     if (id) loadThread();
-  }, [id, user]);
+  }, [id, user, authLoading]);
 
   const loadThread = async () => {
     try {
@@ -96,7 +97,7 @@ export default function ThreadDetailPage() {
     }
   };
 
-  if (!user) return null;
+  if (authLoading || !user) return null;
   if (loading) return <div className="min-h-screen bg-cream-50 flex items-center justify-center"><Loader2 className="animate-spin text-forest-400" size={32} /></div>;
   if (!thread) return (
     <div className="min-h-screen bg-cream-50 flex items-center justify-center">
