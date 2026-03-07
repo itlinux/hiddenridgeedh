@@ -55,15 +55,25 @@ async def list_news(request: Request, limit: int = Query(10, ge=1, le=50)):
             return {"articles": cache.get("articles", [])[:limit]}
         return {"articles": []}
 
-    # Extract and normalize articles
+    # Extract, normalize, and deduplicate articles
     raw_articles = data.get("data", [])
     articles = []
+    seen_urls = set()
+    seen_titles = set()
     for art in raw_articles:
+        url = art.get("url", "")
+        title = (art.get("title") or "").strip().lower()
+        # Skip duplicates by URL or by identical title
+        if url in seen_urls or (title and title in seen_titles):
+            continue
+        seen_urls.add(url)
+        if title:
+            seen_titles.add(title)
         articles.append({
             "title": art.get("title"),
             "description": art.get("description"),
             "snippet": art.get("snippet"),
-            "url": art.get("url"),
+            "url": url,
             "image_url": art.get("image_url"),
             "source": art.get("source"),
             "published_at": art.get("published_at"),
