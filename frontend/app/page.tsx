@@ -1,17 +1,25 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
-import { ArrowRight, Trees, Users, Calendar, MessageSquare, ShieldAlert, Wrench, Loader2 } from 'lucide-react';
+import { ArrowRight, Trees, Users, Calendar, MessageSquare, ShieldAlert, Wrench, Loader2, Newspaper } from 'lucide-react';
 import { toast } from 'sonner';
-import { newsletterApi } from '@/lib/api';
+import { newsletterApi, newsApi } from '@/lib/api';
+import NewsCard from '@/components/NewsCard';
 import Turnstile from '@/components/Turnstile';
 
 export default function HomePage() {
   const [nlEmail, setNlEmail] = useState('');
   const [nlLoading, setNlLoading] = useState(false);
   const [nlTurnstileToken, setNlTurnstileToken] = useState('');
+  const [newsArticles, setNewsArticles] = useState<any[]>([]);
+
+  useEffect(() => {
+    newsApi.list({ limit: 4 }).then(res => {
+      setNewsArticles(res.data.articles || []);
+    }).catch(() => {});
+  }, []);
 
   const handleSubscribe = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -134,6 +142,22 @@ export default function HomePage() {
           ))}
         </div>
       </section>
+
+      {/* Area News */}
+      {newsArticles.length > 0 && (
+        <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <p className="section-label text-bark-400">What&apos;s happening nearby</p>
+            <h2 className="font-serif text-4xl text-forest-800 mt-3">Area News</h2>
+            <div className="divider-gold" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+            {newsArticles.map((article: any, idx: number) => (
+              <NewsCard key={article.url || idx} article={article} />
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Divider */}
       <div className="bg-forest-700 h-px mx-auto max-w-7xl" />

@@ -103,6 +103,11 @@ export const alertsApi = {
   delete: (id: string) => api.delete(`/api/alerts/${id}`),
 };
 
+// ─── News ─────────────────────────────────────────────────────────────────────
+export const newsApi = {
+  list: (params?: any) => api.get('/api/news', { params }),
+};
+
 // ─── Members ──────────────────────────────────────────────────────────────────
 export const membersApi = {
   list: (params?: any) => api.get('/api/members', { params }),
