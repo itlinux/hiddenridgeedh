@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { MapPin, Mail } from 'lucide-react';
+import { MapPin, Mail, User } from 'lucide-react';
 
 export default function Footer() {
   const handleContact = () => {
@@ -31,33 +31,22 @@ export default function Footer() {
               <MapPin size={14} className="text-gold-400" />
               El Dorado Hills, CA 95762
             </div>
-            <button
-              onClick={handleContact}
-              className="flex items-center gap-2 mt-3 text-forest-300 hover:text-gold-400 text-sm transition-colors"
-            >
-              <Mail size={14} className="text-gold-400" />
-              For more info, contact Remo
-            </button>
           </div>
 
-          {/* Quick Links */}
+          {/* Contact */}
           <div>
-            <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Neighborhood</h4>
-            <ul className="space-y-3">
-              {[
-                { href: '/blog', label: 'News & Blog' },
-                { href: '/events', label: 'Events Calendar' },
-                { href: '/gallery', label: 'Photo Gallery' },
-                { href: '/forum', label: 'Neighborhood Forum' },
-                { href: '/members', label: 'Meet the Neighbors' },
-              ].map((link) => (
-                <li key={link.href}>
-                  <Link href={link.href} className="text-forest-300 hover:text-gold-400 font-sans text-sm transition-colors">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
+            <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Contact</h4>
+            <div className="flex items-center gap-2 text-forest-300 text-sm mb-3">
+              <User size={14} className="text-gold-400" />
+              Remo Mattei
+            </div>
+            <button
+              onClick={handleContact}
+              className="flex items-center gap-2 text-forest-300 hover:text-gold-400 text-sm transition-colors"
+            >
+              <Mail size={14} className="text-gold-400" />
+              remo@remomattei.com
+            </button>
           </div>
         </div>
 
