@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { postsApi } from '@/lib/api';
 import { ArrowLeft, Save, Eye, EyeOff, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import RichTextEditor from '@/components/RichTextEditor';
 
 export default function EditPostPage() {
   const { isAdmin, isLoading } = useAuth();
@@ -102,11 +103,10 @@ export default function EditPostPage() {
 
           <div>
             <label className="block font-sans text-sm text-forest-700 mb-1">Content</label>
-            <textarea
+            <RichTextEditor
               value={form.content}
-              onChange={e => setForm({ ...form, content: e.target.value })}
-              className="input-field w-full min-h-[300px] font-body"
-              required
+              onChange={(val) => setForm({ ...form, content: val })}
+              placeholder="Write your post content here..."
             />
           </div>
 
