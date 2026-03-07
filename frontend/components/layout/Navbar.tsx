@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
@@ -28,10 +29,15 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16">
           
           {/* Logo */}
-          <Link href="/" className="flex items-center gap-3 group">
-            <div className="w-8 h-8 bg-gold-400 rounded-sm flex items-center justify-center">
-              <span className="text-forest-800 font-serif font-bold text-sm">HR</span>
-            </div>
+          <Link href="/" className="flex items-center gap-2 group">
+            <Image
+              src="/images/logo.png"
+              alt="Hidden Ridge EDH"
+              width={44}
+              height={44}
+              className="rounded-sm"
+              priority
+            />
             <div className="hidden sm:block">
               <span className="text-cream-100 font-serif text-lg tracking-wide">Hidden Ridge</span>
               <span className="text-gold-400 font-sans text-xs tracking-[0.2em] uppercase block leading-none">El Dorado Hills</span>

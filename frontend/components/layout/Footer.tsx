@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { MapPin, Mail, User } from 'lucide-react';
 
 export default function Footer() {
@@ -16,9 +17,13 @@ export default function Footer() {
           {/* Brand */}
           <div>
             <div className="flex items-center gap-3 mb-4">
-              <div className="w-10 h-10 bg-gold-400 flex items-center justify-center rounded-sm">
-                <span className="text-forest-800 font-serif font-bold">HR</span>
-              </div>
+              <Image
+                src="/images/logo.png"
+                alt="Hidden Ridge EDH"
+                width={48}
+                height={48}
+                className="rounded-sm"
+              />
               <div>
                 <div className="font-serif text-xl text-cream-100">Hidden Ridge EDH</div>
                 <div className="text-gold-400 text-xs tracking-[0.2em] uppercase">El Dorado Hills</div>

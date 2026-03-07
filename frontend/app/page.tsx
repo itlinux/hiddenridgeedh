@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { ArrowRight, Trees, Users, Calendar, MessageSquare, ShieldAlert, Wrench, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { newsletterApi } from '@/lib/api';
@@ -36,7 +37,14 @@ export default function HomePage() {
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/hero-bg.webp)' }} />
         <div className="absolute inset-0 bg-forest-800/50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
-          <p className="section-label text-gold-400 mb-6">Welcome to</p>
+          <Image
+            src="/images/logo.png"
+            alt="Hidden Ridge EDH"
+            width={180}
+            height={180}
+            className="mx-auto mb-8 drop-shadow-2xl"
+            priority
+          />
           <h1 className="font-serif text-5xl sm:text-7xl text-cream-100 leading-tight mb-6">
             Hidden Ridge
             <span className="block text-gold-400 italic">El Dorado Hills</span>

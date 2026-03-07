@@ -9,9 +9,12 @@ logger = logging.getLogger(__name__)
 
 
 def _build_html(title: str, body: str) -> str:
+    settings = get_settings()
+    logo_url = f"{settings.app_url}/images/logo.png"
     return f"""
     <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #1B2E1F; padding: 24px; text-align: center;">
+            <img src="{logo_url}" alt="Hidden Ridge EDH" width="80" height="80" style="margin-bottom: 12px;" />
             <h1 style="color: #C9A84C; margin: 0; font-size: 24px;">Hidden Ridge EDH</h1>
         </div>
         <div style="padding: 32px 24px; background-color: #F5F0E8;">

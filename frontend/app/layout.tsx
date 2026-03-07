@@ -11,11 +11,16 @@ export const metadata: Metadata = {
     template: '%s | Hidden Ridge EDH',
   },
   description: 'Hidden Ridge — El Dorado Hills, California',
+  icons: {
+    icon: '/images/logo.png',
+    apple: '/images/logo.png',
+  },
   openGraph: {
     title: 'Hidden Ridge EDH',
     description: 'Hidden Ridge — El Dorado Hills, California',
     url: 'https://hiddenridgeedh.com',
     siteName: 'Hidden Ridge EDH',
+    images: [{ url: '/images/logo.png', width: 512, height: 512 }],
   },
 };
 
