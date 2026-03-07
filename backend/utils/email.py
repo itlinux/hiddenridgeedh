@@ -1,8 +1,11 @@
 import asyncio
+import logging
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 from database import get_settings
+
+logger = logging.getLogger(__name__)
 
 
 def _build_html(title: str, body: str) -> str:
@@ -59,7 +62,7 @@ async def _send_via_smtp(to_email: str, subject: str, html_content: str):
         port=settings.smtp_port,
         username=settings.smtp_user or None,
         password=settings.smtp_password or None,
-        use_tls=settings.smtp_use_tls,
+        start_tls=settings.smtp_use_tls,
     )
 
 
@@ -90,8 +93,8 @@ async def send_pending_notification(to_email: str, full_name: str):
     )
     try:
         await _send_email(to_email, "Hidden Ridge EDH — Registration Pending", html)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
 
 
 async def send_admin_new_user_alert(
@@ -110,8 +113,8 @@ async def send_admin_new_user_alert(
     )
     try:
         await _send_email(admin_email, "Hidden Ridge EDH — New Registration", html)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
 
 
 async def send_approval_notification(to_email: str, full_name: str):
@@ -127,8 +130,8 @@ async def send_approval_notification(to_email: str, full_name: str):
     )
     try:
         await _send_email(to_email, "Hidden Ridge EDH — Account Approved", html)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
 
 
 async def send_newsletter_subscribe_confirmation(to_email: str, unsubscribe_token: str):
@@ -145,8 +148,8 @@ async def send_newsletter_subscribe_confirmation(to_email: str, unsubscribe_toke
     )
     try:
         await _send_email(to_email, "Hidden Ridge EDH — Newsletter Subscription Confirmed", html)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
 
 
 async def send_newsletter_unsubscribe_confirmation(to_email: str):
@@ -160,8 +163,8 @@ async def send_newsletter_unsubscribe_confirmation(to_email: str):
     )
     try:
         await _send_email(to_email, "Hidden Ridge EDH — Unsubscribed", html)
-    except Exception:
-        pass
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
 
 
 async def send_newsletter(subscribers: list[str], subject: str, html_content: str):
