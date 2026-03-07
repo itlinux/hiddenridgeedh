@@ -58,6 +58,17 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
+            {isAdmin && (
+              <Link
+                href="/edh"
+                className={clsx(
+                  'nav-link text-gold-400 hover:text-gold-300 flex items-center gap-1',
+                  pathname.startsWith('/edh') && 'text-gold-300'
+                )}
+              >
+                <Shield size={14} /> Dashboard
+              </Link>
+            )}
           </nav>
 
           {/* Auth */}
@@ -136,6 +147,15 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
+          {isAdmin && (
+            <Link
+              href="/edh"
+              className="flex items-center gap-2 text-gold-400 hover:text-gold-300 font-sans text-sm tracking-wider uppercase py-2"
+              onClick={() => setMenuOpen(false)}
+            >
+              <Shield size={14} /> Dashboard
+            </Link>
+          )}
           <div className="pt-3 border-t border-forest-700 flex gap-3">
             {user ? (
               <button onClick={logout} className="btn-secondary text-cream-200 border-cream-400 text-xs">
