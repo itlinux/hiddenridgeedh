@@ -36,24 +36,24 @@ export default function HomePage() {
       <section className="relative overflow-hidden min-h-[80vh] flex items-center justify-center">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/hero-bg.webp)' }} />
         <div className="absolute inset-0 bg-forest-800/50" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32 text-center">
           <Image
             src="/images/logo.png"
             alt="Hidden Ridge EDH"
-            width={180}
-            height={180}
-            className="mx-auto mb-8 drop-shadow-2xl"
+            width={240}
+            height={240}
+            className="mx-auto mb-6 drop-shadow-2xl"
             priority
           />
-          <h1 className="font-serif text-5xl sm:text-7xl text-cream-100 leading-tight mb-6">
+          <h1 className="font-serif text-3xl sm:text-5xl text-cream-100 leading-tight mb-4">
             Hidden Ridge
-            <span className="block text-gold-400 italic">El Dorado Hills</span>
+            <span className="block text-gold-400 italic text-2xl sm:text-4xl">El Dorado Hills</span>
           </h1>
           <div className="divider-gold" />
-          <p className="font-body text-forest-300 text-xl max-w-2xl mx-auto mt-6 leading-relaxed">
+          <p className="font-body text-forest-300 text-base max-w-2xl mx-auto mt-4 leading-relaxed">
             Connecting neighbors, sharing news, and celebrating our neighborhood.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-10">
+          <div className="flex flex-col sm:flex-row gap-4 justify-center mt-8">
             <Link href="/register" className="btn-gold text-base px-8 py-4">
               Request Access
             </Link>
