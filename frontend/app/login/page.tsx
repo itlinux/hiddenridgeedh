@@ -36,7 +36,7 @@ export default function LoginPage() {
         return;
       }
       toast.success('Welcome back!');
-      router.push('/');
+      router.push('/edh');
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Login failed. Please try again.';
       toast.error(msg);
@@ -51,7 +51,7 @@ export default function LoginPage() {
     try {
       await verify2FA(tempToken, totpCode);
       toast.success('Welcome back!');
-      router.push('/');
+      router.push('/edh');
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Invalid code. Please try again.';
       toast.error(msg);
