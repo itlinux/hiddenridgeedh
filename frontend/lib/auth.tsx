@@ -11,6 +11,9 @@ interface User {
   role: 'super_admin' | 'content_admin' | 'member' | 'pending';
   is_approved: boolean;
   avatar_url?: string;
+  bio?: string;
+  address?: string;
+  phone?: string;
   latitude?: number;
   longitude?: number;
   totp_enabled?: boolean;

@@ -9,7 +9,7 @@ import { Loader2, Save, Lock, Eye, EyeOff, ShieldCheck, ShieldOff, Copy, Check }
 import { toast } from 'sonner';
 
 export default function ProfilePage() {
-  const { user, isLoading: authLoading } = useAuth();
+  const { user, isLoading: authLoading, refreshUser } = useAuth();
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [smsOptIn, setSmsOptIn] = useState(false);
@@ -32,9 +32,9 @@ export default function ProfilePage() {
       setForm({
         full_name: user.full_name || '',
         username: user.username || '',
-        bio: '',
-        address: '',
-        phone: '',
+        bio: user.bio || '',
+        address: user.address || '',
+        phone: user.phone || '',
         latitude: user.latitude?.toString() || '',
         longitude: user.longitude?.toString() || '',
       });
@@ -53,6 +53,7 @@ export default function ProfilePage() {
         longitude: form.longitude ? parseFloat(form.longitude) : null,
       };
       await membersApi.updateMe(payload);
+      await refreshUser();
       toast.success('Profile updated');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Update failed');
