@@ -46,6 +46,23 @@ async def unsubscribe(token: str = Query(...)):
     return {"message": "You have been unsubscribed"}
 
 
+@router.get("/subscribers")
+async def list_subscribers(
+    current_user: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    cursor = db.newsletter_subscribers.find().sort("subscribed_at", -1)
+    subscribers = []
+    async for sub in cursor:
+        subscribers.append({
+            "id": str(sub["_id"]),
+            "email": sub["email"],
+            "is_active": sub.get("is_active", True),
+            "subscribed_at": sub.get("subscribed_at"),
+        })
+    return {"subscribers": subscribers}
+
+
 @router.post("/send")
 async def send(
     data: NewsletterSend,

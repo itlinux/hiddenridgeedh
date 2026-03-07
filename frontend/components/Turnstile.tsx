@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useCallback } from 'react';
 
 const SITE_KEY = '0x4AAAAAACX5zPRry72pjXTd';
 
@@ -11,6 +11,8 @@ interface TurnstileProps {
 export default function Turnstile({ onVerify }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<string | null>(null);
+  const onVerifyRef = useRef(onVerify);
+  onVerifyRef.current = onVerify;
 
   useEffect(() => {
     const renderWidget = () => {
@@ -19,7 +21,7 @@ export default function Turnstile({ onVerify }: TurnstileProps) {
 
       widgetRef.current = (window as any).turnstile.render(containerRef.current, {
         sitekey: SITE_KEY,
-        callback: (token: string) => onVerify(token),
+        callback: (token: string) => onVerifyRef.current(token),
         theme: 'light',
       });
     };
@@ -34,21 +36,31 @@ export default function Turnstile({ onVerify }: TurnstileProps) {
     const existing = document.querySelector('script[src*="turnstile"]');
     if (!existing) {
       const script = document.createElement('script');
-      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+      script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit&onload=onTurnstileLoad';
       script.async = true;
-      script.onload = () => renderWidget();
+      (window as any).onTurnstileLoad = () => renderWidget();
       document.head.appendChild(script);
     } else {
-      existing.addEventListener('load', renderWidget);
+      // Script exists but may not be loaded yet
+      const checkReady = setInterval(() => {
+        if ((window as any).turnstile) {
+          clearInterval(checkReady);
+          renderWidget();
+        }
+      }, 100);
+      // Stop checking after 10s
+      setTimeout(() => clearInterval(checkReady), 10000);
     }
 
     return () => {
       if (widgetRef.current && (window as any).turnstile) {
-        (window as any).turnstile.remove(widgetRef.current);
+        try {
+          (window as any).turnstile.remove(widgetRef.current);
+        } catch {}
         widgetRef.current = null;
       }
     };
-  }, [onVerify]);
+  }, []);
 
   return <div ref={containerRef} className="mt-2" />;
 }

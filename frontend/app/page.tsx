@@ -113,10 +113,10 @@ export default function HomePage() {
           </h2>
           <div className="divider-gold" />
           <p className="font-body text-forest-300 text-lg mt-6 mb-10 leading-relaxed">
-            Registration is open to Hidden Ridge residents. All accounts are reviewed and approved by neighborhood administrators to ensure a safe, trusted environment.
+            Registration will be available soon for Hidden Ridge residents. All accounts will be reviewed and approved by neighborhood administrators to ensure a safe, trusted environment.
           </p>
           <Link href="/register" className="btn-gold text-base px-10 py-4">
-            Request Membership
+            Learn More
           </Link>
           <p className="text-forest-400 text-sm mt-4 font-sans">
             Already a member? <Link href="/login" className="text-gold-400 hover:underline">Sign in here</Link>

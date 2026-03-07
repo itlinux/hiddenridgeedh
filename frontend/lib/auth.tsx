@@ -13,14 +13,22 @@ interface User {
   avatar_url?: string;
   latitude?: number;
   longitude?: number;
+  totp_enabled?: boolean;
+}
+
+interface LoginResult {
+  requires_2fa?: boolean;
+  temp_token?: string;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string, turnstileToken?: string) => Promise<void>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<LoginResult>;
+  verify2FA: (tempToken: string, code: string) => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
   isAdmin: boolean;
   isContentAdmin: boolean;
   isSuperAdmin: boolean;
@@ -43,13 +51,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string, turnstileToken?: string) => {
+  const login = async (email: string, password: string, turnstileToken?: string): Promise<LoginResult> => {
     const res = await authApi.login({ email, password, turnstile_token: turnstileToken });
+    const data = res.data;
+
+    if (data.requires_2fa) {
+      return { requires_2fa: true, temp_token: data.temp_token };
+    }
+
+    const { access_token, user: userData } = data;
+    localStorage.setItem('hr_token', access_token);
+    localStorage.setItem('hr_user', JSON.stringify(userData));
+    setToken(access_token);
+    setUser(userData);
+    return {};
+  };
+
+  const verify2FA = async (tempToken: string, code: string) => {
+    const res = await authApi.verify2FA(tempToken, code);
     const { access_token, user: userData } = res.data;
     localStorage.setItem('hr_token', access_token);
     localStorage.setItem('hr_user', JSON.stringify(userData));
     setToken(access_token);
     setUser(userData);
+  };
+
+  const refreshUser = async () => {
+    try {
+      const res = await authApi.me();
+      const userData = res.data;
+      localStorage.setItem('hr_user', JSON.stringify(userData));
+      setUser(userData);
+    } catch {
+      // ignore
+    }
   };
 
   const logout = () => {
@@ -64,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const isSuperAdmin = user?.role === 'super_admin';
 
   return (
-    <AuthContext.Provider value={{ user, token, isLoading, login, logout, isAdmin, isContentAdmin, isSuperAdmin }}>
+    <AuthContext.Provider value={{ user, token, isLoading, login, verify2FA, logout, refreshUser, isAdmin, isContentAdmin, isSuperAdmin }}>
       {children}
     </AuthContext.Provider>
   );
