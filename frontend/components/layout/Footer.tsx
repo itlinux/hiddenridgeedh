@@ -1,7 +1,13 @@
+'use client';
+
 import Link from 'next/link';
-import { MapPin } from 'lucide-react';
+import { MapPin, Mail } from 'lucide-react';
 
 export default function Footer() {
+  const handleContact = () => {
+    window.location.href = ['ma', 'ilto:', 'remo', '@', 'remomattei', '.com'].join('');
+  };
+
   return (
     <footer className="bg-forest-800 text-cream-200 border-t border-forest-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -25,6 +31,13 @@ export default function Footer() {
               <MapPin size={14} className="text-gold-400" />
               El Dorado Hills, CA 95762
             </div>
+            <button
+              onClick={handleContact}
+              className="flex items-center gap-2 mt-3 text-forest-300 hover:text-gold-400 text-sm transition-colors"
+            >
+              <Mail size={14} className="text-gold-400" />
+              For more info, contact Remo
+            </button>
           </div>
 
           {/* Quick Links */}

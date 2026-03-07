@@ -96,14 +96,14 @@ export default function HomePage() {
       </section>
 
       {/* Membership CTA */}
-      <section className="bg-forest-800 py-24">
+      <section className="py-24">
         <div className="max-w-3xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400">Residents Only</p>
-          <h2 className="font-serif text-4xl text-cream-100 mt-3 mb-4">
+          <p className="section-label text-bark-400">Residents Only</p>
+          <h2 className="font-serif text-4xl text-forest-800 mt-3 mb-4">
             Ready to Join Your Neighbors?
           </h2>
           <div className="divider-gold" />
-          <p className="font-body text-forest-300 text-lg mt-6 mb-10 leading-relaxed">
+          <p className="font-body text-forest-500 text-lg mt-6 mb-10 leading-relaxed">
             Registration will be available soon for Hidden Ridge residents. All accounts will be reviewed and approved by neighborhood administrators to ensure a safe, trusted environment.
           </p>
           <Link href="/register" className="btn-gold text-base px-10 py-4">
