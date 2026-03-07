@@ -25,6 +25,9 @@ class Settings(BaseSettings):
     upload_dir: str = "./uploads"
     bootstrap_secret: str = ""
     turnstile_secret_key: str = ""
+    login_max_attempts: int = 5
+    login_block_minutes: int = 15
+    login_whitelist_ips: str = ""  # comma-separated IPs e.g. "1.2.3.4,5.6.7.8"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

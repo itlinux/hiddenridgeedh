@@ -1,4 +1,4 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from fastapi import APIRouter, HTTPException, Depends, Request, status
 from datetime import datetime, timedelta
 from bson import ObjectId
 from database import get_db, get_settings
@@ -6,6 +6,7 @@ from models.schemas import UserCreate, UserInDB, Token, LoginRequest, UserRole
 from middleware.auth import hash_password, verify_password, create_access_token, get_current_user
 from utils.email import send_pending_notification, send_admin_new_user_alert
 from utils.turnstile import verify_turnstile
+from utils.rate_limit import is_ip_blocked, record_failed_login, record_successful_login, get_all_blocked_ips, unblock_ip
 import pyotp
 import qrcode
 import io
@@ -71,8 +72,42 @@ async def register(data: UserCreate):
     return {"message": "Registration successful. Your account is pending approval.", "user_id": user_doc["id"]}
 
 
+def _get_client_ip(request: Request) -> str:
+    """Extract client IP, respecting X-Forwarded-For behind nginx."""
+    forwarded = request.headers.get("x-forwarded-for")
+    if forwarded:
+        return forwarded.split(",")[0].strip()
+    return request.client.host if request.client else "unknown"
+
+
+def _get_whitelist() -> list[str]:
+    settings = get_settings()
+    raw = settings.login_whitelist_ips.strip()
+    if not raw:
+        return []
+    return [ip.strip() for ip in raw.split(",") if ip.strip()]
+
+
 @router.post("/login")
-async def login(data: LoginRequest):
+async def login(data: LoginRequest, request: Request):
+    client_ip = _get_client_ip(request)
+    settings = get_settings()
+    whitelist = _get_whitelist()
+
+    # Check if IP is currently blocked
+    blocked, remaining = is_ip_blocked(
+        client_ip,
+        max_attempts=settings.login_max_attempts,
+        block_minutes=settings.login_block_minutes,
+        whitelist=whitelist,
+    )
+    if blocked:
+        minutes = remaining // 60
+        raise HTTPException(
+            status_code=429,
+            detail=f"Too many failed login attempts. Try again in {minutes + 1} minute{'s' if minutes else ''}.",
+        )
+
     if data.turnstile_token:
         await verify_turnstile(data.turnstile_token)
 
@@ -80,10 +115,25 @@ async def login(data: LoginRequest):
     user = await db.users.find_one({"email": data.email})
 
     if not user or not verify_password(data.password, user.get("password_hash", "")):
+        # Record failed attempt
+        now_blocked, remaining = record_failed_login(
+            client_ip,
+            max_attempts=settings.login_max_attempts,
+            block_minutes=settings.login_block_minutes,
+            whitelist=whitelist,
+        )
+        if now_blocked:
+            raise HTTPException(
+                status_code=429,
+                detail=f"Too many failed login attempts. Your IP has been blocked for {settings.login_block_minutes} minutes.",
+            )
         raise HTTPException(status_code=401, detail="Invalid email or password")
 
     if not user.get("is_active"):
         raise HTTPException(status_code=400, detail="Account deactivated")
+
+    # Successful credentials — clear rate limit
+    record_successful_login(client_ip)
 
     # Check if 2FA is enabled
     if user.get("totp_enabled"):
@@ -256,3 +306,22 @@ async def disable_2fa(data: dict, current_user: dict = Depends(get_current_user)
         {"$set": {"totp_enabled": False}, "$unset": {"totp_secret": "", "totp_backup_codes": ""}},
     )
     return {"message": "2FA disabled"}
+
+
+# ─── Login Rate-Limit Admin Endpoints ────────────────────────────────────────
+
+from middleware.auth import require_super_admin
+
+
+@router.get("/blocked-ips")
+async def list_blocked_ips(current_user: dict = Depends(require_super_admin)):
+    """List all currently blocked IPs (super_admin only)."""
+    return {"blocked_ips": get_all_blocked_ips()}
+
+
+@router.delete("/blocked-ips/{ip}")
+async def admin_unblock_ip(ip: str, current_user: dict = Depends(require_super_admin)):
+    """Manually unblock an IP (super_admin only)."""
+    if unblock_ip(ip):
+        return {"message": f"IP {ip} unblocked"}
+    raise HTTPException(404, f"IP {ip} is not currently blocked")
