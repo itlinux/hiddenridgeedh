@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { newsletterApi } from '@/lib/api';
-import { ArrowLeft, Users, Loader2, Trash2 } from 'lucide-react';
+import { ArrowLeft, Users, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function SubscribersPage() {
@@ -34,7 +34,7 @@ export default function SubscribersPage() {
 
   if (isLoading || !isSuperAdmin) return null;
 
-  const activeCount = subscribers.filter((s: any) => s.is_active && s.confirmed).length;
+  const active = subscribers.filter((s: any) => s.is_active && s.confirmed);
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -50,76 +50,42 @@ export default function SubscribersPage() {
         </div>
       </div>
 
-      <div className="max-w-4xl mx-auto px-4 py-8 space-y-6">
-        {/* Summary */}
-        <div className="card p-5 flex items-center gap-4">
-          <Users className="text-forest-500" size={20} />
-          <div className="font-sans text-sm text-forest-700">
-            {loadingSubs ? 'Loading...' : `${activeCount} active / ${subscribers.length} total subscribers`}
-          </div>
-        </div>
-
-        {/* Subscriber table */}
+      <div className="max-w-4xl mx-auto px-4 py-8">
         {loadingSubs ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-forest-400" size={32} />
           </div>
-        ) : subscribers.length === 0 ? (
+        ) : active.length === 0 ? (
           <div className="text-center py-20">
             <Users className="text-forest-300 mx-auto mb-4" size={48} />
-            <p className="font-body text-forest-400 text-lg">No subscribers yet.</p>
+            <p className="font-body text-forest-400 text-lg">No active subscribers yet.</p>
           </div>
         ) : (
-          <div className="card overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-cream-100 text-forest-600 font-sans text-xs uppercase tracking-wider">
-                    <th className="px-5 py-3 text-left">Email</th>
-                    <th className="px-5 py-3 text-left">Status</th>
-                    <th className="px-5 py-3 text-left">Date</th>
-                    <th className="px-5 py-3 text-right">Actions</th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-cream-200">
-                  {subscribers.map((sub: any) => (
-                    <tr key={sub.id} className="hover:bg-cream-50">
-                      <td className="px-5 py-3 font-body text-forest-700">{sub.email}</td>
-                      <td className="px-5 py-3">
-                        {sub.is_active && sub.confirmed ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-sans bg-green-100 text-green-700">Active</span>
-                        ) : sub.confirmed ? (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-sans bg-yellow-100 text-yellow-700">Unsubscribed</span>
-                        ) : (
-                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-sans bg-gray-100 text-gray-600">Pending</span>
-                        )}
-                      </td>
-                      <td className="px-5 py-3 text-forest-400 font-sans text-xs">
-                        {sub.subscribed_at ? new Date(sub.subscribed_at).toLocaleDateString() : '—'}
-                      </td>
-                      <td className="px-5 py-3 text-right">
-                        <button
-                          onClick={async () => {
-                            if (!confirm(`Delete subscriber ${sub.email}?`)) return;
-                            try {
-                              await newsletterApi.deleteSubscriber(sub.id);
-                              setSubscribers(prev => prev.filter((s: any) => s.id !== sub.id));
-                            } catch {
-                              alert('Failed to delete subscriber');
-                            }
-                          }}
-                          className="text-red-400 hover:text-red-600 transition-colors"
-                          title="Delete subscriber"
-                        >
-                          <Trash2 size={14} />
-                        </button>
-                      </td>
+          <>
+            <p className="font-sans text-sm text-forest-500 mb-4">{active.length} active subscriber{active.length !== 1 ? 's' : ''}</p>
+            <div className="card overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-cream-100 text-forest-600 font-sans text-xs uppercase tracking-wider">
+                      <th className="px-5 py-3 text-left">Email</th>
+                      <th className="px-5 py-3 text-left">Subscribed</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-cream-200">
+                    {active.map((sub: any) => (
+                      <tr key={sub.id} className="hover:bg-cream-50">
+                        <td className="px-5 py-3 font-body text-forest-700">{sub.email}</td>
+                        <td className="px-5 py-3 text-forest-400 font-sans text-xs">
+                          {sub.subscribed_at ? new Date(sub.subscribed_at).toLocaleDateString() : '—'}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          </>
         )}
       </div>
     </div>
