@@ -22,6 +22,10 @@ toc::[]
 | Forum | Threaded discussions, pinning, locking
 | Member Directory | Approved neighbor profiles (login required)
 | Newsletter | SendGrid integration, per-subscriber unsubscribe tokens
+| Safety & Alerts | Neighborhood alerts via web or SMS (Twilio), emergency contacts, safety tips
+| SMS-to-Alert | Text your Twilio number to auto-post alerts (registered members only)
+| Neighborhood Map | Leaflet/OpenStreetMap map of member locations (login required)
+| Two-Factor Auth | TOTP-based 2FA with QR code setup and backup codes
 | Role-based Access | Super Admin → Content Admin → Approved Member → Pending
 |===
 
@@ -42,9 +46,11 @@ toc::[]
 * *Frontend:* Next.js 14 (App Router), TypeScript, Tailwind CSS
 * *Backend:* FastAPI (Python 3.13), Motor (async MongoDB driver)
 * *Database:* MongoDB (system instance on port 27017, db: `hiddenridgeedh`)
-* *Email:* SendGrid
+* *Email:* SendGrid (SMTP support planned)
+* *SMS:* Twilio (inbound webhook for SMS-to-alert)
 * *Images:* Pillow (auto-thumbnail generation), served via Nginx
-* *Auth:* JWT (python-jose), bcrypt
+* *Auth:* JWT (python-jose), bcrypt, TOTP 2FA (pyotp)
+* *Security:* slowapi rate limiting, Turnstile CAPTCHA, nginx hardening
 * *Server:* Rocky Linux, Nginx, systemd, Let's Encrypt TLS
 
 == Ports
@@ -78,9 +84,13 @@ hiddenridgeedh/
 │   │   ├── forum.py            # Threads + replies
 │   │   ├── gallery.py          # Photo upload + thumbnails
 │   │   ├── newsletter.py       # Subscribe + send
-│   │   └── members.py          # Member directory + approvals
+│   │   ├── members.py          # Member directory + approvals
+│   │   └── alerts.py           # Safety alerts + Twilio SMS webhook
 │   └── utils/
-│       └── email.py            # SendGrid email helpers
+│       ├── email.py            # SendGrid email helpers
+│       ├── limiter.py          # slowapi rate limiter
+│       ├── rate_limit.py       # Login brute-force protection
+│       └── turnstile.py        # Cloudflare Turnstile verification
 ├── frontend/
 │   ├── app/
 │   │   ├── layout.tsx          # Root layout, AuthProvider, Toaster
@@ -93,6 +103,10 @@ hiddenridgeedh/
 │   │   ├── forum/              # Forum threads + replies (login required)
 │   │   ├── members/            # Member directory + profiles (login required)
 │   │   ├── profile/            # Edit own profile (login required)
+│   │   ├── safety/             # Safety alerts, emergency contacts
+│   │   ├── map/                # Neighborhood map (Leaflet)
+│   │   ├── resources/          # Local resources directory
+│   │   ├── privacy/            # Privacy policy
 │   │   └── edh/                # Admin dashboard
 │   ├── components/
 │   │   └── layout/             # Navbar.tsx, Footer.tsx
@@ -128,6 +142,10 @@ Key variables:
 * `SENDGRID_API_KEY` — from SendGrid dashboard
 * `ADMIN_EMAIL` — your email for admin alerts
 * `BOOTSTRAP_SECRET` — secret for initial admin bootstrap
+* `TURNSTILE_SECRET_KEY` — Cloudflare Turnstile (optional, skipped if empty)
+* `TWILIO_ACCOUNT_SID` — Twilio account SID (optional, for SMS alerts)
+* `TWILIO_AUTH_TOKEN` — Twilio auth token
+* `TWILIO_PHONE_NUMBER` — your Twilio phone number (e.g. +19165551234)
 
 === 2. Development
 
@@ -210,6 +228,57 @@ systemctl enable --now hredh-frontend
 sudo bash deploy/update.sh
 ----
 
+== SMS Alerts (Twilio)
+
+Members with SMS opt-in can text the neighborhood Twilio number to post alerts directly to the Safety page.
+
+=== How It Works
+
+1. Member enables SMS opt-in and sets their phone number on the profile page
+2. Member texts a message to the Twilio phone number
+3. Twilio POSTs to `POST /api/alerts/sms/inbound` with sender phone and message body
+4. Backend matches the phone to a registered user (last 10 digits)
+5. Alert is created and appears on the `/safety` page with an "SMS" badge
+6. Twilio replies with a confirmation message (requires A2P 10DLC registration)
+
+=== Setup
+
+1. Create a Twilio account and buy a phone number
+2. Add to `backend/.env`:
++
+[source]
+----
+TWILIO_ACCOUNT_SID=your_account_sid
+TWILIO_AUTH_TOKEN=your_auth_token
+TWILIO_PHONE_NUMBER=+19165551234
+----
+3. In Twilio Console -> Phone Numbers -> your number -> Messaging:
+   * "A message comes in" -> Webhook -> `https://hiddenridgeedh.com/api/alerts/sms/inbound` (HTTP POST)
+4. Complete A2P 10DLC registration for outbound replies (optional but recommended)
+
+=== Cost
+
+Twilio local number: ~$1.15/month + $0.0079/inbound SMS + $0.0079/outbound SMS.
+
+== Security
+
+=== Nginx Hardening
+
+* Blocks hidden files, WordPress/PHP attack paths, scanner bots
+* Blocks suspicious file extensions (`.php`, `.asp`, `.exe`, etc.)
+* Blocks known scanner user-agents (sqlmap, nikto, nmap, etc.)
+* Security headers: HSTS, CSP, X-Frame-Options, X-Content-Type-Options, Referrer-Policy, Permissions-Policy
+
+=== Application Security
+
+* *Rate limiting* (slowapi): 120 req/min default, stricter on auth/newsletter/alerts
+* *Login brute-force protection*: IP-based blocking after 5 failed attempts (15-min lockout), with CIDR whitelist
+* *Input validation*: Pydantic Field constraints (min/max length) on all user inputs
+* *Password policy*: 8+ chars, uppercase, lowercase, number required
+* *Turnstile CAPTCHA*: Cloudflare Turnstile on register/login forms
+* *TOTP 2FA*: Optional two-factor authentication with backup codes
+* *Twilio signature validation*: HMAC-SHA1 verification on SMS webhook
+
 == MongoDB Collections
 
 [cols="1,2"]
@@ -224,6 +293,7 @@ sudo bash deploy/update.sh
 | `gallery_items` | Photo metadata
 | `newsletter_subscribers` | Email list with unsubscribe tokens
 | `newsletter_sends` | Send history / audit log
+| `alerts` | Neighborhood safety alerts (web + SMS)
 |===
 
 == Design System
