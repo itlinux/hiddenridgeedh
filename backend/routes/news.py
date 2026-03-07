@@ -11,14 +11,14 @@ logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/api/news", tags=["news"])
 
 CACHE_TTL_HOURS = 6
-SEARCH_QUERY = '"El Dorado Hills" OR "Sacramento" OR "Folsom" OR "El Dorado County"'
-API_URL = "https://newsapi.org/v2/everything"
+SEARCH_QUERY = '"El Dorado Hills" | "Sacramento" | "Folsom" | "El Dorado County" | "EDH"'
+API_URL = "https://api.thenewsapi.com/v1/news/all"
 
 
 @router.get("")
 @limiter.limit("30/minute")
 async def list_news(request: Request, limit: int = Query(10, ge=1, le=50)):
-    """Get cached local area news articles from NewsAPI.org."""
+    """Get cached local area news articles from TheNewsAPI."""
     settings = get_settings()
 
     # If no API key configured, return empty (graceful degradation)
@@ -39,38 +39,35 @@ async def list_news(request: Request, limit: int = Query(10, ge=1, le=50)):
     try:
         async with httpx.AsyncClient(timeout=10.0) as client:
             resp = await client.get(API_URL, params={
-                "q": SEARCH_QUERY,
+                "api_token": settings.news_api_key,
+                "search": SEARCH_QUERY,
                 "language": "en",
-                "sortBy": "publishedAt",
-                "pageSize": 50,
-            }, headers={
-                "X-Api-Key": settings.news_api_key,
+                "locale": "us",
+                "limit": 50,
+                "sort": "published_at",
             })
             resp.raise_for_status()
             data = resp.json()
     except Exception as e:
-        logger.warning(f"NewsAPI fetch failed: {e}")
+        logger.warning(f"TheNewsAPI fetch failed: {e}")
         # Return stale cache if available, otherwise empty
         if cache:
             return {"articles": cache.get("articles", [])[:limit]}
         return {"articles": []}
 
     # Extract and normalize articles
-    raw_articles = data.get("articles", [])
+    raw_articles = data.get("data", [])
     articles = []
     for art in raw_articles:
-        # Skip articles with "[Removed]" title (deleted/retracted)
-        if art.get("title") == "[Removed]":
-            continue
-        source = art.get("source", {})
         articles.append({
             "title": art.get("title"),
             "description": art.get("description"),
+            "snippet": art.get("snippet"),
             "url": art.get("url"),
-            "image_url": art.get("urlToImage"),
-            "source": source.get("name") if isinstance(source, dict) else str(source),
-            "published_at": art.get("publishedAt"),
-            "author": art.get("author"),
+            "image_url": art.get("image_url"),
+            "source": art.get("source"),
+            "published_at": art.get("published_at"),
+            "categories": art.get("categories", []),
         })
 
     # Upsert cache (single document with _id "latest")
