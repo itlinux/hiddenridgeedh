@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { postsApi } from '@/lib/api';
 import { ArrowLeft, Save, Eye, EyeOff } from 'lucide-react';
 import Link from 'next/link';
+import RichTextEditor from '@/components/RichTextEditor';
 
 export default function NewPostPage() {
   const { isAdmin, isLoading } = useAuth();
@@ -27,7 +28,8 @@ export default function NewPostPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.content.trim()) return;
+    const contentText = form.content.replace(/<[^>]*>/g, '').trim();
+    if (!form.title.trim() || !contentText) return;
     setSaving(true);
     try {
       const payload = {
@@ -72,12 +74,10 @@ export default function NewPostPage() {
 
           <div>
             <label className="block font-sans text-sm text-forest-700 mb-1">Content</label>
-            <textarea
+            <RichTextEditor
               value={form.content}
-              onChange={e => setForm({ ...form, content: e.target.value })}
-              className="input-field w-full min-h-[300px] font-body"
-              placeholder="Write your post content here... (HTML supported)"
-              required
+              onChange={(val) => setForm({ ...form, content: val })}
+              placeholder="Write your post content here..."
             />
           </div>
 
