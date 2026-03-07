@@ -142,7 +142,7 @@ export default function AdminDashboard() {
                 { href: '/edh/posts/new', label: 'New Blog Post', icon: FileText },
                 { href: '/edh/events/new', label: 'Create Event', icon: Calendar },
                 { href: '/edh/newsletter', label: 'Send Newsletter', icon: Mail },
-                { href: '/edh/newsletter#subscribers', label: 'View Subscribers', icon: Users },
+                { href: '/edh/subscribers', label: 'View Subscribers', icon: Users },
                 { href: '/edh/members', label: 'Manage Members', icon: Users },
                 { href: '/edh/gallery', label: 'Manage Gallery', icon: Image },
               ].map((action) => (
