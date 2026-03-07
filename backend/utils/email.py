@@ -56,13 +56,19 @@ async def _send_via_smtp(to_email: str, subject: str, html_content: str):
     msg["Subject"] = subject
     msg.attach(MIMEText(html_content, "html"))
 
+    # Port 587 = STARTTLS (connect plain, then upgrade)
+    # Port 465 = implicit TLS (connect with SSL from the start)
+    use_tls = settings.smtp_port == 465
+    start_tls = settings.smtp_use_tls and not use_tls
+
     await aiosmtplib.send(
         msg,
         hostname=settings.smtp_host,
         port=settings.smtp_port,
         username=settings.smtp_user or None,
         password=settings.smtp_password or None,
-        start_tls=settings.smtp_use_tls,
+        use_tls=use_tls,
+        start_tls=start_tls,
     )
 
 
