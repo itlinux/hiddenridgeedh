@@ -36,7 +36,8 @@ export default function LoginPage() {
         return;
       }
       toast.success('Welcome back!');
-      router.push('/edh');
+      const role = result.user?.role;
+      router.push(role === 'super_admin' || role === 'content_admin' ? '/edh' : '/');
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Login failed. Please try again.';
       toast.error(msg);
@@ -51,7 +52,10 @@ export default function LoginPage() {
     try {
       await verify2FA(tempToken, totpCode);
       toast.success('Welcome back!');
-      router.push('/edh');
+      // After 2FA, check role from localStorage since verify2FA doesn't return it
+      const stored = localStorage.getItem('hr_user');
+      const role = stored ? JSON.parse(stored).role : '';
+      router.push(role === 'super_admin' || role === 'content_admin' ? '/edh' : '/');
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Invalid code. Please try again.';
       toast.error(msg);

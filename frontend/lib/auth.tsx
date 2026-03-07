@@ -23,6 +23,7 @@ interface User {
 interface LoginResult {
   requires_2fa?: boolean;
   temp_token?: string;
+  user?: User;
 }
 
 interface AuthContextType {
@@ -68,7 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     localStorage.setItem('hr_user', JSON.stringify(userData));
     setToken(access_token);
     setUser(userData);
-    return {};
+    return { user: userData };
   };
 
   const verify2FA = async (tempToken: string, code: string) => {
