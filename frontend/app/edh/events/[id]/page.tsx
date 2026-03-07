@@ -6,6 +6,7 @@ import { useRouter, useParams } from 'next/navigation';
 import { eventsApi } from '@/lib/api';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import RichTextEditor from '@/components/RichTextEditor';
 
 export default function EditEventPage() {
   const { isAdmin, isLoading } = useAuth();
@@ -101,7 +102,11 @@ export default function EditEventPage() {
           </div>
           <div>
             <label className="block font-sans text-sm text-forest-700 mb-1">Description</label>
-            <textarea value={form.description} onChange={e => setForm({ ...form, description: e.target.value })} className="input-field w-full min-h-[150px] font-body" required />
+            <RichTextEditor
+              value={form.description}
+              onChange={(val) => setForm({ ...form, description: val })}
+              placeholder="Event details, schedule, what to bring..."
+            />
           </div>
           <div>
             <label className="block font-sans text-sm text-forest-700 mb-1">Location</label>
