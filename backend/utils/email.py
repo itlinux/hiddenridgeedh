@@ -171,6 +171,69 @@ async def send_newsletter_unsubscribe_confirmation(to_email: str):
         logger.error(f"Failed to send email to {to_email}: {e}")
 
 
+async def send_alert_email(
+    to_email: str,
+    author_name: str,
+    message: str,
+    category: str,
+    source: str = "web",
+):
+    """Send an email notification when a new neighborhood alert is posted."""
+    settings = get_settings()
+    source_label = "via SMS" if source == "sms" else "on the web"
+    category_display = category.replace("-", " ").title()
+    html = _build_html(
+        "Neighborhood Alert",
+        f"""
+        <p style="background-color: #FEF2F2; border: 1px solid #FECACA; padding: 16px; border-radius: 4px;">
+            <strong style="color: #991B1B;">{category_display}</strong>
+        </p>
+        <p style="font-size: 16px; margin: 16px 0;">{message}</p>
+        <p style="color: #666; font-size: 13px;">
+            Posted by <strong>{author_name}</strong> {source_label}
+        </p>
+        <p style="text-align: center; margin: 24px 0;">
+            <a href="{settings.app_url}/safety" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block;">
+                View All Alerts
+            </a>
+        </p>
+        <p style="color: #999; font-size: 11px;">
+            You're receiving this because you opted in to email alerts.
+            To stop, update your notification settings on your
+            <a href="{settings.app_url}/profile" style="color: #C9A84C;">profile page</a>.
+        </p>
+        """,
+    )
+    try:
+        await _send_email(to_email, f"Hidden Ridge Alert — {category_display}", html)
+    except Exception as e:
+        logger.error(f"Failed to send alert email to {to_email}: {e}")
+
+
+async def send_alert_emails_to_opted_in(
+    author_id: str,
+    author_name: str,
+    message: str,
+    category: str,
+    source: str = "web",
+):
+    """Query all users with email_opt_in=True and send them the alert (excluding author)."""
+    from database import get_db
+
+    db = get_db()
+    cursor = db.users.find({
+        "is_active": True,
+        "is_approved": True,
+        "email_opt_in": True,
+    })
+    async for user in cursor:
+        if str(user["_id"]) == author_id:
+            continue  # Don't email the author about their own alert
+        email = user.get("email")
+        if email:
+            await send_alert_email(email, author_name, message, category, source)
+
+
 async def send_newsletter(subscribers: list[str], subject: str, html_content: str):
     settings = get_settings()
     provider = settings.email_provider.lower()

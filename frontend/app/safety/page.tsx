@@ -120,13 +120,18 @@ export default function SafetyPage() {
               </button>
             </div>
 
-            {/* SMS info banner */}
+            {/* Notification info banner */}
             <div className="bg-cream-100 border border-cream-200 rounded-sm p-4 mb-5">
-              <p className="font-sans text-xs text-forest-600 leading-relaxed">
+              <p className="font-sans text-xs text-forest-600 leading-relaxed mb-2">
                 <Smartphone size={13} className="inline text-gold-500 mr-1" />
-                <strong>SMS Alerts:</strong> Registered members with SMS enabled can text alerts directly
-                to the neighborhood number. The message will appear here automatically.
-                Enable SMS in your <a href="/profile" className="text-gold-500 hover:underline">profile settings</a>.
+                <strong>SMS Alerts:</strong> Text alerts directly to the neighborhood number and they'll appear here automatically.
+              </p>
+              <p className="font-sans text-xs text-forest-600 leading-relaxed">
+                <AlertTriangle size={13} className="inline text-gold-500 mr-1" />
+                <strong>Email Alerts:</strong> Get an email whenever a new alert is posted by a neighbor.
+              </p>
+              <p className="font-sans text-xs text-forest-400 mt-2">
+                Enable SMS and/or email notifications in your <a href="/profile" className="text-gold-500 hover:underline">profile settings</a>.
               </p>
             </div>
 

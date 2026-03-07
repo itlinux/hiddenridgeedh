@@ -10,6 +10,7 @@ Flow:
 """
 
 import re
+import asyncio
 import hashlib
 import hmac
 from urllib.parse import urlencode
@@ -21,6 +22,7 @@ from database import get_db, get_settings
 from models.schemas import AlertCreate
 from middleware.auth import require_member, require_super_admin, get_current_user
 from utils.limiter import limiter
+from utils.email import send_alert_emails_to_opted_in
 
 router = APIRouter(prefix="/api/alerts", tags=["alerts"])
 
@@ -101,6 +103,16 @@ async def create_alert(
     }
     result = await db.alerts.insert_one(alert_doc)
     alert_doc["id"] = str(result.inserted_id)
+
+    # Fire-and-forget email notifications to opted-in members
+    asyncio.create_task(send_alert_emails_to_opted_in(
+        author_id=str(current_user["_id"]),
+        author_name=alert_doc["author_name"],
+        message=data.message,
+        category=data.category,
+        source="web",
+    ))
+
     return serialize_alert(alert_doc)
 
 
@@ -196,6 +208,15 @@ async def sms_inbound(
         "created_at": now,
     }
     await db.alerts.insert_one(alert_doc)
+
+    # Fire-and-forget email notifications to opted-in members
+    asyncio.create_task(send_alert_emails_to_opted_in(
+        author_id=str(user["_id"]),
+        author_name=alert_doc["author_name"],
+        message=message_body,
+        category="sms-alert",
+        source="sms",
+    ))
 
     # Reply with confirmation TwiML
     author_name = user.get("full_name", "Neighbor")

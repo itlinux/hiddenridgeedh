@@ -18,6 +18,7 @@ interface User {
   longitude?: number;
   totp_enabled?: boolean;
   sms_opt_in?: boolean;
+  email_opt_in?: boolean;
 }
 
 interface LoginResult {

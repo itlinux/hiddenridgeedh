@@ -26,6 +26,7 @@ def serialize_member(user: dict, include_email: bool = False) -> dict:
         member["email"] = user.get("email")
         member["phone"] = user.get("phone")
         member["sms_opt_in"] = user.get("sms_opt_in", False)
+        member["email_opt_in"] = user.get("email_opt_in", False)
         member["is_active"] = user.get("is_active")
         member["is_approved"] = user.get("is_approved")
         member["created_at"] = user.get("created_at")
@@ -80,6 +81,8 @@ async def update_my_profile(
         update_fields["phone"] = data.phone
     if data.sms_opt_in is not None:
         update_fields["sms_opt_in"] = data.sms_opt_in
+    if data.email_opt_in is not None:
+        update_fields["email_opt_in"] = data.email_opt_in
     if data.latitude is not None:
         update_fields["latitude"] = data.latitude
     if data.longitude is not None:

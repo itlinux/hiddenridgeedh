@@ -166,6 +166,7 @@ class ProfileUpdate(BaseModel):
     address: Optional[str] = Field(None, max_length=200)
     phone: Optional[str] = Field(None, max_length=20)
     sms_opt_in: Optional[bool] = None
+    email_opt_in: Optional[bool] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
