@@ -4,8 +4,9 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { newsletterApi } from '@/lib/api';
-import { ArrowLeft, Users, Loader2 } from 'lucide-react';
+import { ArrowLeft, Users, Loader2, Trash2, Mail } from 'lucide-react';
 import Link from 'next/link';
+import { toast } from 'sonner';
 
 export default function SubscribersPage() {
   const { user, isSuperAdmin, isLoading } = useAuth();
@@ -29,6 +30,17 @@ export default function SubscribersPage() {
       setSubscribers([]);
     } finally {
       setLoadingSubs(false);
+    }
+  };
+
+  const handleDelete = async (sub: any) => {
+    if (!confirm(`Remove subscriber ${sub.email}?`)) return;
+    try {
+      await newsletterApi.deleteSubscriber(sub.id);
+      setSubscribers(prev => prev.filter((s: any) => s.id !== sub.id));
+      toast.success(`Removed ${sub.email}`);
+    } catch {
+      toast.error('Failed to remove subscriber');
     }
   };
 
@@ -70,6 +82,7 @@ export default function SubscribersPage() {
                     <tr className="bg-cream-100 text-forest-600 font-sans text-xs uppercase tracking-wider">
                       <th className="px-5 py-3 text-left">Email</th>
                       <th className="px-5 py-3 text-left">Subscribed</th>
+                      <th className="px-5 py-3 text-right">Actions</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-cream-200">
@@ -78,6 +91,24 @@ export default function SubscribersPage() {
                         <td className="px-5 py-3 font-body text-forest-700">{sub.email}</td>
                         <td className="px-5 py-3 text-forest-400 font-sans text-xs">
                           {sub.subscribed_at ? new Date(sub.subscribed_at).toLocaleDateString() : '—'}
+                        </td>
+                        <td className="px-5 py-3 text-right">
+                          <div className="flex items-center justify-end gap-3">
+                            <a
+                              href={`mailto:${sub.email}`}
+                              className="text-forest-400 hover:text-gold-500 transition-colors"
+                              title="Send email"
+                            >
+                              <Mail size={14} />
+                            </a>
+                            <button
+                              onClick={() => handleDelete(sub)}
+                              className="text-red-400 hover:text-red-600 transition-colors"
+                              title="Remove subscriber"
+                            >
+                              <Trash2 size={14} />
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}
