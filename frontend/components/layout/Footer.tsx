@@ -11,7 +11,7 @@ export default function Footer() {
   return (
     <footer className="bg-forest-800 text-cream-200 border-t border-forest-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
 
           {/* Brand */}
           <div>
@@ -31,6 +31,26 @@ export default function Footer() {
               <MapPin size={14} className="text-gold-400" />
               El Dorado Hills, CA 95762
             </div>
+          </div>
+
+          {/* Quick Links */}
+          <div>
+            <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Neighborhood</h4>
+            <ul className="space-y-3">
+              {[
+                { href: '/blog', label: 'News & Blog' },
+                { href: '/events', label: 'Events Calendar' },
+                { href: '/gallery', label: 'Photo Gallery' },
+                { href: '/forum', label: 'Neighborhood Forum' },
+                { href: '/members', label: 'Meet the Neighbors' },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-forest-300 hover:text-gold-400 font-sans text-sm transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
           </div>
 
           {/* Contact */}
