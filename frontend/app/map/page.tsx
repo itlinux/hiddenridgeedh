@@ -69,18 +69,18 @@ export default function MapPage() {
         </div>
       </div>
 
-      <div className="max-w-6xl mx-auto px-4 py-12">
+      <div className="max-w-6xl mx-auto px-4 py-6">
         {loading ? (
-          <div className="flex justify-center py-20">
+          <div className="flex justify-center py-12">
             <Loader2 className="animate-spin text-forest-400" size={32} />
           </div>
         ) : (
           <>
-            <p className="text-forest-400 font-sans text-sm mb-4">
+            <p className="text-forest-400 font-sans text-sm mb-3">
               <MapPin size={14} className="inline mr-1" />
               {members.length} neighbor{members.length !== 1 ? 's' : ''} on the map
             </p>
-            <div className="card overflow-hidden" style={{ height: '600px' }}>
+            <div className="card overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '400px' }}>
               <NeighborhoodMap members={members} />
             </div>
             {members.length === 0 && (
