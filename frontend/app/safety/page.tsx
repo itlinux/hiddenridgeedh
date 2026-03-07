@@ -274,6 +274,10 @@ export default function SafetyPage() {
             </li>
             <li className="flex items-start gap-3">
               <AlertTriangle size={16} className="text-gold-500 mt-0.5 shrink-0" />
+              <span><strong>Rattlesnake encounters</strong> — back away slowly, do not attempt to handle or kill the snake. If bitten, call 911 immediately. For non-emergency snake removal, contact Animal Control at (916) 368-7387.</span>
+            </li>
+            <li className="flex items-start gap-3">
+              <AlertTriangle size={16} className="text-gold-500 mt-0.5 shrink-0" />
               <span><strong>Fire safety</strong> — maintain defensible space around your home. Clear dry brush and dead vegetation, especially during fire season.</span>
             </li>
             <li className="flex items-start gap-3">
@@ -292,6 +296,7 @@ export default function SafetyPage() {
               { label: 'El Dorado Hills Fire', url: 'https://www.edhfire.com' },
               { label: 'Ready for Wildfire', url: 'https://www.readyforwildfire.org' },
               { label: 'PG&E Outage Map', url: 'https://pgealerts.alerts.pge.com/outagecenter/' },
+              { label: 'Rattlesnake Safety (CDFW)', url: 'https://wildlife.ca.gov/Keep-Me-Wild/Rattlesnakes' },
               { label: 'Nextdoor (EDH)', url: 'https://nextdoor.com' },
               { label: 'El Dorado Hills CSD', url: 'https://www.edhcsd.org' },
             ].map((link) => (
