@@ -1,37 +1,27 @@
 'use client';
 
-import { useState, useCallback } from 'react';
-import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
-import L from 'leaflet';
-import 'leaflet/dist/leaflet.css';
+import { useState, useCallback, useRef } from 'react';
+import {
+  GoogleMap,
+  useJsApiLoader,
+  MarkerF,
+  InfoWindowF,
+} from '@react-google-maps/api';
 import { Search, Loader2, X } from 'lucide-react';
 
-// Fix Leaflet default marker icon issue in Next.js/webpack
-const defaultIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-});
-L.Marker.prototype.options.icon = defaultIcon;
-
-const searchIcon = L.icon({
-  iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-  iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-  shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-  popupAnchor: [1, -34],
-  shadowSize: [41, 41],
-  className: 'search-marker',
-});
-
-// Hidden Ridge, El Dorado Hills center
-const CENTER: [number, number] = [38.67253, -121.02622];
+const CENTER = { lat: 38.67253, lng: -121.02622 };
 const DEFAULT_ZOOM = 17;
+const LIBRARIES: ('places')[] = ['places'];
+
+const mapContainerStyle = { width: '100%', height: '100%' };
+
+const mapOptions: google.maps.MapOptions = {
+  mapTypeId: 'hybrid',
+  mapTypeControl: true,
+  streetViewControl: false,
+  fullscreenControl: true,
+  zoomControl: true,
+};
 
 interface MemberPin {
   id: string;
@@ -45,47 +35,44 @@ interface Props {
   members: MemberPin[];
 }
 
-// Component to fly the map to a location
-function FlyTo({ position, zoom }: { position: [number, number] | null; zoom?: number }) {
-  const map = useMap();
-  if (position) {
-    map.flyTo(position, zoom || 18, { duration: 1 });
-  }
-  return null;
-}
-
 export default function NeighborhoodMap({ members }: Props) {
+  const { isLoaded, loadError } = useJsApiLoader({
+    googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '',
+    libraries: LIBRARIES,
+  });
+
+  const mapRef = useRef<google.maps.Map | null>(null);
+  const [selectedMember, setSelectedMember] = useState<MemberPin | null>(null);
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
-  const [searchResult, setSearchResult] = useState<{ lat: number; lon: number; name: string } | null>(null);
-  const [flyTarget, setFlyTarget] = useState<[number, number] | null>(null);
+  const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; name: string } | null>(null);
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+  }, []);
 
   const handleSearch = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!query.trim()) return;
+    if (!query.trim() || !mapRef.current) return;
 
     setSearching(true);
     try {
-      // Append El Dorado Hills context for better results
+      const geocoder = new google.maps.Geocoder();
       const searchQuery = query.toLowerCase().includes('el dorado') || query.toLowerCase().includes('edh')
         ? query
         : `${query}, El Dorado Hills, CA`;
 
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(searchQuery)}&limit=1`,
-        { headers: { 'User-Agent': 'HiddenRidgeEDH/1.0' } }
-      );
-      const data = await res.json();
-      if (data.length > 0) {
-        const { lat, lon, display_name } = data[0];
-        const pos: [number, number] = [parseFloat(lat), parseFloat(lon)];
-        setSearchResult({ lat: parseFloat(lat), lon: parseFloat(lon), name: display_name });
-        setFlyTarget(pos);
-      } else {
-        setSearchResult(null);
+      const result = await geocoder.geocode({ address: searchQuery });
+      if (result.results.length > 0) {
+        const location = result.results[0].geometry.location;
+        const pos = { lat: location.lat(), lng: location.lng() };
+        setSearchMarker({ ...pos, name: result.results[0].formatted_address });
+        mapRef.current.panTo(pos);
+        mapRef.current.setZoom(18);
+        setSelectedMember(null);
       }
     } catch {
-      setSearchResult(null);
+      // Geocoding failed
     } finally {
       setSearching(false);
     }
@@ -93,14 +80,33 @@ export default function NeighborhoodMap({ members }: Props) {
 
   const clearSearch = () => {
     setQuery('');
-    setSearchResult(null);
-    setFlyTarget(CENTER);
+    setSearchMarker(null);
+    if (mapRef.current) {
+      mapRef.current.panTo(CENTER);
+      mapRef.current.setZoom(DEFAULT_ZOOM);
+    }
   };
+
+  if (loadError) {
+    return (
+      <div className="flex items-center justify-center h-full bg-cream-100">
+        <p className="text-forest-500 font-sans text-sm">Failed to load Google Maps</p>
+      </div>
+    );
+  }
+
+  if (!isLoaded) {
+    return (
+      <div className="flex items-center justify-center h-full bg-cream-100">
+        <Loader2 className="animate-spin text-forest-400" size={32} />
+      </div>
+    );
+  }
 
   return (
     <div className="relative h-full w-full">
       {/* Search bar */}
-      <div className="absolute top-3 left-3 right-3 z-[1000]">
+      <div className="absolute top-3 left-3 right-3 z-10">
         <form onSubmit={handleSearch} className="flex gap-2 max-w-md">
           <div className="relative flex-1">
             <input
@@ -123,46 +129,56 @@ export default function NeighborhoodMap({ members }: Props) {
         </form>
       </div>
 
-      <MapContainer
+      <GoogleMap
+        mapContainerStyle={mapContainerStyle}
         center={CENTER}
         zoom={DEFAULT_ZOOM}
-        style={{ height: '100%', width: '100%' }}
-        scrollWheelZoom={true}
+        onLoad={onLoad}
+        options={mapOptions}
       >
-        <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        <FlyTo position={flyTarget} />
         {members.map((member) => (
-          <Marker
+          <MarkerF
             key={member.id}
-            position={[member.latitude, member.longitude]}
-          >
-            <Popup>
-              <div className="text-sm">
-                <strong className="text-forest-800">{member.full_name}</strong>
-                {member.address && (
-                  <p className="text-forest-500 mt-1 text-xs">{member.address}</p>
-                )}
-              </div>
-            </Popup>
-          </Marker>
+            position={{ lat: member.latitude, lng: member.longitude }}
+            onClick={() => setSelectedMember(member)}
+          />
         ))}
-        {searchResult && (
-          <Marker
-            position={[searchResult.lat, searchResult.lon]}
-            icon={searchIcon}
+
+        {selectedMember && (
+          <InfoWindowF
+            position={{ lat: selectedMember.latitude, lng: selectedMember.longitude }}
+            onCloseClick={() => setSelectedMember(null)}
           >
-            <Popup>
-              <div className="text-sm">
-                <strong className="text-forest-800">Search Result</strong>
-                <p className="text-forest-500 mt-1 text-xs">{searchResult.name}</p>
-              </div>
-            </Popup>
-          </Marker>
+            <div className="text-sm p-1">
+              <strong className="text-forest-800">{selectedMember.full_name}</strong>
+              {selectedMember.address && (
+                <p className="text-forest-500 mt-1 text-xs">{selectedMember.address}</p>
+              )}
+            </div>
+          </InfoWindowF>
         )}
-      </MapContainer>
+
+        {searchMarker && (
+          <>
+            <MarkerF
+              position={{ lat: searchMarker.lat, lng: searchMarker.lng }}
+              icon={{
+                url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png',
+              }}
+              onClick={() => {}}
+            />
+            <InfoWindowF
+              position={{ lat: searchMarker.lat, lng: searchMarker.lng }}
+              onCloseClick={() => setSearchMarker(null)}
+            >
+              <div className="text-sm p-1">
+                <strong className="text-forest-800">Search Result</strong>
+                <p className="text-forest-500 mt-1 text-xs">{searchMarker.name}</p>
+              </div>
+            </InfoWindowF>
+          </>
+        )}
+      </GoogleMap>
     </div>
   );
 }
