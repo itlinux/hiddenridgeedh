@@ -1,39 +1,13 @@
-'use client';
-
-import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Trees, Users, Calendar, MessageSquare, Camera, Mail, Loader2 } from 'lucide-react';
-import { toast } from 'sonner';
-import { newsletterApi } from '@/lib/api';
-import Turnstile from '@/components/Turnstile';
+import { ArrowRight, Trees, Users, Calendar, MessageSquare, Camera } from 'lucide-react';
 
 export default function HomePage() {
-  const [nlEmail, setNlEmail] = useState('');
-  const [nlLoading, setNlLoading] = useState(false);
-  const [nlTurnstileToken, setNlTurnstileToken] = useState('');
-
-  const handleSubscribe = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!nlEmail) return;
-    setNlLoading(true);
-    try {
-      await newsletterApi.subscribe({ email: nlEmail, turnstile_token: nlTurnstileToken || undefined });
-      toast.success('Subscribed! Check your inbox for a confirmation.');
-      setNlEmail('');
-    } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Failed to subscribe. Please try again.';
-      toast.error(msg);
-    } finally {
-      setNlLoading(false);
-    }
-  };
-
   return (
     <div className="bg-cream-50">
 
       {/* Hero */}
       <section className="relative overflow-hidden min-h-[80vh] flex items-center justify-center"
-        style={{ backgroundImage: 'url(/images/hero-bg.jpg)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}
+        style={{ backgroundImage: 'url(/images/hero-bg.webp)', backgroundSize: 'cover', backgroundPosition: 'center', backgroundAttachment: 'fixed' }}
       >
         <div className="absolute inset-0 bg-forest-800/50" />
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-32 text-center">
@@ -102,13 +76,6 @@ export default function HomePage() {
               href: '/members',
               color: 'text-forest-600',
             },
-            {
-              icon: Mail,
-              title: 'Newsletter',
-              desc: 'Subscribe to receive neighborhood updates and important announcements directly in your inbox.',
-              href: '#newsletter',
-              color: 'text-gold-500',
-            },
           ].map((feature) => (
             <Link
               key={feature.title}
@@ -146,33 +113,6 @@ export default function HomePage() {
             Already a member? <Link href="/login" className="text-gold-400 hover:underline">Sign in here</Link>
           </p>
         </div>
-      </section>
-
-      {/* Newsletter signup */}
-      <section id="newsletter" className="py-20 max-w-2xl mx-auto px-4 text-center">
-        <p className="section-label text-bark-400">Stay in the loop</p>
-        <h2 className="font-serif text-3xl text-forest-800 mt-3 mb-4">Neighborhood Newsletter</h2>
-        <div className="divider-gold" />
-        <p className="font-body text-forest-500 mt-6 mb-8">
-          Receive neighborhood updates, event reminders, and important announcements directly in your inbox.
-        </p>
-        <form className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto" onSubmit={handleSubscribe}>
-          <input
-            type="email"
-            placeholder="your@email.com"
-            className="input-field flex-1"
-            value={nlEmail}
-            onChange={(e) => setNlEmail(e.target.value)}
-            required
-          />
-          <button type="submit" disabled={nlLoading} className="btn-primary whitespace-nowrap flex items-center justify-center gap-2">
-            {nlLoading ? <><Loader2 size={16} className="animate-spin" /> Subscribing...</> : 'Subscribe'}
-          </button>
-        </form>
-        <div className="flex justify-center mt-3">
-          <Turnstile onVerify={setNlTurnstileToken} />
-        </div>
-        <p className="text-forest-400 text-xs mt-4 font-sans">No spam. Unsubscribe anytime.</p>
       </section>
     </div>
   );
