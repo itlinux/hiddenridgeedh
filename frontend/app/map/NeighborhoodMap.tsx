@@ -17,7 +17,7 @@ const defaultIcon = L.icon({
 L.Marker.prototype.options.icon = defaultIcon;
 
 // Hidden Ridge, El Dorado Hills center
-const CENTER: [number, number] = [38.683, -121.076];
+const CENTER: [number, number] = [38.67199, -121.02625];
 const DEFAULT_ZOOM = 16;
 
 interface MemberPin {
