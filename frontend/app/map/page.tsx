@@ -76,10 +76,15 @@ export default function MapPage() {
           </div>
         ) : (
           <>
-            <p className="text-forest-400 font-sans text-sm mb-3">
-              <MapPin size={14} className="inline mr-1" />
-              {members.length} neighbor{members.length !== 1 ? 's' : ''} on the map
-            </p>
+            <div className="flex items-center justify-between mb-3">
+              <p className="text-forest-400 font-sans text-sm">
+                <MapPin size={14} className="inline mr-1" />
+                {members.length} neighbor{members.length !== 1 ? 's' : ''} on the map
+              </p>
+              <p className="text-forest-400 font-sans text-xs">
+                Member locations are private — do not share or distribute.
+              </p>
+            </div>
             <div className="card overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '400px' }}>
               <NeighborhoodMap members={members} />
             </div>
