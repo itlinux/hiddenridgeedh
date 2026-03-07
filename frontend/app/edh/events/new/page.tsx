@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { eventsApi } from '@/lib/api';
 import { ArrowLeft, Save } from 'lucide-react';
 import Link from 'next/link';
+import RichTextEditor from '@/components/RichTextEditor';
 
 export default function NewEventPage() {
   const { isAdmin, isLoading } = useAuth();
@@ -28,6 +29,12 @@ export default function NewEventPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title.trim() || !form.start_date) return;
+    // Validate description has content (strip HTML tags)
+    const descText = form.description.replace(/<[^>]*>/g, '').trim();
+    if (descText.length < 10) {
+      alert('Description must be at least 10 characters');
+      return;
+    }
     setSaving(true);
     try {
       const payload: any = {
@@ -76,12 +83,10 @@ export default function NewEventPage() {
 
           <div>
             <label className="block font-sans text-sm text-forest-700 mb-1">Description</label>
-            <textarea
+            <RichTextEditor
               value={form.description}
-              onChange={e => setForm({ ...form, description: e.target.value })}
-              className="input-field w-full min-h-[150px] font-body"
-              placeholder="Event details..."
-              required
+              onChange={(val) => setForm({ ...form, description: val })}
+              placeholder="Event details, schedule, what to bring..."
             />
           </div>
 
