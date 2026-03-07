@@ -13,8 +13,8 @@ export default function PageHeader({ title, label, subtitle }: PageHeaderProps) 
         <Image
           src="/images/logo.png"
           alt="Hidden Ridge EDH"
-          width={80}
-          height={80}
+          width={110}
+          height={110}
           className="rounded-sm drop-shadow-lg flex-shrink-0"
         />
         <div>
