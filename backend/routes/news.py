@@ -3,7 +3,10 @@ import logging
 import re
 from datetime import datetime, timedelta
 from difflib import SequenceMatcher
+from email.utils import parsedate_to_datetime
+from functools import partial
 from fastapi import APIRouter, Request, Query
+import feedparser
 import httpx
 
 from database import get_db, get_settings
@@ -60,6 +63,12 @@ THENEWSAPI_QUERY = '"El Dorado Hills" | "Sacramento" | "Folsom" | "El Dorado Cou
 
 GNEWS_URL = "https://gnews.io/api/v4/search"
 GNEWS_QUERY = '"El Dorado Hills" OR "Sacramento" OR "Folsom" OR "El Dorado County"'
+
+GOOGLE_NEWS_RSS_URLS = [
+    "https://news.google.com/rss/search?q=El+Dorado+Hills+CA&hl=en-US&gl=US&ceid=US:en",
+    "https://news.google.com/rss/search?q=Folsom+CA+news&hl=en-US&gl=US&ceid=US:en",
+    "https://news.google.com/rss/search?q=El+Dorado+County+CA&hl=en-US&gl=US&ceid=US:en",
+]
 
 
 async def _track_api_call(db, provider: str, success: bool, article_count: int = 0):
@@ -152,6 +161,49 @@ async def _fetch_gnews(client: httpx.AsyncClient, api_key: str, db) -> list[dict
         return []
 
 
+def _parse_rss_sync(urls: list[str]) -> list[dict]:
+    """Parse multiple Google News RSS feeds (sync, runs in thread)."""
+    articles = []
+    for url in urls:
+        try:
+            feed = feedparser.parse(url)
+            for entry in feed.entries[:15]:
+                # Parse published date to ISO format
+                published_at = None
+                if hasattr(entry, "published"):
+                    try:
+                        dt = parsedate_to_datetime(entry.published)
+                        published_at = dt.isoformat()
+                    except Exception:
+                        published_at = entry.published
+                # Extract source from title (Google News format: "Title - Source")
+                title = entry.get("title", "")
+                source = None
+                if " - " in title:
+                    parts = title.rsplit(" - ", 1)
+                    title = parts[0]
+                    source = parts[1]
+                articles.append({
+                    "title": title,
+                    "description": entry.get("summary", ""),
+                    "snippet": None,
+                    "url": entry.get("link", ""),
+                    "image_url": None,  # Google News RSS doesn't include images
+                    "source": source,
+                    "published_at": published_at,
+                    "categories": [],
+                })
+        except Exception as e:
+            logger.warning(f"Google News RSS parse failed for {url}: {e}")
+    return articles
+
+
+async def _fetch_google_news_rss() -> list[dict]:
+    """Fetch articles from Google News RSS (free, no API key, no rate limit)."""
+    loop = asyncio.get_event_loop()
+    return await loop.run_in_executor(None, partial(_parse_rss_sync, GOOGLE_NEWS_RSS_URLS))
+
+
 # ── Router ────────────────────────────────────────────────────────────────────
 
 router = APIRouter(prefix="/api/news", tags=["news"])
@@ -168,10 +220,6 @@ async def list_news(
     """Get cached local area news articles from multiple sources."""
     settings = get_settings()
 
-    # If no API keys configured, return empty (graceful degradation)
-    if not settings.news_api_key and not settings.gnews_api_key:
-        return {"articles": []}
-
     db = get_db()
 
     # Check cache (skip if refresh=true)
@@ -183,8 +231,11 @@ async def list_news(
             return {"articles": articles[:limit]}
 
     # Cache is stale or missing — fetch from all configured sources concurrently
+    tasks = []
+    # Google News RSS is always available (free, no key needed)
+    tasks.append(_fetch_google_news_rss())
+
     async with httpx.AsyncClient(timeout=10.0) as client:
-        tasks = []
         if settings.news_api_key:
             tasks.append(_fetch_thenewsapi(client, settings.news_api_key, db))
         if settings.gnews_api_key:
