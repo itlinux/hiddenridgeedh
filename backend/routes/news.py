@@ -62,7 +62,29 @@ GNEWS_URL = "https://gnews.io/api/v4/search"
 GNEWS_QUERY = '"El Dorado Hills" OR "Sacramento" OR "Folsom" OR "El Dorado County"'
 
 
-async def _fetch_thenewsapi(client: httpx.AsyncClient, api_key: str) -> list[dict]:
+async def _track_api_call(db, provider: str, success: bool, article_count: int = 0):
+    """Track an API call in the news_api_usage collection."""
+    today = datetime.utcnow().strftime("%Y-%m-%d")
+    await db.news_api_usage.update_one(
+        {"_id": f"{provider}:{today}"},
+        {
+            "$inc": {
+                "calls": 1,
+                "success_count": 1 if success else 0,
+                "fail_count": 0 if success else 1,
+                "total_articles": article_count,
+            },
+            "$set": {
+                "provider": provider,
+                "date": today,
+                "last_call": datetime.utcnow(),
+            },
+        },
+        upsert=True,
+    )
+
+
+async def _fetch_thenewsapi(client: httpx.AsyncClient, api_key: str, db) -> list[dict]:
     """Fetch articles from TheNewsAPI."""
     try:
         resp = await client.get(THENEWSAPI_URL, params={
@@ -75,7 +97,7 @@ async def _fetch_thenewsapi(client: httpx.AsyncClient, api_key: str) -> list[dic
         })
         resp.raise_for_status()
         data = resp.json()
-        return [
+        articles = [
             {
                 "title": art.get("title"),
                 "description": art.get("description"),
@@ -88,12 +110,15 @@ async def _fetch_thenewsapi(client: httpx.AsyncClient, api_key: str) -> list[dic
             }
             for art in data.get("data", [])
         ]
+        await _track_api_call(db, "thenewsapi", True, len(articles))
+        return articles
     except Exception as e:
         logger.warning(f"TheNewsAPI fetch failed: {e}")
+        await _track_api_call(db, "thenewsapi", False)
         return []
 
 
-async def _fetch_gnews(client: httpx.AsyncClient, api_key: str) -> list[dict]:
+async def _fetch_gnews(client: httpx.AsyncClient, api_key: str, db) -> list[dict]:
     """Fetch articles from GNews."""
     try:
         resp = await client.get(GNEWS_URL, params={
@@ -106,7 +131,7 @@ async def _fetch_gnews(client: httpx.AsyncClient, api_key: str) -> list[dict]:
         })
         resp.raise_for_status()
         data = resp.json()
-        return [
+        articles = [
             {
                 "title": art.get("title"),
                 "description": art.get("description"),
@@ -119,8 +144,11 @@ async def _fetch_gnews(client: httpx.AsyncClient, api_key: str) -> list[dict]:
             }
             for art in data.get("articles", [])
         ]
+        await _track_api_call(db, "gnews", True, len(articles))
+        return articles
     except Exception as e:
         logger.warning(f"GNews fetch failed: {e}")
+        await _track_api_call(db, "gnews", False)
         return []
 
 
@@ -158,9 +186,9 @@ async def list_news(
     async with httpx.AsyncClient(timeout=10.0) as client:
         tasks = []
         if settings.news_api_key:
-            tasks.append(_fetch_thenewsapi(client, settings.news_api_key))
+            tasks.append(_fetch_thenewsapi(client, settings.news_api_key, db))
         if settings.gnews_api_key:
-            tasks.append(_fetch_gnews(client, settings.gnews_api_key))
+            tasks.append(_fetch_gnews(client, settings.gnews_api_key, db))
 
         results = await asyncio.gather(*tasks)
 
@@ -195,3 +223,40 @@ async def list_news(
     )
 
     return {"articles": articles[:limit]}
+
+
+@router.get("/usage")
+@limiter.limit("10/minute")
+async def news_api_usage(request: Request, days: int = Query(7, ge=1, le=30)):
+    """Get news API usage stats for the last N days."""
+    db = get_db()
+    cutoff = (datetime.utcnow() - timedelta(days=days)).strftime("%Y-%m-%d")
+    cursor = db.news_api_usage.find({"date": {"$gte": cutoff}}).sort("date", -1)
+    records = await cursor.to_list(length=100)
+
+    # Summarize by provider
+    summary = {}
+    for rec in records:
+        provider = rec.get("provider", "unknown")
+        if provider not in summary:
+            summary[provider] = {"total_calls": 0, "successes": 0, "failures": 0,
+                                 "daily_limit": 100, "articles_fetched": 0}
+        summary[provider]["total_calls"] += rec.get("calls", 0)
+        summary[provider]["successes"] += rec.get("success_count", 0)
+        summary[provider]["failures"] += rec.get("fail_count", 0)
+        summary[provider]["articles_fetched"] += rec.get("total_articles", 0)
+
+    # Daily breakdown
+    daily = []
+    for rec in records:
+        daily.append({
+            "provider": rec.get("provider"),
+            "date": rec.get("date"),
+            "calls": rec.get("calls", 0),
+            "successes": rec.get("success_count", 0),
+            "failures": rec.get("fail_count", 0),
+            "articles": rec.get("total_articles", 0),
+            "last_call": rec.get("last_call", "").isoformat() if rec.get("last_call") else None,
+        })
+
+    return {"days": days, "summary": summary, "daily": daily}
