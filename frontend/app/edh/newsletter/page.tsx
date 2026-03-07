@@ -86,7 +86,7 @@ export default function NewsletterPage() {
 
         {/* Subscriber list */}
         {!loadingSubs && subscribers.length > 0 && (
-          <div className="card overflow-hidden">
+          <div id="subscribers" className="card overflow-hidden">
             <div className="px-5 py-4 border-b border-cream-200">
               <h3 className="font-serif text-lg text-forest-800">All Subscribers</h3>
             </div>

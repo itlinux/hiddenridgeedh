@@ -3,11 +3,29 @@ from datetime import datetime
 from bson import ObjectId
 
 from database import get_db
-from models.schemas import ThreadCreate, ReplyCreate
+from models.schemas import ThreadCreate, ReplyCreate, ForumCategoryCreate
 from middleware.auth import require_member, require_content_admin
 from utils.limiter import limiter
+from utils.profanity import clean_text
 
 router = APIRouter(prefix="/api/forum", tags=["forum"])
+
+
+def serialize_category(cat: dict) -> dict:
+    cat["id"] = str(cat["_id"])
+    del cat["_id"]
+    return cat
+
+
+# Default categories seeded if collection is empty
+DEFAULT_CATEGORIES = [
+    {"value": "general", "label": "General", "color": "bg-forest-600 text-cream-100"},
+    {"value": "recommendations", "label": "Recommendations", "color": "bg-gold-500 text-forest-800"},
+    {"value": "lost-found", "label": "Lost & Found", "color": "bg-red-500 text-white"},
+    {"value": "hoa", "label": "HOA", "color": "bg-bark-500 text-cream-100"},
+    {"value": "events", "label": "Events", "color": "bg-forest-500 text-cream-100"},
+    {"value": "safety", "label": "Safety", "color": "bg-red-600 text-white"},
+]
 
 
 def serialize_thread(thread: dict) -> dict:
@@ -81,8 +99,11 @@ async def create_thread(
 ):
     db = get_db()
     now = datetime.utcnow()
+    cleaned = data.model_dump()
+    cleaned["title"] = clean_text(cleaned["title"])
+    cleaned["content"] = clean_text(cleaned["content"])
     thread_doc = {
-        **data.model_dump(),
+        **cleaned,
         "author_id": str(current_user["_id"]),
         "author_name": current_user.get("full_name", current_user.get("username")),
         "pinned": False,
@@ -114,7 +135,7 @@ async def create_reply(
     now = datetime.utcnow()
     reply_doc = {
         "thread_id": thread_id,
-        "content": data.content,
+        "content": clean_text(data.content),
         "author_id": str(current_user["_id"]),
         "author_name": current_user.get("full_name", current_user.get("username")),
         "created_at": now,
@@ -162,3 +183,46 @@ async def toggle_lock(
         {"_id": ObjectId(thread_id)}, {"$set": {"locked": new_value}}
     )
     return {"locked": new_value}
+
+
+# --- Categories ---
+
+@router.get("/categories")
+async def list_categories(current_user: dict = Depends(require_member)):
+    """List forum categories. Seeds defaults if none exist."""
+    db = get_db()
+    count = await db.forum_categories.count_documents({})
+    if count == 0:
+        await db.forum_categories.insert_many(
+            [{**c, "created_at": datetime.utcnow()} for c in DEFAULT_CATEGORIES]
+        )
+    cursor = db.forum_categories.find().sort("label", 1)
+    categories = [serialize_category(c) async for c in cursor]
+    return {"categories": categories}
+
+
+@router.post("/categories", status_code=201)
+async def create_category(
+    data: ForumCategoryCreate,
+    current_user: dict = Depends(require_content_admin),
+):
+    db = get_db()
+    existing = await db.forum_categories.find_one({"value": data.value})
+    if existing:
+        raise HTTPException(400, "Category already exists")
+    doc = {**data.model_dump(), "created_at": datetime.utcnow()}
+    result = await db.forum_categories.insert_one(doc)
+    doc["id"] = str(result.inserted_id)
+    return serialize_category(doc)
+
+
+@router.delete("/categories/{category_id}")
+async def delete_category(
+    category_id: str,
+    current_user: dict = Depends(require_content_admin),
+):
+    db = get_db()
+    result = await db.forum_categories.delete_one({"_id": ObjectId(category_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Category not found")
+    return {"deleted": True}

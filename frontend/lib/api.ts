@@ -73,6 +73,9 @@ export const forumApi = {
   listReplies: (threadId: string, params?: any) => api.get(`/api/forum/threads/${threadId}/replies`, { params }),
   createReply: (threadId: string, data: any) => api.post(`/api/forum/threads/${threadId}/replies`, data),
   deleteReply: (id: string) => api.delete(`/api/forum/replies/${id}`),
+  listCategories: () => api.get('/api/forum/categories'),
+  createCategory: (data: any) => api.post('/api/forum/categories', data),
+  deleteCategory: (id: string) => api.delete(`/api/forum/categories/${id}`),
 };
 
 // ─── Gallery ──────────────────────────────────────────────────────────────────
