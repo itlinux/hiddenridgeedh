@@ -7,6 +7,7 @@ from middleware.auth import hash_password, verify_password, create_access_token,
 from utils.email import send_pending_notification, send_admin_new_user_alert
 from utils.turnstile import verify_turnstile
 from utils.rate_limit import is_ip_blocked, record_failed_login, record_successful_login, get_all_blocked_ips, unblock_ip
+from utils.limiter import limiter
 import pyotp
 import qrcode
 import io
@@ -28,7 +29,8 @@ def serialize_user(user: dict) -> dict:
 
 
 @router.post("/register", status_code=201)
-async def register(data: UserCreate):
+@limiter.limit("5/hour")
+async def register(request: Request, data: UserCreate):
     if data.turnstile_token:
         await verify_turnstile(data.turnstile_token)
 

@@ -1,10 +1,11 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from datetime import datetime
 from bson import ObjectId
 
 from database import get_db
 from models.schemas import ThreadCreate, ReplyCreate
 from middleware.auth import require_member, require_content_admin
+from utils.limiter import limiter
 
 router = APIRouter(prefix="/api/forum", tags=["forum"])
 
@@ -72,7 +73,9 @@ async def get_thread(
 
 
 @router.post("/threads", status_code=201)
+@limiter.limit("10/hour")
 async def create_thread(
+    request: Request,
     data: ThreadCreate,
     current_user: dict = Depends(require_member),
 ):
@@ -94,7 +97,9 @@ async def create_thread(
 
 
 @router.post("/threads/{thread_id}/replies", status_code=201)
+@limiter.limit("30/hour")
 async def create_reply(
+    request: Request,
     thread_id: str,
     data: ReplyCreate,
     current_user: dict = Depends(require_member),

@@ -1,11 +1,15 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import JSONResponse
 from contextlib import asynccontextmanager
+from slowapi import _rate_limit_exceeded_handler
+from slowapi.errors import RateLimitExceeded
 import os
 
 from database import connect_db, disconnect_db, get_settings
 from routes import auth, posts, events, forum, gallery, newsletter, members
+from utils.limiter import limiter
 
 
 @asynccontextmanager
@@ -25,13 +29,17 @@ app = FastAPI(
     lifespan=lifespan,
 )
 
+# Attach limiter to app state
+app.state.limiter = limiter
+app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
+
 settings = get_settings()
 
 # Ensure upload directories exist before StaticFiles mount
 os.makedirs(settings.upload_dir, exist_ok=True)
 os.makedirs(f"{settings.upload_dir}/thumbnails", exist_ok=True)
 
-# CORS
+# CORS — explicit methods & headers
 origins = [
     "http://localhost:3000",
     "https://hiddenridgeedh.com",
@@ -44,8 +52,8 @@ app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
     allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
+    allow_methods=["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
 )
 
 # Static files (uploaded images)
@@ -78,7 +86,7 @@ async def bootstrap_admin(secret: str):
     if settings.environment != "development" and secret != os.environ.get("BOOTSTRAP_SECRET"):
         from fastapi import HTTPException
         raise HTTPException(403, "Forbidden")
-    
+
     from database import get_db
     from middleware.auth import hash_password
     from datetime import datetime

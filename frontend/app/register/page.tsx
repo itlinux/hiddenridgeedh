@@ -33,6 +33,10 @@ export default function RegisterPage() {
       toast.error('Password must be at least 8 characters.');
       return;
     }
+    if (!/[A-Z]/.test(form.password) || !/[a-z]/.test(form.password) || !/\d/.test(form.password)) {
+      toast.error('Password must include uppercase, lowercase, and a number.');
+      return;
+    }
     setLoading(true);
     try {
       await authApi.register({
@@ -153,7 +157,7 @@ export default function RegisterPage() {
                   value={form.password}
                   onChange={update('password')}
                   className="input-field pr-10"
-                  placeholder="Min. 8 characters"
+                  placeholder="Min. 8 chars, upper + lower + number"
                   minLength={8}
                   required
                 />

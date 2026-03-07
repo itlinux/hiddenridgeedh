@@ -1,12 +1,13 @@
 import os
 import uuid
-from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File, Form
+from fastapi import APIRouter, HTTPException, Depends, Query, Request, UploadFile, File, Form
 from datetime import datetime
 from bson import ObjectId
 from PIL import Image
 
 from database import get_db, get_settings
 from middleware.auth import require_member, require_content_admin, get_current_user
+from utils.limiter import limiter
 
 router = APIRouter(prefix="/api/gallery", tags=["gallery"])
 
@@ -38,7 +39,9 @@ async def list_gallery(
 
 
 @router.post("/upload", status_code=201)
+@limiter.limit("20/hour")
 async def upload_photo(
+    request: Request,
     file: UploadFile = File(...),
     title: str = Form(...),
     description: str = Form(""),

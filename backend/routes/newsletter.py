@@ -1,5 +1,5 @@
 import secrets
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, Request
 from fastapi.responses import RedirectResponse
 from datetime import datetime
 
@@ -8,12 +8,14 @@ from models.schemas import NewsletterSubscribe, NewsletterSend
 from middleware.auth import require_super_admin
 from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_unsubscribe_confirmation
 from utils.turnstile import verify_turnstile
+from utils.limiter import limiter
 
 router = APIRouter(prefix="/api/newsletter", tags=["newsletter"])
 
 
 @router.post("/subscribe", status_code=201)
-async def subscribe(data: NewsletterSubscribe):
+@limiter.limit("5/hour")
+async def subscribe(request: Request, data: NewsletterSubscribe):
     if data.turnstile_token:
         await verify_turnstile(data.turnstile_token)
 
