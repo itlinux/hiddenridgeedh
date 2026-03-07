@@ -145,22 +145,21 @@ export default function HomePage() {
 
       {/* Area News */}
       {newsArticles.length > 0 && (
-        <section className="py-16 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="text-center mb-12">
-            <p className="section-label text-bark-400">What&apos;s happening nearby</p>
-            <h2 className="font-serif text-4xl text-forest-800 mt-3">Area News</h2>
-            <div className="divider-gold" />
-          </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
-            {newsArticles.map((article: any, idx: number) => (
-              <NewsCard key={article.url || idx} article={article} />
-            ))}
+        <section className="py-16 bg-forest-800">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="text-center mb-12">
+              <p className="section-label text-gold-400">What&apos;s happening nearby</p>
+              <h2 className="font-serif text-4xl text-cream-100 mt-3">Area News</h2>
+              <div className="divider-gold" />
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-5">
+              {newsArticles.map((article: any, idx: number) => (
+                <NewsCard key={article.url || idx} article={article} />
+              ))}
+            </div>
           </div>
         </section>
       )}
-
-      {/* Divider */}
-      <div className="bg-forest-700 h-px mx-auto max-w-7xl" />
 
       {/* Newsletter + Join CTA */}
       <section className="py-24">
