@@ -1,4 +1,5 @@
 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,600&family=Lora:ital,wght@0,400;0,500;0,600;1,400&family=DM+Sans:wght@300;400;500;600&display=swap');
+@import 'react-quill/dist/quill.snow.css';
 
 @tailwind base;
 @tailwind components;
@@ -64,6 +65,9 @@
 .prose-ridge h2 {
   @apply font-serif text-2xl text-forest-800 mt-8 mb-4;
 }
+.prose-ridge h3 {
+  @apply font-serif text-xl text-forest-800 mt-6 mb-3;
+}
 .prose-ridge p {
   @apply mb-5 leading-relaxed;
 }
@@ -72,6 +76,64 @@
 }
 .prose-ridge blockquote {
   @apply border-l-4 border-gold-400 pl-6 italic text-bark-400 my-6;
+}
+.prose-ridge strong {
+  @apply font-semibold text-forest-800;
+}
+.prose-ridge em {
+  @apply italic;
+}
+.prose-ridge s {
+  @apply line-through;
+}
+.prose-ridge ul {
+  @apply list-disc pl-6 mb-5 space-y-1;
+}
+.prose-ridge ol {
+  @apply list-decimal pl-6 mb-5 space-y-1;
+}
+.prose-ridge li {
+  @apply leading-relaxed;
+}
+.prose-ridge img {
+  @apply max-w-full rounded-sm my-4 shadow-sm;
+}
+.prose-ridge pre {
+  @apply bg-forest-800 text-cream-100 p-4 rounded-sm overflow-x-auto my-4 text-sm;
+}
+.prose-ridge code {
+  @apply bg-cream-200 text-forest-700 px-1.5 py-0.5 rounded text-sm;
+}
+
+/* Rich text editor styling */
+.rich-text-editor .ql-toolbar {
+  @apply border-cream-300 bg-cream-50 rounded-t-sm;
+}
+.rich-text-editor .ql-container {
+  @apply border-cream-300 bg-white rounded-b-sm font-body text-forest-800;
+  min-height: 120px;
+}
+.rich-text-editor .ql-editor {
+  @apply font-body leading-relaxed;
+  min-height: 120px;
+}
+.rich-text-editor .ql-editor.ql-blank::before {
+  @apply text-forest-300 italic;
+}
+.rich-text-editor .ql-editor img {
+  @apply max-w-full rounded-sm my-2;
+}
+.rich-text-editor .ql-toolbar button:hover,
+.rich-text-editor .ql-toolbar button.ql-active {
+  color: #C9A84C !important;
+}
+.rich-text-editor .ql-toolbar button:hover .ql-stroke,
+.rich-text-editor .ql-toolbar button.ql-active .ql-stroke {
+  stroke: #C9A84C !important;
+}
+.rich-text-editor .ql-toolbar button:hover .ql-fill,
+.rich-text-editor .ql-toolbar button.ql-active .ql-fill {
+  fill: #C9A84C !important;
 }
 
 /* Animations */

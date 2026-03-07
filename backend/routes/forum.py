@@ -4,7 +4,7 @@ from bson import ObjectId
 
 from database import get_db
 from models.schemas import ThreadCreate, ReplyCreate, ForumCategoryCreate
-from middleware.auth import require_member, require_content_admin
+from middleware.auth import require_member, require_content_admin, require_super_admin
 from utils.limiter import limiter
 from utils.profanity import clean_text
 
@@ -183,6 +183,39 @@ async def toggle_lock(
         {"_id": ObjectId(thread_id)}, {"$set": {"locked": new_value}}
     )
     return {"locked": new_value}
+
+
+@router.delete("/threads/{thread_id}")
+async def delete_thread(
+    thread_id: str,
+    current_user: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    thread = await db.forum_threads.find_one({"_id": ObjectId(thread_id)})
+    if not thread:
+        raise HTTPException(404, "Thread not found")
+
+    await db.forum_replies.delete_many({"thread_id": thread_id})
+    await db.forum_threads.delete_one({"_id": ObjectId(thread_id)})
+    return {"deleted": True}
+
+
+@router.delete("/replies/{reply_id}")
+async def delete_reply(
+    reply_id: str,
+    current_user: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    reply = await db.forum_replies.find_one({"_id": ObjectId(reply_id)})
+    if not reply:
+        raise HTTPException(404, "Reply not found")
+
+    await db.forum_replies.delete_one({"_id": ObjectId(reply_id)})
+    await db.forum_threads.update_one(
+        {"_id": ObjectId(reply["thread_id"])},
+        {"$inc": {"reply_count": -1}},
+    )
+    return {"deleted": True}
 
 
 # --- Categories ---

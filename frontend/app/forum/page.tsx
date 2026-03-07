@@ -9,6 +9,9 @@ import { MessageSquare, Pin, Lock, Loader2, Plus, X, Send } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import PageHeader from '@/components/layout/PageHeader';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { ssr: false });
 
 interface ForumCategory {
   id: string;
@@ -73,7 +76,8 @@ export default function ForumPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newTitle.trim() || !newContent.trim()) return;
+    const plainText = newContent.replace(/<[^>]*>/g, '').trim();
+    if (!newTitle.trim() || !plainText) return;
     setSubmitting(true);
     try {
       await forumApi.createThread({
@@ -180,14 +184,10 @@ export default function ForumPage() {
             </div>
             <div>
               <label className="section-label block mb-1 text-xs">Content</label>
-              <textarea
+              <RichTextEditor
                 value={newContent}
-                onChange={(e) => setNewContent(e.target.value)}
-                className="input-field text-sm"
-                rows={4}
+                onChange={setNewContent}
                 placeholder="Share your thoughts with the neighborhood..."
-                maxLength={20000}
-                required
               />
             </div>
             <button type="submit" disabled={submitting} className="btn-primary text-sm flex items-center gap-2">
@@ -223,7 +223,9 @@ export default function ForumPage() {
                     </h3>
                   </div>
                   {thread.content && (
-                    <p className="font-body text-forest-500 text-sm mt-1 line-clamp-2">{thread.content}</p>
+                    <p className="font-body text-forest-500 text-sm mt-1 line-clamp-2">
+                      {thread.content.replace(/<[^>]*>/g, '').slice(0, 200)}
+                    </p>
                   )}
                   <div className="flex items-center gap-3 mt-2 flex-wrap">
                     {thread.category && (

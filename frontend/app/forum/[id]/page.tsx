@@ -5,9 +5,12 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { forumApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ArrowLeft, Loader2, Lock, Send } from 'lucide-react';
+import { ArrowLeft, Loader2, Lock, Send, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import dynamic from 'next/dynamic';
+
+const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { ssr: false });
 
 interface Reply {
   id: string;
@@ -28,7 +31,7 @@ interface Thread {
 
 export default function ThreadDetailPage() {
   const { id } = useParams<{ id: string }>();
-  const { user } = useAuth();
+  const { user, isSuperAdmin } = useAuth();
   const router = useRouter();
   const [thread, setThread] = useState<Thread | null>(null);
   const [replies, setReplies] = useState<Reply[]>([]);
@@ -43,12 +46,9 @@ export default function ThreadDetailPage() {
 
   const loadThread = async () => {
     try {
-      const [threadRes, repliesRes] = await Promise.all([
-        forumApi.getThread(id),
-        forumApi.listReplies(id),
-      ]);
-      setThread(threadRes.data);
-      setReplies(repliesRes.data.replies || []);
+      const res = await forumApi.getThread(id);
+      setThread(res.data);
+      setReplies(res.data.replies || []);
     } catch {
       setThread(null);
     } finally {
@@ -58,18 +58,41 @@ export default function ThreadDetailPage() {
 
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!replyText.trim()) return;
+    const plainText = replyText.replace(/<[^>]*>/g, '').trim();
+    if (!plainText) return;
     setSubmitting(true);
     try {
       await forumApi.createReply(id, { content: replyText });
       setReplyText('');
-      const res = await forumApi.listReplies(id);
+      const res = await forumApi.getThread(id);
       setReplies(res.data.replies || []);
       toast.success('Reply posted');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Failed to post reply');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleDeleteThread = async () => {
+    if (!confirm('Delete this entire thread and all its replies?')) return;
+    try {
+      await forumApi.deleteThread(id);
+      toast.success('Thread deleted');
+      router.push('/forum');
+    } catch {
+      toast.error('Failed to delete thread');
+    }
+  };
+
+  const handleDeleteReply = async (replyId: string) => {
+    if (!confirm('Delete this reply?')) return;
+    try {
+      await forumApi.deleteReply(replyId);
+      setReplies(prev => prev.filter(r => r.id !== replyId));
+      toast.success('Reply deleted');
+    } catch {
+      toast.error('Failed to delete reply');
     }
   };
 
@@ -93,11 +116,22 @@ export default function ThreadDetailPage() {
 
         {/* Thread */}
         <div className="card p-6 mb-6">
-          <h1 className="font-serif text-3xl text-forest-800 mb-2">{thread.title}</h1>
+          <div className="flex items-start justify-between gap-4">
+            <h1 className="font-serif text-3xl text-forest-800 mb-2">{thread.title}</h1>
+            {isSuperAdmin && (
+              <button
+                onClick={handleDeleteThread}
+                className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0 mt-1"
+                title="Delete thread"
+              >
+                <Trash2 size={18} />
+              </button>
+            )}
+          </div>
           <div className="text-forest-400 text-sm font-sans mb-4">
             {thread.author_name} · {format(new Date(thread.created_at), 'MMM d, yyyy h:mm a')}
           </div>
-          <div className="font-body text-forest-700 leading-relaxed whitespace-pre-wrap">{thread.content}</div>
+          <div className="prose-ridge" dangerouslySetInnerHTML={{ __html: thread.content }} />
         </div>
 
         {/* Replies */}
@@ -105,10 +139,21 @@ export default function ThreadDetailPage() {
         <div className="space-y-4 mb-8">
           {replies.map((reply) => (
             <div key={reply.id} className="card p-5">
-              <div className="text-forest-400 text-xs font-sans mb-2">
-                {reply.author_name} · {format(new Date(reply.created_at), 'MMM d, yyyy h:mm a')}
+              <div className="flex items-center justify-between mb-2">
+                <div className="text-forest-400 text-xs font-sans">
+                  {reply.author_name} · {format(new Date(reply.created_at), 'MMM d, yyyy h:mm a')}
+                </div>
+                {isSuperAdmin && (
+                  <button
+                    onClick={() => handleDeleteReply(reply.id)}
+                    className="text-red-400 hover:text-red-600 transition-colors"
+                    title="Delete reply"
+                  >
+                    <Trash2 size={14} />
+                  </button>
+                )}
               </div>
-              <p className="font-body text-forest-700 text-sm whitespace-pre-wrap">{reply.content}</p>
+              <div className="prose-ridge text-sm" dangerouslySetInnerHTML={{ __html: reply.content }} />
             </div>
           ))}
         </div>
@@ -120,12 +165,11 @@ export default function ThreadDetailPage() {
           </div>
         ) : (
           <form onSubmit={handleReply} className="card p-5">
-            <textarea
+            <RichTextEditor
               value={replyText}
-              onChange={(e) => setReplyText(e.target.value)}
+              onChange={setReplyText}
               placeholder="Write a reply..."
-              className="input-field w-full h-24 resize-none"
-              required
+              compact
             />
             <div className="flex justify-end mt-3">
               <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-2 text-sm">
