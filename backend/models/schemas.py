@@ -160,5 +160,15 @@ class AlertCreate(BaseModel):
 
 # --- Members ---
 
+class ProfileUpdate(BaseModel):
+    full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    bio: Optional[str] = Field(None, max_length=500)
+    address: Optional[str] = Field(None, max_length=200)
+    phone: Optional[str] = Field(None, max_length=20)
+    sms_opt_in: Optional[bool] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+
 class RoleUpdate(BaseModel):
     role: UserRole

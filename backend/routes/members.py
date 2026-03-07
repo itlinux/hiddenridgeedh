@@ -3,8 +3,8 @@ from datetime import datetime
 from bson import ObjectId
 
 from database import get_db
-from models.schemas import RoleUpdate
-from middleware.auth import require_member, require_super_admin
+from models.schemas import RoleUpdate, ProfileUpdate
+from middleware.auth import require_member, require_super_admin, get_current_user
 from utils.email import send_approval_notification
 
 router = APIRouter(prefix="/api/members", tags=["members"])
@@ -59,6 +59,45 @@ async def list_pending(
     cursor = db.users.find(query).sort("created_at", -1)
     pending = [serialize_member(u, include_email=True) async for u in cursor]
     return {"pending": pending, "total": len(pending)}
+
+
+# ── Update own profile (any authenticated user) ─────────────────
+@router.put("/me")
+async def update_my_profile(
+    data: ProfileUpdate,
+    current_user: dict = Depends(get_current_user),
+):
+    db = get_db()
+    update_fields: dict = {}
+
+    if data.full_name is not None:
+        update_fields["full_name"] = data.full_name
+    if data.bio is not None:
+        update_fields["bio"] = data.bio
+    if data.address is not None:
+        update_fields["address"] = data.address
+    if data.phone is not None:
+        update_fields["phone"] = data.phone
+    if data.sms_opt_in is not None:
+        update_fields["sms_opt_in"] = data.sms_opt_in
+    if data.latitude is not None:
+        update_fields["latitude"] = data.latitude
+    if data.longitude is not None:
+        update_fields["longitude"] = data.longitude
+
+    if not update_fields:
+        raise HTTPException(400, "No fields to update")
+
+    update_fields["updated_at"] = datetime.utcnow()
+
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": update_fields},
+    )
+
+    # Return updated user
+    updated = await db.users.find_one({"_id": current_user["_id"]})
+    return serialize_member(updated, include_email=True)
 
 
 @router.get("/{user_id}")
