@@ -6,7 +6,7 @@ import { alertsApi } from '@/lib/api';
 import { toast } from 'sonner';
 import {
   ShieldAlert, Phone, AlertTriangle, Loader2, MessageSquare,
-  Trash2, Plus, X, Send, Smartphone, Lock,
+  Trash2, Plus, X, Send, Smartphone, Lock, Bug,
 } from 'lucide-react';
 
 interface Alert {
@@ -274,10 +274,6 @@ export default function SafetyPage() {
             </li>
             <li className="flex items-start gap-3">
               <AlertTriangle size={16} className="text-gold-500 mt-0.5 shrink-0" />
-              <span><strong>Rattlesnake encounters</strong> — back away slowly, do not attempt to handle or kill the snake. If bitten, call 911 immediately. For non-emergency snake removal, contact Animal Control at (916) 368-7387.</span>
-            </li>
-            <li className="flex items-start gap-3">
-              <AlertTriangle size={16} className="text-gold-500 mt-0.5 shrink-0" />
               <span><strong>Fire safety</strong> — maintain defensible space around your home. Clear dry brush and dead vegetation, especially during fire season.</span>
             </li>
             <li className="flex items-start gap-3">
@@ -285,6 +281,60 @@ export default function SafetyPage() {
               <span><strong>Know your neighbors</strong> — introduce yourself, exchange phone numbers, and watch out for each other. A connected neighborhood is a safer neighborhood.</span>
             </li>
           </ul>
+        </div>
+
+        {/* ── Rattlesnake Safety (public) ──────────────────────────── */}
+        <div className="bg-red-50 border-2 border-red-300 rounded-lg p-8 mb-8 shadow-sm">
+          <div className="flex items-center gap-3 mb-6">
+            <div className="bg-red-100 p-2 rounded-full">
+              <Bug className="text-red-600" size={24} />
+            </div>
+            <div>
+              <h2 className="font-serif text-2xl text-red-800">Rattlesnake Safety</h2>
+              <p className="font-sans text-xs text-red-500 uppercase tracking-wider font-semibold">Important for all residents</p>
+            </div>
+          </div>
+          <p className="font-body text-forest-600 text-sm leading-relaxed mb-4">
+            Rattlesnakes are common in the El Dorado Hills foothills, especially during warmer months (April–October).
+            Northern Pacific rattlesnakes are the primary species in our area.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="bg-white border border-red-200 rounded-sm p-4">
+              <p className="font-sans text-xs font-semibold text-red-700 mb-2 uppercase tracking-wide">If You See a Snake</p>
+              <ul className="font-body text-forest-600 text-sm space-y-1.5">
+                <li>• Back away slowly — give it space</li>
+                <li>• Do not attempt to handle or kill it</li>
+                <li>• Keep children and pets away</li>
+                <li>• Watch where you step on trails and in yards</li>
+              </ul>
+            </div>
+            <div className="bg-red-100 border border-red-300 rounded-sm p-4">
+              <p className="font-sans text-xs font-semibold text-red-800 mb-2 uppercase tracking-wide">If Someone Is Bitten</p>
+              <ul className="font-body text-red-900 text-sm space-y-1.5">
+                <li>• <strong>Call 911 immediately</strong></li>
+                <li>• Keep the person calm and still</li>
+                <li>• Remove jewelry near the bite</li>
+                <li>• Do NOT apply ice, tourniquet, or try to suck venom</li>
+              </ul>
+            </div>
+          </div>
+          <div className="bg-white border border-red-200 rounded-sm p-4">
+            <p className="font-sans text-xs font-semibold text-red-700 mb-2 uppercase tracking-wide">Who to Call</p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div>
+                <p className="text-forest-400 text-xs font-sans">Emergency (bite)</p>
+                <p className="text-red-700 font-sans font-bold text-lg">911</p>
+              </div>
+              <div>
+                <p className="text-forest-400 text-xs font-sans">Animal Control (removal)</p>
+                <p className="text-forest-800 font-sans font-semibold">(916) 368-7387</p>
+              </div>
+              <div>
+                <p className="text-forest-400 text-xs font-sans">CA Poison Control</p>
+                <p className="text-forest-800 font-sans font-semibold">1-800-222-1222</p>
+              </div>
+            </div>
+          </div>
         </div>
 
         {/* ── Useful Links (public) ───────────────────────────────── */}
