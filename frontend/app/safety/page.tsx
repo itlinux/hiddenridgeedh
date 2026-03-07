@@ -1,13 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { alertsApi } from '@/lib/api';
 import { toast } from 'sonner';
 import {
   ShieldAlert, Phone, AlertTriangle, Loader2, MessageSquare,
-  Trash2, Plus, X, Send, Smartphone,
+  Trash2, Plus, X, Send, Smartphone, Lock,
 } from 'lucide-react';
 
 interface Alert {
@@ -22,7 +21,6 @@ interface Alert {
 
 export default function SafetyPage() {
   const { user, isLoading } = useAuth();
-  const router = useRouter();
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [alertsLoading, setAlertsLoading] = useState(true);
   const [showNewAlert, setShowNewAlert] = useState(false);
@@ -31,11 +29,8 @@ export default function SafetyPage() {
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
-    if (!isLoading && !user) router.push('/login');
-  }, [isLoading, user]);
-
-  useEffect(() => {
     if (user) fetchAlerts();
+    else setAlertsLoading(false);
   }, [user]);
 
   const fetchAlerts = async () => {
@@ -94,9 +89,6 @@ export default function SafetyPage() {
     return d.toLocaleDateString();
   };
 
-  if (isLoading) return <div className="min-h-screen bg-cream-50 flex items-center justify-center"><Loader2 className="animate-spin text-forest-400" size={32} /></div>;
-  if (!user) return null;
-
   return (
     <div className="min-h-screen bg-cream-50">
       <div className="bg-forest-800 py-16">
@@ -108,117 +100,137 @@ export default function SafetyPage() {
 
       <div className="max-w-4xl mx-auto px-4 py-12">
 
-        {/* ── Live Neighborhood Alerts ─────────────────────────────── */}
-        <div className="card p-8 mb-8">
-          <div className="flex items-center justify-between mb-6">
-            <div className="flex items-center gap-3">
-              <MessageSquare className="text-gold-500" size={24} />
-              <h2 className="font-serif text-2xl text-forest-800">Neighborhood Alerts</h2>
-            </div>
-            <button
-              onClick={() => setShowNewAlert(!showNewAlert)}
-              className="btn-gold text-xs px-4 py-2 flex items-center gap-1"
-            >
-              {showNewAlert ? <><X size={14} /> Cancel</> : <><Plus size={14} /> Post Alert</>}
-            </button>
+        {/* ── Live Neighborhood Alerts (login required) ──────────── */}
+        {isLoading ? (
+          <div className="card p-8 mb-8 flex justify-center">
+            <Loader2 className="animate-spin text-forest-400" size={24} />
           </div>
-
-          {/* SMS info banner */}
-          <div className="bg-cream-100 border border-cream-200 rounded-sm p-4 mb-5">
-            <p className="font-sans text-xs text-forest-600 leading-relaxed">
-              <Smartphone size={13} className="inline text-gold-500 mr-1" />
-              <strong>SMS Alerts:</strong> Registered members with SMS enabled can text alerts directly
-              to the neighborhood number. The message will appear here automatically.
-              Enable SMS in your <a href="/profile" className="text-gold-500 hover:underline">profile settings</a>.
-            </p>
-          </div>
-
-          {/* New alert form */}
-          {showNewAlert && (
-            <form onSubmit={handleSubmitAlert} className="bg-cream-100 rounded-sm p-5 mb-5 space-y-3">
-              <div>
-                <label className="section-label block mb-1 text-xs">Category</label>
-                <select
-                  value={newCategory}
-                  onChange={(e) => setNewCategory(e.target.value)}
-                  className="input-field text-sm"
-                >
-                  <option value="general">General</option>
-                  <option value="safety">Safety</option>
-                  <option value="wildlife">Wildlife</option>
-                  <option value="traffic">Traffic</option>
-                  <option value="fire">Fire / Smoke</option>
-                  <option value="suspicious">Suspicious Activity</option>
-                  <option value="utility">Utility / Power</option>
-                  <option value="lost-found">Lost & Found</option>
-                </select>
+        ) : user ? (
+          <div className="card p-8 mb-8">
+            <div className="flex items-center justify-between mb-6">
+              <div className="flex items-center gap-3">
+                <MessageSquare className="text-gold-500" size={24} />
+                <h2 className="font-serif text-2xl text-forest-800">Neighborhood Alerts</h2>
               </div>
-              <div>
-                <label className="section-label block mb-1 text-xs">Message</label>
-                <textarea
-                  value={newMessage}
-                  onChange={(e) => setNewMessage(e.target.value)}
-                  className="input-field text-sm"
-                  rows={3}
-                  placeholder="Describe the alert for your neighbors..."
-                  maxLength={1000}
-                  required
-                />
-              </div>
-              <button type="submit" disabled={submitting} className="btn-primary text-sm flex items-center gap-2">
-                {submitting ? <><Loader2 size={14} className="animate-spin" /> Posting...</> : <><Send size={14} /> Post Alert</>}
+              <button
+                onClick={() => setShowNewAlert(!showNewAlert)}
+                className="btn-gold text-xs px-4 py-2 flex items-center gap-1"
+              >
+                {showNewAlert ? <><X size={14} /> Cancel</> : <><Plus size={14} /> Post Alert</>}
               </button>
-            </form>
-          )}
+            </div>
 
-          {/* Alert list */}
-          {alertsLoading ? (
-            <div className="flex justify-center py-8">
-              <Loader2 className="animate-spin text-forest-400" size={24} />
+            {/* SMS info banner */}
+            <div className="bg-cream-100 border border-cream-200 rounded-sm p-4 mb-5">
+              <p className="font-sans text-xs text-forest-600 leading-relaxed">
+                <Smartphone size={13} className="inline text-gold-500 mr-1" />
+                <strong>SMS Alerts:</strong> Registered members with SMS enabled can text alerts directly
+                to the neighborhood number. The message will appear here automatically.
+                Enable SMS in your <a href="/profile" className="text-gold-500 hover:underline">profile settings</a>.
+              </p>
             </div>
-          ) : alerts.length === 0 ? (
-            <div className="text-center py-8">
-              <p className="text-forest-400 font-sans text-sm">No alerts yet. Post one to notify your neighbors!</p>
-            </div>
-          ) : (
-            <div className="space-y-3">
-              {alerts.map((alert) => (
-                <div key={alert.id} className="bg-cream-50 rounded-sm p-4 flex items-start gap-3">
-                  <div className="mt-0.5">
-                    {alert.source === 'sms' ? (
-                      <Smartphone size={16} className="text-gold-500" />
-                    ) : (
-                      <AlertTriangle size={16} className="text-gold-500" />
+
+            {/* New alert form */}
+            {showNewAlert && (
+              <form onSubmit={handleSubmitAlert} className="bg-cream-100 rounded-sm p-5 mb-5 space-y-3">
+                <div>
+                  <label className="section-label block mb-1 text-xs">Category</label>
+                  <select
+                    value={newCategory}
+                    onChange={(e) => setNewCategory(e.target.value)}
+                    className="input-field text-sm"
+                  >
+                    <option value="general">General</option>
+                    <option value="safety">Safety</option>
+                    <option value="wildlife">Wildlife</option>
+                    <option value="traffic">Traffic</option>
+                    <option value="fire">Fire / Smoke</option>
+                    <option value="suspicious">Suspicious Activity</option>
+                    <option value="utility">Utility / Power</option>
+                    <option value="lost-found">Lost & Found</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="section-label block mb-1 text-xs">Message</label>
+                  <textarea
+                    value={newMessage}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    className="input-field text-sm"
+                    rows={3}
+                    placeholder="Describe the alert for your neighbors..."
+                    maxLength={1000}
+                    required
+                  />
+                </div>
+                <button type="submit" disabled={submitting} className="btn-primary text-sm flex items-center gap-2">
+                  {submitting ? <><Loader2 size={14} className="animate-spin" /> Posting...</> : <><Send size={14} /> Post Alert</>}
+                </button>
+              </form>
+            )}
+
+            {/* Alert list */}
+            {alertsLoading ? (
+              <div className="flex justify-center py-8">
+                <Loader2 className="animate-spin text-forest-400" size={24} />
+              </div>
+            ) : alerts.length === 0 ? (
+              <div className="text-center py-8">
+                <p className="text-forest-400 font-sans text-sm">No alerts yet. Post one to notify your neighbors!</p>
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {alerts.map((alert) => (
+                  <div key={alert.id} className="bg-cream-50 rounded-sm p-4 flex items-start gap-3">
+                    <div className="mt-0.5">
+                      {alert.source === 'sms' ? (
+                        <Smartphone size={16} className="text-gold-500" />
+                      ) : (
+                        <AlertTriangle size={16} className="text-gold-500" />
+                      )}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-1 flex-wrap">
+                        <span className="font-sans text-xs font-semibold text-forest-800">{alert.author_name}</span>
+                        <span className="text-forest-300 text-xs">&middot;</span>
+                        <span className="text-forest-400 text-xs font-sans">{formatTime(alert.created_at)}</span>
+                        {alert.source === 'sms' && (
+                          <span className="bg-gold-100 text-gold-700 text-[10px] font-sans uppercase px-1.5 py-0.5 rounded-sm">SMS</span>
+                        )}
+                        <span className="bg-forest-100 text-forest-600 text-[10px] font-sans uppercase px-1.5 py-0.5 rounded-sm">{alert.category}</span>
+                      </div>
+                      <p className="font-body text-forest-700 text-sm leading-relaxed">{alert.message}</p>
+                    </div>
+                    {canDelete(alert) && (
+                      <button
+                        onClick={() => handleDeleteAlert(alert.id)}
+                        className="text-forest-300 hover:text-red-500 transition-colors shrink-0 mt-1"
+                        title="Delete alert"
+                      >
+                        <Trash2 size={14} />
+                      </button>
                     )}
                   </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-center gap-2 mb-1 flex-wrap">
-                      <span className="font-sans text-xs font-semibold text-forest-800">{alert.author_name}</span>
-                      <span className="text-forest-300 text-xs">&middot;</span>
-                      <span className="text-forest-400 text-xs font-sans">{formatTime(alert.created_at)}</span>
-                      {alert.source === 'sms' && (
-                        <span className="bg-gold-100 text-gold-700 text-[10px] font-sans uppercase px-1.5 py-0.5 rounded-sm">SMS</span>
-                      )}
-                      <span className="bg-forest-100 text-forest-600 text-[10px] font-sans uppercase px-1.5 py-0.5 rounded-sm">{alert.category}</span>
-                    </div>
-                    <p className="font-body text-forest-700 text-sm leading-relaxed">{alert.message}</p>
-                  </div>
-                  {canDelete(alert) && (
-                    <button
-                      onClick={() => handleDeleteAlert(alert.id)}
-                      className="text-forest-300 hover:text-red-500 transition-colors shrink-0 mt-1"
-                      title="Delete alert"
-                    >
-                      <Trash2 size={14} />
-                    </button>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
+            )}
+          </div>
+        ) : (
+          <div className="card p-8 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Lock className="text-forest-400" size={24} />
+              <h2 className="font-serif text-2xl text-forest-800">Neighborhood Alerts</h2>
             </div>
-          )}
-        </div>
+            <p className="text-forest-500 font-sans text-sm mb-4">
+              Live neighborhood alerts are available to registered members.
+              Log in to view alerts, post new ones, or text them via SMS.
+            </p>
+            <a href="/login" className="btn-primary text-sm inline-flex items-center gap-2">
+              Log In to View Alerts
+            </a>
+          </div>
+        )}
 
-        {/* ── Emergency Contacts ───────────────────────────────────── */}
+        {/* ── Emergency Contacts (public) ─────────────────────────── */}
         <div className="card p-8 mb-8">
           <div className="flex items-center gap-3 mb-6">
             <Phone className="text-gold-500" size={24} />
@@ -241,7 +253,7 @@ export default function SafetyPage() {
           </div>
         </div>
 
-        {/* ── Safety Tips ──────────────────────────────────────────── */}
+        {/* ── Safety Tips (public) ────────────────────────────────── */}
         <div className="card p-8 mb-8">
           <div className="flex items-center gap-3 mb-6">
             <ShieldAlert className="text-gold-500" size={24} />
@@ -271,7 +283,7 @@ export default function SafetyPage() {
           </ul>
         </div>
 
-        {/* ── Useful Links ─────────────────────────────────────────── */}
+        {/* ── Useful Links (public) ───────────────────────────────── */}
         <div className="card p-8">
           <h2 className="font-serif text-2xl text-forest-800 mb-6">Useful Links</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
