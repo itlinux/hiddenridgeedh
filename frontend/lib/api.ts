@@ -101,4 +101,5 @@ export const membersApi = {
   approve: (id: string) => api.put(`/api/members/${id}/approve`),
   updateRole: (id: string, data: any) => api.put(`/api/members/${id}/role`, data),
   deactivate: (id: string) => api.put(`/api/members/${id}/deactivate`),
+  delete: (id: string) => api.delete(`/api/members/${id}`),
 };

@@ -142,3 +142,27 @@ async def deactivate_member(
     if result.matched_count == 0:
         raise HTTPException(404, "User not found")
     return {"message": "Member deactivated"}
+
+
+@router.delete("/{user_id}")
+async def delete_member(
+    user_id: str,
+    current_user: dict = Depends(require_super_admin),
+):
+    """Permanently delete a member account and all associated data."""
+    if str(current_user["_id"]) == user_id:
+        raise HTTPException(400, "Cannot delete your own account")
+
+    db = get_db()
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    # Delete the user
+    await db.users.delete_one({"_id": ObjectId(user_id)})
+
+    # Clean up related data
+    await db.forum_threads.delete_many({"author_id": user_id})
+    await db.forum_replies.delete_many({"author_id": user_id})
+
+    return {"message": f"Member {user.get('full_name', '')} permanently deleted"}

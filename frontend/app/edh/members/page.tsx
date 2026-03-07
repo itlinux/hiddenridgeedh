@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { membersApi } from '@/lib/api';
-import { ArrowLeft, Users, CheckCircle, Shield, UserX, Loader2, Clock } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, Shield, UserX, Trash2, Loader2, Clock, XCircle } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
@@ -99,6 +99,17 @@ export default function ManageMembersPage() {
     }
   };
 
+  const handleDelete = async (userId: string, name: string) => {
+    if (!confirm(`Permanently delete ${name}? This cannot be undone. All their data will be removed.`)) return;
+    try {
+      await membersApi.delete(userId);
+      setMembers(prev => prev.filter(m => m.id !== userId));
+      setPending(prev => prev.filter(p => p.id !== userId));
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to delete');
+    }
+  };
+
   if (isLoading || !isAdmin) return null;
 
   return (
@@ -158,7 +169,12 @@ export default function ManageMembersPage() {
                       {m.created_at && <div className="text-forest-400 text-xs">Registered {format(new Date(m.created_at), 'MMM d, yyyy')}</div>}
                     </div>
                   </div>
-                  <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
+                    <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Deny & Delete">
+                      <Trash2 size={14} className="text-red-500" />
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
@@ -198,6 +214,9 @@ export default function ManageMembersPage() {
                       </select>
                       <button onClick={() => handleDeactivate(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Deactivate">
                         <UserX size={14} className="text-red-500" />
+                      </button>
+                      <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Delete permanently">
+                        <Trash2 size={14} className="text-red-500" />
                       </button>
                     </div>
                   )}
