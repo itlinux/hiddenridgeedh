@@ -60,6 +60,7 @@ export const eventsApi = {
   create: (data: any) => api.post('/api/events', data),
   update: (id: string, data: any) => api.put(`/api/events/${id}`, data),
   rsvp: (id: string) => api.post(`/api/events/${id}/rsvp`),
+  cancelRsvp: (id: string) => api.delete(`/api/events/${id}/rsvp`),
   delete: (id: string) => api.delete(`/api/events/${id}`),
 };
 
