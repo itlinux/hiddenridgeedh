@@ -132,7 +132,11 @@ CACHE_TTL_HOURS = 6
 
 @router.get("")
 @limiter.limit("30/minute")
-async def list_news(request: Request, limit: int = Query(10, ge=1, le=50)):
+async def list_news(
+    request: Request,
+    limit: int = Query(10, ge=1, le=50),
+    refresh: bool = Query(False),
+):
     """Get cached local area news articles from multiple sources."""
     settings = get_settings()
 
@@ -142,9 +146,9 @@ async def list_news(request: Request, limit: int = Query(10, ge=1, le=50)):
 
     db = get_db()
 
-    # Check cache
+    # Check cache (skip if refresh=true)
     cache = await db.news_cache.find_one({"_id": "latest"})
-    if cache and cache.get("fetched_at"):
+    if not refresh and cache and cache.get("fetched_at"):
         age = datetime.utcnow() - cache["fetched_at"]
         if age < timedelta(hours=CACHE_TTL_HOURS):
             articles = cache.get("articles", [])
