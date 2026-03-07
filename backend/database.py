@@ -32,6 +32,7 @@ class Settings(BaseSettings):
     twilio_auth_token: str = ""
     twilio_phone_number: str = ""  # Your Twilio number (e.g. +19165551234)
     news_api_key: str = ""  # thenewsapi.com API key for local area news
+    gnews_api_key: str = ""  # gnews.io API key for additional news coverage
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
