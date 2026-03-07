@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { ArrowRight, Trees, Users, Calendar, MessageSquare, Camera, ShieldAlert, Wrench, Loader2 } from 'lucide-react';
+import { ArrowRight, Trees, Users, Calendar, MessageSquare, ShieldAlert, Wrench, Loader2 } from 'lucide-react';
 import { toast } from 'sonner';
 import { newsletterApi } from '@/lib/api';
 import Turnstile from '@/components/Turnstile';
@@ -74,25 +74,18 @@ export default function HomePage() {
               color: 'text-forest-600',
             },
             {
-              icon: Camera,
-              title: 'Photo Gallery',
-              desc: 'Share and browse photos of our beautiful neighborhood — homes, events, seasonal highlights, and more.',
-              href: '/gallery',
-              color: 'text-gold-500',
-            },
-            {
               icon: Calendar,
               title: 'Events Calendar',
               desc: 'Never miss a neighborhood event. RSVP to block parties, HOA meetings, holiday gatherings, and more.',
               href: '/events',
-              color: 'text-forest-600',
+              color: 'text-gold-500',
             },
             {
               icon: MessageSquare,
               title: 'Neighbor Forum',
               desc: 'Discuss local topics, share recommendations, coordinate for lost pets, or find a trusted contractor.',
               href: '/forum',
-              color: 'text-gold-500',
+              color: 'text-forest-600',
             },
             {
               icon: Users,
