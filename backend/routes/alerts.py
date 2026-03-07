@@ -13,6 +13,7 @@ import re
 import asyncio
 import hashlib
 import hmac
+import logging
 from urllib.parse import urlencode
 from fastapi import APIRouter, HTTPException, Depends, Query, Request, Form, Response
 from datetime import datetime
@@ -23,6 +24,8 @@ from models.schemas import AlertCreate
 from middleware.auth import require_member, require_super_admin, get_current_user
 from utils.limiter import limiter
 from utils.email import send_alert_emails_to_opted_in
+
+logger = logging.getLogger(__name__)
 
 router = APIRouter(prefix="/api/alerts", tags=["alerts"])
 
@@ -41,32 +44,46 @@ def _normalize_phone(phone: str) -> str:
     return f"+{digits}"
 
 
+def _get_public_url(request: Request) -> str:
+    """Reconstruct the public URL that Twilio used (not the internal proxy URL)."""
+    # Use X-Forwarded-Proto and Host headers set by nginx
+    proto = request.headers.get("X-Forwarded-Proto", "https")
+    host = request.headers.get("Host", "hiddenridgeedh.com")
+    path = request.url.path
+    return f"{proto}://{host}{path}"
+
+
 def _validate_twilio_signature(request: Request, params: dict) -> bool:
     """Validate that the request actually came from Twilio (X-Twilio-Signature)."""
+    import base64
+
     settings = get_settings()
     if not settings.twilio_auth_token:
         return False  # Can't validate without auth token
 
     signature = request.headers.get("X-Twilio-Signature", "")
     if not signature:
+        logger.warning("Twilio webhook missing X-Twilio-Signature header")
         return False
 
-    # Build the full URL Twilio used to reach us
-    url = str(request.url)
+    # Build the full URL Twilio used to reach us (public URL, not internal proxy URL)
+    url = _get_public_url(request)
     # Twilio builds the string as: URL + sorted POST params concatenated
     sorted_params = sorted(params.items())
     data_str = url + "".join(f"{k}{v}" for k, v in sorted_params)
 
     # HMAC-SHA1 with auth token
-    expected = hmac.new(
+    expected = hmac.HMAC(
         settings.twilio_auth_token.encode("utf-8"),
         data_str.encode("utf-8"),
         hashlib.sha1,
     ).digest()
 
-    import base64
     expected_b64 = base64.b64encode(expected).decode("utf-8")
-    return hmac.compare_digest(signature, expected_b64)
+    valid = hmac.compare_digest(signature, expected_b64)
+    if not valid:
+        logger.warning(f"Twilio signature mismatch. URL used: {url}")
+    return valid
 
 
 # ── List alerts (all logged-in members) ───────────────────────────
@@ -146,6 +163,7 @@ async def sms_inbound(
     Twilio sends POST with Form data: From (phone), Body (message), etc.
     We match the sender's phone to a registered user, then create an alert.
     """
+    logger.info(f"SMS inbound webhook hit — From: {From}, Body: {Body[:50] if Body else '(empty)'}")
     settings = get_settings()
 
     # Validate Twilio signature if auth token is configured
@@ -153,6 +171,7 @@ async def sms_inbound(
         form_data = await request.form()
         params = {k: v for k, v in form_data.items()}
         if not _validate_twilio_signature(request, params):
+            logger.warning(f"Twilio signature validation FAILED for From: {From}")
             raise HTTPException(403, "Invalid Twilio signature")
 
     # Normalize incoming phone number
@@ -190,6 +209,7 @@ async def sms_inbound(
             break
 
     if not user:
+        logger.warning(f"SMS from unregistered phone: {sender_phone}")
         # Unknown number — reply with rejection
         return Response(
             content='<?xml version="1.0" encoding="UTF-8"?><Response><Message>Your phone number is not registered with Hidden Ridge EDH or SMS is not enabled on your account. Please register at hiddenridgeedh.com and enable SMS notifications.</Message></Response>',
@@ -208,6 +228,7 @@ async def sms_inbound(
         "created_at": now,
     }
     await db.alerts.insert_one(alert_doc)
+    logger.info(f"SMS alert created from {sender_phone} by {alert_doc['author_name']}")
 
     # Fire-and-forget email notifications to opted-in members
     asyncio.create_task(send_alert_emails_to_opted_in(
