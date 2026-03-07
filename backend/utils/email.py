@@ -1,6 +1,6 @@
 import asyncio
-from sendgrid import SendGridAPIClient
-from sendgrid.helpers.mail import Mail
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 
 from database import get_settings
 
@@ -24,11 +24,11 @@ def _build_html(title: str, body: str) -> str:
     """
 
 
-async def _send_email(to_email: str, subject: str, html_content: str):
-    settings = get_settings()
-    if not settings.sendgrid_api_key:
-        return
+async def _send_via_sendgrid(to_email: str, subject: str, html_content: str):
+    from sendgrid import SendGridAPIClient
+    from sendgrid.helpers.mail import Mail
 
+    settings = get_settings()
     message = Mail(
         from_email=(settings.from_email, settings.from_name),
         to_emails=to_email,
@@ -43,13 +43,47 @@ async def _send_email(to_email: str, subject: str, html_content: str):
     await asyncio.to_thread(_send)
 
 
+async def _send_via_smtp(to_email: str, subject: str, html_content: str):
+    import aiosmtplib
+
+    settings = get_settings()
+    msg = MIMEMultipart("alternative")
+    msg["From"] = f"{settings.from_name} <{settings.from_email}>"
+    msg["To"] = to_email
+    msg["Subject"] = subject
+    msg.attach(MIMEText(html_content, "html"))
+
+    await aiosmtplib.send(
+        msg,
+        hostname=settings.smtp_host,
+        port=settings.smtp_port,
+        username=settings.smtp_user or None,
+        password=settings.smtp_password or None,
+        use_tls=settings.smtp_use_tls,
+    )
+
+
+async def _send_email(to_email: str, subject: str, html_content: str):
+    settings = get_settings()
+    provider = settings.email_provider.lower()
+
+    if provider == "smtp":
+        if not settings.smtp_host:
+            return
+        await _send_via_smtp(to_email, subject, html_content)
+    else:
+        if not settings.sendgrid_api_key:
+            return
+        await _send_via_sendgrid(to_email, subject, html_content)
+
+
 async def send_pending_notification(to_email: str, full_name: str):
     html = _build_html(
         "Registration Received",
         f"""
         <p>Hi {full_name},</p>
-        <p>Thank you for registering with the Hidden Ridge community portal.
-        Your account is currently <strong>pending approval</strong> by a community administrator.</p>
+        <p>Thank you for registering with Hidden Ridge EDH.
+        Your account is currently <strong>pending approval</strong> by a neighborhood administrator.</p>
         <p>You'll receive another email once your account has been approved.</p>
         <p>Welcome to the neighborhood!</p>
         """,
@@ -66,7 +100,7 @@ async def send_admin_new_user_alert(
     html = _build_html(
         "New Registration",
         f"""
-        <p>A new user has registered on the Hidden Ridge community portal:</p>
+        <p>A new user has registered on Hidden Ridge EDH:</p>
         <ul>
             <li><strong>Name:</strong> {user_name}</li>
             <li><strong>Email:</strong> {user_email}</li>
@@ -86,7 +120,7 @@ async def send_approval_notification(to_email: str, full_name: str):
         "Account Approved!",
         f"""
         <p>Hi {full_name},</p>
-        <p>Great news! Your Hidden Ridge community account has been <strong>approved</strong>.</p>
+        <p>Great news! Your Hidden Ridge EDH account has been <strong>approved</strong>.</p>
         <p>You can now log in and access the forum, photo gallery, events, and member directory.</p>
         <p><a href="{settings.app_url}/login" style="color: #C9A84C;">Sign In Now</a></p>
         """,
@@ -99,7 +133,11 @@ async def send_approval_notification(to_email: str, full_name: str):
 
 async def send_newsletter(subscribers: list[str], subject: str, html_content: str):
     settings = get_settings()
-    if not settings.sendgrid_api_key:
+    provider = settings.email_provider.lower()
+
+    if provider == "smtp" and not settings.smtp_host:
+        return 0
+    if provider != "smtp" and not settings.sendgrid_api_key:
         return 0
 
     sent = 0

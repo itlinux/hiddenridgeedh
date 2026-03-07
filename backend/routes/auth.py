@@ -5,6 +5,7 @@ from database import get_db, get_settings
 from models.schemas import UserCreate, UserInDB, Token, LoginRequest, UserRole
 from middleware.auth import hash_password, verify_password, create_access_token, get_current_user
 from utils.email import send_pending_notification, send_admin_new_user_alert
+from utils.turnstile import verify_turnstile
 
 router = APIRouter(prefix="/api/auth", tags=["auth"])
 
@@ -18,6 +19,9 @@ def serialize_user(user: dict) -> dict:
 
 @router.post("/register", status_code=201)
 async def register(data: UserCreate):
+    if data.turnstile_token:
+        await verify_turnstile(data.turnstile_token)
+
     db = get_db()
     settings = get_settings()
 
@@ -61,6 +65,9 @@ async def register(data: UserCreate):
 
 @router.post("/login", response_model=Token)
 async def login(data: LoginRequest):
+    if data.turnstile_token:
+        await verify_turnstile(data.turnstile_token)
+
     db = get_db()
     user = await db.users.find_one({"email": data.email})
 

@@ -17,6 +17,8 @@ export default function ProfilePage() {
     bio: '',
     address: '',
     phone: '',
+    latitude: '',
+    longitude: '',
   });
 
   useEffect(() => {
@@ -31,6 +33,8 @@ export default function ProfilePage() {
         bio: '',
         address: '',
         phone: '',
+        latitude: user.latitude?.toString() || '',
+        longitude: user.longitude?.toString() || '',
       });
     }
   }, [user, authLoading]);
@@ -39,7 +43,12 @@ export default function ProfilePage() {
     e.preventDefault();
     setLoading(true);
     try {
-      await membersApi.updateMe(form);
+      const payload = {
+        ...form,
+        latitude: form.latitude ? parseFloat(form.latitude) : null,
+        longitude: form.longitude ? parseFloat(form.longitude) : null,
+      };
+      await membersApi.updateMe(payload);
       toast.success('Profile updated');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Update failed');
@@ -120,6 +129,33 @@ export default function ProfilePage() {
                 className="input-field w-full"
               />
             </div>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <label className="section-label block mb-2">Latitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={form.latitude}
+                  onChange={(e) => setForm({ ...form, latitude: e.target.value })}
+                  className="input-field w-full"
+                  placeholder="38.683"
+                />
+              </div>
+              <div>
+                <label className="section-label block mb-2">Longitude</label>
+                <input
+                  type="number"
+                  step="any"
+                  value={form.longitude}
+                  onChange={(e) => setForm({ ...form, longitude: e.target.value })}
+                  className="input-field w-full"
+                  placeholder="-121.076"
+                />
+              </div>
+            </div>
+            <p className="text-forest-400 text-xs font-sans -mt-3">
+              Set your coordinates to appear on the neighborhood map. Find yours on Google Maps.
+            </p>
             <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
               {loading ? <Loader2 size={16} className="animate-spin" /> : <Save size={16} />}
               Save Changes

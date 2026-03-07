@@ -6,11 +6,13 @@ import { useRouter } from 'next/navigation';
 import { authApi } from '@/lib/api';
 import { toast } from 'sonner';
 import { Loader2, CheckCircle } from 'lucide-react';
+import Turnstile from '@/components/Turnstile';
 
 export default function RegisterPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
   const [submitted, setSubmitted] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
   const [form, setForm] = useState({
     email: '',
     username: '',
@@ -35,6 +37,10 @@ export default function RegisterPage() {
       toast.error('Password must be at least 8 characters');
       return;
     }
+    if (!turnstileToken) {
+      toast.error('Please complete the verification');
+      return;
+    }
     setLoading(true);
     try {
       await authApi.register({
@@ -44,6 +50,7 @@ export default function RegisterPage() {
         address: form.address,
         phone: form.phone,
         password: form.password,
+        turnstile_token: turnstileToken,
       });
       setSubmitted(true);
     } catch (err: any) {
@@ -62,7 +69,7 @@ export default function RegisterPage() {
           <h2 className="font-serif text-3xl text-forest-800 mb-4">Registration Submitted</h2>
           <div className="divider-gold" />
           <p className="font-body text-forest-500 mt-6 leading-relaxed">
-            Thank you for registering! Your account is pending approval by a community administrator. You'll receive an email at <strong>{form.email}</strong> once you're approved — typically within 24–48 hours.
+            Thank you for registering! Your account is pending approval by a neighborhood administrator. You'll receive an email at <strong>{form.email}</strong> once you're approved — typically within 24–48 hours.
           </p>
           <Link href="/" className="btn-primary inline-flex mt-8">Back to Home</Link>
         </div>
@@ -78,7 +85,7 @@ export default function RegisterPage() {
           <h1 className="font-serif text-4xl text-forest-800 mt-3">Join Hidden Ridge EDH</h1>
           <div className="divider-gold" />
           <p className="font-body text-forest-500 text-sm mt-4">
-            All registrations are reviewed and approved by community admins.
+            All registrations are reviewed and approved by neighborhood administrators.
           </p>
         </div>
 
@@ -174,7 +181,9 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2 mt-2">
+            <Turnstile onVerify={setTurnstileToken} />
+
+            <button type="submit" disabled={loading || !turnstileToken} className="btn-primary w-full flex items-center justify-center gap-2 mt-2">
               {loading ? <><Loader2 size={16} className="animate-spin" /> Submitting...</> : 'Request Membership'}
             </button>
           </form>

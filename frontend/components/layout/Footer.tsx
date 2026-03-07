@@ -21,7 +21,7 @@ export default function Footer() {
               </div>
             </div>
             <p className="text-forest-300 font-body text-sm leading-relaxed">
-              Connecting neighbors, celebrating community, and keeping everyone informed in Hidden Ridge, El Dorado Hills.
+              Connecting neighbors, sharing news, and celebrating life in Hidden Ridge, El Dorado Hills.
             </p>
             <div className="flex items-center gap-2 mt-4 text-forest-300 text-sm">
               <MapPin size={14} className="text-gold-400" />
@@ -31,7 +31,7 @@ export default function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Community</h4>
+            <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Neighborhood</h4>
             <ul className="space-y-3">
               {[
                 { href: '/blog', label: 'News & Blog' },
@@ -53,7 +53,7 @@ export default function Footer() {
           <div>
             <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Stay Informed</h4>
             <p className="text-forest-300 text-sm font-body mb-4">
-              Subscribe to the Hidden Ridge newsletter for community updates and announcements.
+              Subscribe to the Hidden Ridge newsletter for neighborhood updates and announcements.
             </p>
             <form className="flex gap-2" onSubmit={(e) => e.preventDefault()}>
               <input
@@ -75,7 +75,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Hidden Ridge EDH. All rights reserved.
           </p>
           <div className="flex gap-6">
-            <Link href="/register" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Join the Community</Link>
+            <Link href="/register" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Join the Neighborhood</Link>
             <Link href="/login" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Sign In</Link>
           </div>
         </div>

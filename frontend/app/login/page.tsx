@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2 } from 'lucide-react';
+import Turnstile from '@/components/Turnstile';
 
 export default function LoginPage() {
   const { login } = useAuth();
@@ -14,12 +15,17 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [turnstileToken, setTurnstileToken] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!turnstileToken) {
+      toast.error('Please complete the verification');
+      return;
+    }
     setLoading(true);
     try {
-      await login(email, password);
+      await login(email, password, turnstileToken);
       toast.success('Welcome back!');
       router.push('/');
     } catch (err: any) {
@@ -62,7 +68,7 @@ export default function LoginPage() {
           </div>
 
           <h2 className="font-serif text-3xl text-forest-800 mb-2">Welcome back</h2>
-          <p className="font-body text-forest-500 text-sm mb-8">Sign in to your community account</p>
+          <p className="font-body text-forest-500 text-sm mb-8">Sign in to your neighborhood account</p>
 
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
@@ -98,7 +104,9 @@ export default function LoginPage() {
               </div>
             </div>
 
-            <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
+            <Turnstile onVerify={setTurnstileToken} />
+
+            <button type="submit" disabled={loading || !turnstileToken} className="btn-primary w-full flex items-center justify-center gap-2">
               {loading ? <><Loader2 size={16} className="animate-spin" /> Signing In...</> : 'Sign In'}
             </button>
           </form>

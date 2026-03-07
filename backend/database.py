@@ -11,6 +11,12 @@ class Settings(BaseSettings):
     mongodb_url: str = "mongodb://localhost:27017"
     mongodb_db: str = "hiddenridgeedh"
     sendgrid_api_key: str = ""
+    email_provider: str = "sendgrid"
+    smtp_host: str = ""
+    smtp_port: int = 587
+    smtp_user: str = ""
+    smtp_password: str = ""
+    smtp_use_tls: bool = True
     from_email: str = "noreply@hiddenridgeedh.com"
     from_name: str = "Hidden Ridge EDH"
     app_url: str = "http://localhost:3000"
@@ -18,6 +24,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     upload_dir: str = "./uploads"
     bootstrap_secret: str = ""
+    turnstile_secret_key: str = ""
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 

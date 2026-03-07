@@ -11,13 +11,15 @@ interface User {
   role: 'super_admin' | 'content_admin' | 'member' | 'pending';
   is_approved: boolean;
   avatar_url?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface AuthContextType {
   user: User | null;
   token: string | null;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string, turnstileToken?: string) => Promise<void>;
   logout: () => void;
   isAdmin: boolean;
   isContentAdmin: boolean;
@@ -41,8 +43,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const login = async (email: string, password: string) => {
-    const res = await authApi.login({ email, password });
+  const login = async (email: string, password: string, turnstileToken?: string) => {
+    const res = await authApi.login({ email, password, turnstile_token: turnstileToken });
     const { access_token, user: userData } = res.data;
     localStorage.setItem('hr_token', access_token);
     localStorage.setItem('hr_user', JSON.stringify(userData));

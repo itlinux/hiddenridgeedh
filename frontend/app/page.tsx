@@ -27,7 +27,7 @@ export default function HomePage() {
               Request Access
             </Link>
             <Link href="/blog" className="btn-secondary text-cream-200 border-cream-400 text-base px-8 py-4">
-              Community News
+              Neighborhood News
             </Link>
           </div>
         </div>
@@ -45,8 +45,8 @@ export default function HomePage() {
           {[
             {
               icon: Trees,
-              title: 'Community Blog',
-              desc: 'Stay informed with neighborhood news, HOA updates, and local announcements from your community admins.',
+              title: 'Neighborhood Blog',
+              desc: 'Stay informed with neighborhood news, HOA updates, and local announcements from your neighborhood administrators.',
               href: '/blog',
               color: 'text-forest-600',
             },
@@ -81,7 +81,7 @@ export default function HomePage() {
             {
               icon: Mail,
               title: 'Newsletter',
-              desc: 'Subscribe to receive community updates and important announcements directly in your inbox.',
+              desc: 'Subscribe to receive neighborhood updates and important announcements directly in your inbox.',
               href: '#newsletter',
               color: 'text-gold-500',
             },
@@ -109,11 +109,11 @@ export default function HomePage() {
         <div className="max-w-3xl mx-auto px-4 text-center">
           <p className="section-label text-gold-400">Residents Only</p>
           <h2 className="font-serif text-4xl text-cream-100 mt-3 mb-4">
-            Ready to Join the Community?
+            Ready to Join Your Neighbors?
           </h2>
           <div className="divider-gold" />
           <p className="font-body text-forest-300 text-lg mt-6 mb-10 leading-relaxed">
-            Registration is open to Hidden Ridge residents. All accounts are reviewed and approved by community administrators to ensure a safe, trusted environment.
+            Registration is open to Hidden Ridge residents. All accounts are reviewed and approved by neighborhood administrators to ensure a safe, trusted environment.
           </p>
           <Link href="/register" className="btn-gold text-base px-10 py-4">
             Request Membership
@@ -127,7 +127,7 @@ export default function HomePage() {
       {/* Newsletter signup */}
       <section id="newsletter" className="py-20 max-w-2xl mx-auto px-4 text-center">
         <p className="section-label text-bark-400">Stay in the loop</p>
-        <h2 className="font-serif text-3xl text-forest-800 mt-3 mb-4">Community Newsletter</h2>
+        <h2 className="font-serif text-3xl text-forest-800 mt-3 mb-4">Neighborhood Newsletter</h2>
         <div className="divider-gold" />
         <p className="font-body text-forest-500 mt-6 mb-8">
           Receive neighborhood updates, event reminders, and important announcements directly in your inbox.
