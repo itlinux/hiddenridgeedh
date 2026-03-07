@@ -33,10 +33,10 @@ export default function HomePage() {
     <div className="bg-cream-50">
 
       {/* Hero */}
-      <section className="relative overflow-hidden min-h-[80vh] flex items-center justify-center">
+      <section className="relative overflow-hidden min-h-[80vh] flex items-start justify-center">
         <div className="absolute inset-0 bg-cover bg-center" style={{ backgroundImage: 'url(/images/hero-bg.webp)' }} />
         <div className="absolute inset-0 bg-forest-800/50" />
-        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-20 pb-32 text-center">
+        <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-12 pb-32 text-center">
           <Image
             src="/images/logo.png"
             alt="Hidden Ridge EDH"
