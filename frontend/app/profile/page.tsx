@@ -350,14 +350,28 @@ function TwoFactorCard() {
               Disable 2FA
             </button>
           ) : (
-            <button
-              onClick={handleSetup}
-              disabled={loading}
-              className="btn-primary w-full flex items-center justify-center gap-2"
-            >
-              {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
-              Enable 2FA
-            </button>
+            <>
+              <button
+                onClick={handleSetup}
+                disabled={loading}
+                className="btn-primary w-full flex items-center justify-center gap-2"
+              >
+                {loading ? <Loader2 size={16} className="animate-spin" /> : <ShieldCheck size={16} />}
+                Enable 2FA
+              </button>
+              <div className="mt-4 pt-4 border-t border-cream-200">
+                <p className="text-forest-400 text-xs font-sans mb-2">Need an authenticator app?</p>
+                <div className="flex gap-3">
+                  <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" rel="noopener noreferrer" className="text-gold-500 text-xs font-sans hover:underline">
+                    iPhone (App Store)
+                  </a>
+                  <span className="text-forest-300">|</span>
+                  <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener noreferrer" className="text-gold-500 text-xs font-sans hover:underline">
+                    Android (Play Store)
+                  </a>
+                </div>
+              </div>
+            </>
           )}
         </>
       )}
@@ -365,7 +379,10 @@ function TwoFactorCard() {
       {step === 'setup' && (
         <div className="space-y-5">
           <p className="text-forest-500 text-sm font-sans">
-            Scan this QR code with your authenticator app (Google Authenticator, Authy, etc.):
+            Scan this QR code with your authenticator app. Don't have one? Download Google Authenticator for{' '}
+            <a href="https://apps.apple.com/app/google-authenticator/id388497605" target="_blank" rel="noopener noreferrer" className="text-gold-500 hover:underline">iPhone</a>
+            {' '}or{' '}
+            <a href="https://play.google.com/store/apps/details?id=com.google.android.apps.authenticator2" target="_blank" rel="noopener noreferrer" className="text-gold-500 hover:underline">Android</a>.
           </p>
           <div className="flex justify-center">
             {/* eslint-disable-next-line @next/next/no-img-element */}
