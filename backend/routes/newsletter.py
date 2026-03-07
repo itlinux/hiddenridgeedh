@@ -1,8 +1,9 @@
 import secrets
 from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi.responses import RedirectResponse
 from datetime import datetime
 
-from database import get_db
+from database import get_db, get_settings
 from models.schemas import NewsletterSubscribe, NewsletterSend
 from middleware.auth import require_super_admin
 from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_unsubscribe_confirmation
@@ -50,30 +51,32 @@ async def subscribe(data: NewsletterSubscribe):
 @router.get("/confirm")
 async def confirm(token: str = Query(...)):
     db = get_db()
+    settings = get_settings()
     sub = await db.newsletter_subscribers.find_one({"confirm_token": token})
     if not sub:
-        raise HTTPException(404, "Invalid confirmation link")
+        return RedirectResponse(f"{settings.app_url}/newsletter/confirmed?status=invalid")
     if sub.get("confirmed"):
-        return {"message": "Already confirmed"}
+        return RedirectResponse(f"{settings.app_url}/newsletter/confirmed?status=already")
     await db.newsletter_subscribers.update_one(
         {"_id": sub["_id"]},
         {"$set": {"confirmed": True, "is_active": True, "subscribed_at": datetime.utcnow()}},
     )
-    return {"message": "Subscription confirmed! Welcome to the Hidden Ridge newsletter."}
+    return RedirectResponse(f"{settings.app_url}/newsletter/confirmed?status=success")
 
 
 @router.get("/unsubscribe")
 async def unsubscribe(token: str = Query(...)):
     db = get_db()
+    settings = get_settings()
     sub = await db.newsletter_subscribers.find_one({"unsubscribe_token": token})
     if not sub:
-        raise HTTPException(404, "Invalid unsubscribe link")
+        return RedirectResponse(f"{settings.app_url}/newsletter/unsubscribed?status=invalid")
     await db.newsletter_subscribers.update_one(
         {"_id": sub["_id"]},
         {"$set": {"is_active": False}},
     )
     await send_newsletter_unsubscribe_confirmation(sub["email"])
-    return {"message": "You have been unsubscribed"}
+    return RedirectResponse(f"{settings.app_url}/newsletter/unsubscribed?status=success")
 
 
 @router.get("/subscribers")
