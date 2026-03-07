@@ -7,6 +7,7 @@ import { membersApi, authApi } from '@/lib/api';
 import Image from 'next/image';
 import { Loader2, Save, Lock, Eye, EyeOff, ShieldCheck, ShieldOff, Copy, Check } from 'lucide-react';
 import { toast } from 'sonner';
+import PageHeader from '@/components/layout/PageHeader';
 
 export default function ProfilePage() {
   const { user, isLoading: authLoading, refreshUser } = useAuth();
@@ -70,12 +71,7 @@ export default function ProfilePage() {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <div className="bg-forest-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400 mb-3">Your Account</p>
-          <h1 className="font-serif text-4xl text-cream-100">My Profile</h1>
-        </div>
-      </div>
+      <PageHeader label="Your Account" title="My Profile" />
 
       <div className="max-w-lg mx-auto px-4 py-12 space-y-8">
         <div className="card p-8">

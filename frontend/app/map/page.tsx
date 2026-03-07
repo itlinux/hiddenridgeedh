@@ -6,6 +6,7 @@ import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Loader2, MapPin } from 'lucide-react';
 import dynamic from 'next/dynamic';
+import PageHeader from '@/components/layout/PageHeader';
 
 interface MemberPin {
   id: string;
@@ -62,12 +63,7 @@ export default function MapPage() {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <div className="bg-forest-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400 mb-3">Our Neighborhood</p>
-          <h1 className="font-serif text-4xl text-cream-100">Neighborhood Map</h1>
-        </div>
-      </div>
+      <PageHeader label="Our Neighborhood" title="Neighborhood Map" />
 
       <div className="max-w-6xl mx-auto px-4 py-6">
         {loading ? (

@@ -6,6 +6,7 @@ import { useAuth } from '@/lib/auth';
 import { Camera, X, Loader2, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
+import PageHeader from '@/components/layout/PageHeader';
 
 interface GalleryItem {
   id: string;
@@ -33,12 +34,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <div className="bg-forest-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400 mb-3">Our Neighborhood</p>
-          <h1 className="font-serif text-4xl text-cream-100">Photo Gallery</h1>
-        </div>
-      </div>
+      <PageHeader label="Our Neighborhood" title="Photo Gallery" />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {loading ? (
