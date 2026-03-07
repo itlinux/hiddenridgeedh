@@ -196,10 +196,10 @@ async def sms_inbound(
     user = None
 
     # Search for the user by normalized phone patterns
+    # Note: sms_opt_in controls receiving notifications, not sending alerts
     async for u in db.users.find({
         "is_active": True,
         "is_approved": True,
-        "sms_opt_in": True,
         "phone": {"$exists": True, "$ne": ""},
     }):
         user_phone_digits = re.sub(r"\D", "", u.get("phone", ""))
