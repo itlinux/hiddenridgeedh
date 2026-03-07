@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { postsApi } from '@/lib/api';
-import { Calendar, ArrowRight, Loader2 } from 'lucide-react';
+import { postsApi, newsApi } from '@/lib/api';
+import NewsCard from '@/components/NewsCard';
+import { Calendar, ArrowRight, Loader2, Newspaper } from 'lucide-react';
 import { format } from 'date-fns';
 import PageHeader from '@/components/layout/PageHeader';
 
@@ -24,6 +25,13 @@ export default function BlogPage() {
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
   const perPage = 12;
+  const [newsArticles, setNewsArticles] = useState<any[]>([]);
+
+  useEffect(() => {
+    newsApi.list({ limit: 4 }).then(res => {
+      setNewsArticles(res.data.articles || []);
+    }).catch(() => {});
+  }, []);
 
   useEffect(() => {
     loadPosts();
@@ -47,6 +55,25 @@ export default function BlogPage() {
       <PageHeader label="Stay Informed" title="News & Blog" />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
+        {/* Area News */}
+        {newsArticles.length > 0 && (
+          <div className="mb-12">
+            <div className="flex items-center gap-2 mb-4">
+              <Newspaper size={18} className="text-gold-500" />
+              <h2 className="font-serif text-2xl text-forest-800">Area News</h2>
+            </div>
+            <p className="font-body text-forest-400 text-sm mb-4">
+              Local news from El Dorado Hills and the surrounding area.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+              {newsArticles.map((article: any, idx: number) => (
+                <NewsCard key={article.url || idx} article={article} />
+              ))}
+            </div>
+            <div className="border-b border-forest-200 mt-12" />
+          </div>
+        )}
+
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-forest-400" size={32} />
