@@ -4,6 +4,7 @@ import { useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { Wrench, Star, ExternalLink, Loader2 } from 'lucide-react';
+import PageHeader from '@/components/layout/PageHeader';
 
 const RESOURCE_CATEGORIES = [
   {
@@ -50,12 +51,7 @@ export default function ResourcesPage() {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <div className="bg-forest-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400 mb-3">Helpful Info</p>
-          <h1 className="font-serif text-4xl text-cream-100">Local Resources</h1>
-        </div>
-      </div>
+      <PageHeader label="Helpful Info" title="Local Resources" />
 
       <div className="max-w-4xl mx-auto px-4 py-12">
         <div className="bg-cream-100 border border-cream-200 rounded-sm p-5 mb-8">

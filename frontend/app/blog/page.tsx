@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { postsApi } from '@/lib/api';
 import { Calendar, ArrowRight, Loader2 } from 'lucide-react';
 import { format } from 'date-fns';
+import PageHeader from '@/components/layout/PageHeader';
 
 interface Post {
   id: string;
@@ -43,12 +44,7 @@ export default function BlogPage() {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <div className="bg-forest-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400 mb-3">Stay Informed</p>
-          <h1 className="font-serif text-4xl text-cream-100">News & Blog</h1>
-        </div>
-      </div>
+      <PageHeader label="Stay Informed" title="News & Blog" />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
         {loading ? (

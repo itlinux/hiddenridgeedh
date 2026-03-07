@@ -8,6 +8,7 @@ import {
   ShieldAlert, Phone, AlertTriangle, Loader2, MessageSquare,
   Trash2, Plus, X, Send, Smartphone, Lock, Bug,
 } from 'lucide-react';
+import PageHeader from '@/components/layout/PageHeader';
 
 interface Alert {
   id: string;
@@ -91,12 +92,7 @@ export default function SafetyPage() {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <div className="bg-forest-800 py-16">
-        <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400 mb-3">Stay Safe</p>
-          <h1 className="font-serif text-4xl text-cream-100">Safety & Alerts</h1>
-        </div>
-      </div>
+      <PageHeader label="Stay Safe" title="Safety & Alerts" />
 
       <div className="max-w-4xl mx-auto px-4 py-12">
 
