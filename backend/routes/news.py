@@ -1,5 +1,7 @@
 import logging
+import re
 from datetime import datetime, timedelta
+from difflib import SequenceMatcher
 from fastapi import APIRouter, Request, Query
 import httpx
 
@@ -7,6 +9,30 @@ from database import get_db, get_settings
 from utils.limiter import limiter
 
 logger = logging.getLogger(__name__)
+
+
+def _normalize_title(title: str) -> str:
+    """Normalize a title for fuzzy comparison: lowercase, strip punctuation,
+    collapse whitespace, and convert written numbers to digits."""
+    t = (title or "").strip().lower()
+    # Replace common written numbers with digits
+    number_map = {"zero": "0", "one": "1", "two": "2", "three": "3", "four": "4",
+                  "five": "5", "six": "6", "seven": "7", "eight": "8", "nine": "9",
+                  "ten": "10"}
+    for word, digit in number_map.items():
+        t = re.sub(rf'\b{word}\b', digit, t)
+    # Strip punctuation and collapse whitespace
+    t = re.sub(r'[^\w\s]', '', t)
+    t = re.sub(r'\s+', ' ', t).strip()
+    return t
+
+
+def _is_similar(title: str, existing_titles: list[str], threshold: float = 0.82) -> bool:
+    """Check if a title is too similar to any already-seen title."""
+    for existing in existing_titles:
+        if SequenceMatcher(None, title, existing).ratio() >= threshold:
+            return True
+    return False
 
 router = APIRouter(prefix="/api/news", tags=["news"])
 
@@ -59,16 +85,18 @@ async def list_news(request: Request, limit: int = Query(10, ge=1, le=50)):
     raw_articles = data.get("data", [])
     articles = []
     seen_urls = set()
-    seen_titles = set()
+    seen_titles: list[str] = []
     for art in raw_articles:
         url = art.get("url", "")
-        title = (art.get("title") or "").strip().lower()
-        # Skip duplicates by URL or by identical title
-        if url in seen_urls or (title and title in seen_titles):
+        norm_title = _normalize_title(art.get("title"))
+        # Skip duplicates by URL or by fuzzy title match
+        if url in seen_urls:
+            continue
+        if norm_title and _is_similar(norm_title, seen_titles):
             continue
         seen_urls.add(url)
-        if title:
-            seen_titles.add(title)
+        if norm_title:
+            seen_titles.append(norm_title)
         articles.append({
             "title": art.get("title"),
             "description": art.get("description"),
