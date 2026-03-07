@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { newsletterApi } from '@/lib/api';
-import { ArrowLeft, Mail, Send, Users, Loader2 } from 'lucide-react';
+import { ArrowLeft, Mail, Send, Users, Loader2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
 
 export default function NewsletterPage() {
@@ -78,11 +78,68 @@ export default function NewsletterPage() {
           <Users className="text-forest-500" size={20} />
           <div>
             <div className="font-sans text-sm text-forest-700">
-              {loadingSubs ? 'Loading...' : `${subscribers.filter((s: any) => s.is_active !== false).length} active subscribers`}
+              {loadingSubs ? 'Loading...' : `${subscribers.filter((s: any) => s.is_active && s.confirmed).length} active / ${subscribers.length} total subscribers`}
             </div>
             <div className="text-forest-400 text-xs font-sans">Subscribers stored in database. Emails sent via {process.env.NEXT_PUBLIC_EMAIL_PROVIDER || 'SMTP/SendGrid'}.</div>
           </div>
         </div>
+
+        {/* Subscriber list */}
+        {!loadingSubs && subscribers.length > 0 && (
+          <div className="card overflow-hidden">
+            <div className="px-5 py-4 border-b border-cream-200">
+              <h3 className="font-serif text-lg text-forest-800">All Subscribers</h3>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead>
+                  <tr className="bg-cream-100 text-forest-600 font-sans text-xs uppercase tracking-wider">
+                    <th className="px-5 py-3 text-left">Email</th>
+                    <th className="px-5 py-3 text-left">Status</th>
+                    <th className="px-5 py-3 text-left">Date</th>
+                    <th className="px-5 py-3 text-right">Actions</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-cream-200">
+                  {subscribers.map((sub: any) => (
+                    <tr key={sub.id} className="hover:bg-cream-50">
+                      <td className="px-5 py-3 font-body text-forest-700">{sub.email}</td>
+                      <td className="px-5 py-3">
+                        {sub.is_active && sub.confirmed ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-sans bg-green-100 text-green-700">Active</span>
+                        ) : sub.confirmed ? (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-sans bg-yellow-100 text-yellow-700">Unsubscribed</span>
+                        ) : (
+                          <span className="inline-flex items-center px-2 py-0.5 rounded text-xs font-sans bg-gray-100 text-gray-600">Pending</span>
+                        )}
+                      </td>
+                      <td className="px-5 py-3 text-forest-400 font-sans text-xs">
+                        {sub.subscribed_at ? new Date(sub.subscribed_at).toLocaleDateString() : '—'}
+                      </td>
+                      <td className="px-5 py-3 text-right">
+                        <button
+                          onClick={async () => {
+                            if (!confirm(`Delete subscriber ${sub.email}?`)) return;
+                            try {
+                              await newsletterApi.deleteSubscriber(sub.id);
+                              setSubscribers(prev => prev.filter((s: any) => s.id !== sub.id));
+                            } catch {
+                              alert('Failed to delete subscriber');
+                            }
+                          }}
+                          className="text-red-400 hover:text-red-600 transition-colors"
+                          title="Delete subscriber"
+                        >
+                          <Trash2 size={14} />
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </div>
+        )}
 
         {/* Send form */}
         {sent ? (

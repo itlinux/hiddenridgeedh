@@ -134,20 +134,24 @@ async def send_approval_notification(to_email: str, full_name: str):
         logger.error(f"Failed to send email to {to_email}: {e}")
 
 
-async def send_newsletter_subscribe_confirmation(to_email: str, unsubscribe_token: str):
+async def send_newsletter_confirm_email(to_email: str, confirm_token: str):
     settings = get_settings()
-    unsub_url = f"{settings.app_url}/api/newsletter/unsubscribe?token={unsubscribe_token}"
+    confirm_url = f"{settings.app_url}/api/newsletter/confirm?token={confirm_token}"
     html = _build_html(
-        "Welcome to the Newsletter!",
+        "Confirm Your Subscription",
         f"""
-        <p>You've been subscribed to the <strong>Hidden Ridge EDH</strong> neighborhood newsletter.</p>
-        <p>You'll receive neighborhood updates, event reminders, and important announcements directly in your inbox.</p>
-        <p>If you didn't subscribe, or wish to unsubscribe, click below:</p>
-        <p><a href="{unsub_url}" style="color: #C9A84C;">Unsubscribe</a></p>
+        <p>Thank you for subscribing to the <strong>Hidden Ridge EDH</strong> neighborhood newsletter!</p>
+        <p>Please click the button below to confirm your subscription:</p>
+        <p style="text-align: center; margin: 24px 0;">
+            <a href="{confirm_url}" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block;">
+                Confirm Subscription
+            </a>
+        </p>
+        <p style="color: #666; font-size: 13px;">If you didn't request this, you can safely ignore this email.</p>
         """,
     )
     try:
-        await _send_email(to_email, "Hidden Ridge EDH — Newsletter Subscription Confirmed", html)
+        await _send_email(to_email, "Hidden Ridge EDH — Confirm Your Subscription", html)
     except Exception as e:
         logger.error(f"Failed to send email to {to_email}: {e}")
 

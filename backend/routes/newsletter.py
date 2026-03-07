@@ -5,7 +5,7 @@ from datetime import datetime
 from database import get_db
 from models.schemas import NewsletterSubscribe, NewsletterSend
 from middleware.auth import require_super_admin
-from utils.email import send_newsletter, send_newsletter_subscribe_confirmation, send_newsletter_unsubscribe_confirmation
+from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_unsubscribe_confirmation
 from utils.turnstile import verify_turnstile
 
 router = APIRouter(prefix="/api/newsletter", tags=["newsletter"])
@@ -22,23 +22,44 @@ async def subscribe(data: NewsletterSubscribe):
     if existing:
         if existing.get("is_active"):
             return {"message": "Already subscribed"}
-        # Reactivate
-        await db.newsletter_subscribers.update_one(
-            {"email": data.email},
-            {"$set": {"is_active": True, "subscribed_at": datetime.utcnow()}},
-        )
-        await send_newsletter_subscribe_confirmation(data.email, existing["unsubscribe_token"])
-        return {"message": "Subscription reactivated"}
+        if existing.get("confirmed"):
+            # Was confirmed before, just reactivate
+            await db.newsletter_subscribers.update_one(
+                {"email": data.email},
+                {"$set": {"is_active": True, "subscribed_at": datetime.utcnow()}},
+            )
+            return {"message": "Subscription reactivated"}
+        # Not yet confirmed — resend confirmation
+        await send_newsletter_confirm_email(data.email, existing["confirm_token"])
+        return {"message": "Check your email to confirm your subscription"}
 
+    confirm_token = secrets.token_urlsafe(32)
     unsub_token = secrets.token_urlsafe(32)
     await db.newsletter_subscribers.insert_one({
         "email": data.email,
         "subscribed_at": datetime.utcnow(),
+        "confirm_token": confirm_token,
         "unsubscribe_token": unsub_token,
-        "is_active": True,
+        "confirmed": False,
+        "is_active": False,
     })
-    await send_newsletter_subscribe_confirmation(data.email, unsub_token)
-    return {"message": "Subscribed successfully"}
+    await send_newsletter_confirm_email(data.email, confirm_token)
+    return {"message": "Check your email to confirm your subscription"}
+
+
+@router.get("/confirm")
+async def confirm(token: str = Query(...)):
+    db = get_db()
+    sub = await db.newsletter_subscribers.find_one({"confirm_token": token})
+    if not sub:
+        raise HTTPException(404, "Invalid confirmation link")
+    if sub.get("confirmed"):
+        return {"message": "Already confirmed"}
+    await db.newsletter_subscribers.update_one(
+        {"_id": sub["_id"]},
+        {"$set": {"confirmed": True, "is_active": True, "subscribed_at": datetime.utcnow()}},
+    )
+    return {"message": "Subscription confirmed! Welcome to the Hidden Ridge newsletter."}
 
 
 @router.get("/unsubscribe")
@@ -67,9 +88,24 @@ async def list_subscribers(
             "id": str(sub["_id"]),
             "email": sub["email"],
             "is_active": sub.get("is_active", True),
+            "confirmed": sub.get("confirmed", False),
             "subscribed_at": sub.get("subscribed_at"),
         })
     return {"subscribers": subscribers}
+
+
+@router.delete("/subscribers/{subscriber_id}")
+async def delete_subscriber(
+    subscriber_id: str,
+    current_user: dict = Depends(require_super_admin),
+):
+    from bson import ObjectId
+
+    db = get_db()
+    result = await db.newsletter_subscribers.delete_one({"_id": ObjectId(subscriber_id)})
+    if result.deleted_count == 0:
+        raise HTTPException(404, "Subscriber not found")
+    return {"message": "Subscriber deleted"}
 
 
 @router.post("/send")
@@ -78,7 +114,7 @@ async def send(
     current_user: dict = Depends(require_super_admin),
 ):
     db = get_db()
-    cursor = db.newsletter_subscribers.find({"is_active": True})
+    cursor = db.newsletter_subscribers.find({"is_active": True, "confirmed": True})
     subscribers = [sub["email"] async for sub in cursor]
 
     if not subscribers:

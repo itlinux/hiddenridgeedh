@@ -9,7 +9,7 @@ User=nginx
 Group=nginx
 WorkingDirectory=/var/www/hiddenridgeedh/backend
 EnvironmentFile=/var/www/hiddenridgeedh/backend/.env
-ExecStart=/var/www/hiddenridgeedh/venv/bin/uvicorn main:app \
+ExecStart=/usr/local/bin/uvicorn main:app \
     --host 127.0.0.1 \
     --port 8003 \
     --workers 2 \

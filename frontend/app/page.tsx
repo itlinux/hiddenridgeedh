@@ -18,7 +18,7 @@ export default function HomePage() {
     setNlLoading(true);
     try {
       await newsletterApi.subscribe({ email: nlEmail, turnstile_token: nlTurnstileToken || undefined });
-      toast.success('Subscribed! Check your inbox for a confirmation.');
+      toast.success('Check your email to confirm your subscription.');
       setNlEmail('');
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Failed to subscribe. Please try again.';
