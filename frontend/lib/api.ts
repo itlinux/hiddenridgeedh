@@ -36,6 +36,11 @@ export const authApi = {
   register: (data: any) => api.post('/api/auth/register', data),
   login: (data: any) => api.post('/api/auth/login', data),
   me: () => api.get('/api/auth/me'),
+  changePassword: (data: any) => api.put('/api/auth/change-password', data),
+  setup2FA: () => api.post('/api/auth/2fa/setup'),
+  enable2FA: (code: string) => api.post('/api/auth/2fa/enable', { code }),
+  verify2FA: (temp_token: string, code: string) => api.post('/api/auth/2fa/verify', { temp_token, code }),
+  disable2FA: (password: string) => api.post('/api/auth/2fa/disable', { password }),
 };
 
 // ─── Posts ────────────────────────────────────────────────────────────────────
@@ -73,7 +78,7 @@ export const forumApi = {
 // ─── Gallery ──────────────────────────────────────────────────────────────────
 export const galleryApi = {
   list: (params?: any) => api.get('/api/gallery', { params }),
-  upload: (formData: FormData) => api.post('/api/gallery', formData, {
+  upload: (formData: FormData) => api.post('/api/gallery/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   delete: (id: string) => api.delete(`/api/gallery/${id}`),
@@ -94,5 +99,5 @@ export const membersApi = {
   updateMe: (data: any) => api.put('/api/members/me', data),
   approve: (id: string) => api.put(`/api/members/${id}/approve`),
   updateRole: (id: string, data: any) => api.put(`/api/members/${id}/role`, data),
-  deactivate: (id: string) => api.delete(`/api/members/${id}`),
+  deactivate: (id: string) => api.put(`/api/members/${id}/deactivate`),
 };

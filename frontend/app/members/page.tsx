@@ -54,7 +54,7 @@ export default function MembersPage() {
     <div className="min-h-screen bg-cream-50">
       <div className="bg-forest-800 py-16">
         <div className="max-w-7xl mx-auto px-4 text-center">
-          <p className="section-label text-gold-400 mb-3">Our Community</p>
+          <p className="section-label text-gold-400 mb-3">Our Neighborhood</p>
           <h1 className="font-serif text-4xl text-cream-100">Neighbors</h1>
         </div>
       </div>

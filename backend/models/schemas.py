@@ -23,11 +23,15 @@ class UserCreate(BaseModel):
     address: Optional[str] = None
     bio: Optional[str] = None
     phone: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+    turnstile_token: Optional[str] = None
 
 
 class LoginRequest(BaseModel):
     email: EmailStr
     password: str
+    turnstile_token: Optional[str] = None
 
 
 class Token(BaseModel):
@@ -44,6 +48,8 @@ class UserInDB(BaseModel):
     address: Optional[str] = None
     bio: Optional[str] = None
     phone: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
     avatar_url: Optional[str] = None
     role: UserRole
     is_active: bool

@@ -13,6 +13,7 @@ const NAV_LINKS = [
   { href: '/gallery', label: 'Gallery' },
   { href: '/forum',   label: 'Forum' },
   { href: '/members', label: 'Neighbors' },
+  { href: '/map',     label: 'Map' },
 ];
 
 export default function Navbar() {

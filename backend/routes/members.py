@@ -18,6 +18,8 @@ def serialize_member(user: dict, include_email: bool = False) -> dict:
         "bio": user.get("bio"),
         "avatar_url": user.get("avatar_url"),
         "address": user.get("address"),
+        "latitude": user.get("latitude"),
+        "longitude": user.get("longitude"),
         "role": user.get("role"),
     }
     if include_email:

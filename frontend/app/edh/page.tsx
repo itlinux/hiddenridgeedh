@@ -73,7 +73,7 @@ export default function AdminDashboard() {
           <Shield className="text-gold-400" size={24} />
           <div>
             <h1 className="font-serif text-2xl text-cream-100">Admin Portal</h1>
-            <p className="text-forest-300 text-sm font-sans">Hidden Ridge EDH — Community Management</p>
+            <p className="text-forest-300 text-sm font-sans">Hidden Ridge EDH — Neighborhood Management</p>
           </div>
         </div>
       </div>

@@ -25,13 +25,31 @@ def slugify(title: str) -> str:
 
 
 @router.get("")
-async def list_posts(
+async def list_posts_admin(
+    skip: int = Query(0, ge=0),
+    limit: int = Query(20, ge=1, le=100),
+    category: str | None = None,
+    current_user: dict = Depends(require_content_admin),
+):
+    db = get_db()
+    query: dict = {}
+    if category:
+        query["category"] = category
+
+    total = await db.posts.count_documents(query)
+    cursor = db.posts.find(query).sort("created_at", -1).skip(skip).limit(limit)
+    posts = [serialize_post(p) async for p in cursor]
+    return {"posts": posts, "total": total}
+
+
+@router.get("/public")
+async def list_posts_public(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     category: str | None = None,
 ):
     db = get_db()
-    query = {"published": True}
+    query: dict = {"published": True}
     if category:
         query["category"] = category
 

@@ -20,7 +20,7 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="Hidden Ridge EDH API",
-    description="Community portal API for hiddenridgeedh.com",
+    description="Neighborhood API for hiddenridgeedh.com",
     version="1.0.0",
     lifespan=lifespan,
 )

@@ -5,8 +5,8 @@ Wants=mongod.service
 
 [Service]
 Type=simple
-User=www-data
-Group=www-data
+User=nginx
+Group=nginx
 WorkingDirectory=/var/www/hiddenridgeedh/backend
 EnvironmentFile=/var/www/hiddenridgeedh/backend/.env
 ExecStart=/var/www/hiddenridgeedh/venv/bin/uvicorn main:app \
