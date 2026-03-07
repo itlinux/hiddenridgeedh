@@ -6,7 +6,7 @@ import { alertsApi } from '@/lib/api';
 import { toast } from 'sonner';
 import {
   ShieldAlert, Phone, AlertTriangle, Loader2, MessageSquare,
-  Trash2, Plus, X, Send, Smartphone,
+  Trash2, Plus, X, Send, Smartphone, Lock,
 } from 'lucide-react';
 
 interface Alert {
@@ -214,7 +214,21 @@ export default function SafetyPage() {
               </div>
             )}
           </div>
-        ) : null}
+        ) : (
+          <div className="card p-8 mb-8">
+            <div className="flex items-center gap-3 mb-4">
+              <Lock className="text-forest-400" size={24} />
+              <h2 className="font-serif text-2xl text-forest-800">Neighborhood Alerts</h2>
+            </div>
+            <p className="text-forest-500 font-sans text-sm mb-4">
+              Live neighborhood alerts are available to registered members.
+              Log in to view alerts, post new ones, or text them via SMS.
+            </p>
+            <a href="/login" className="btn-primary text-sm inline-flex items-center gap-2">
+              Log In to View Alerts
+            </a>
+          </div>
+        )}
 
         {/* ── Emergency Contacts (public) ─────────────────────────── */}
         <div className="card p-8 mb-8">
