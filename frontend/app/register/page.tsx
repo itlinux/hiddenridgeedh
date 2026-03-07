@@ -190,6 +190,17 @@ export default function RegisterPage() {
 
             <Turnstile onVerify={setTurnstileToken} />
 
+            {/* Privacy notice */}
+            <div className="bg-cream-100 border border-cream-200 rounded-sm p-4">
+              <p className="font-sans text-xs text-forest-600 leading-relaxed">
+                <strong>Privacy Notice:</strong> By registering, you agree that all member information
+                (including contact details, addresses, and directory data) is strictly for private
+                neighborhood use only. You may not share, distribute, or sell member information
+                to any business, third party, or commercial entity. Violation of this policy may
+                result in account removal.
+              </p>
+            </div>
+
             <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
               {loading ? <><Loader2 size={16} className="animate-spin" /> Submitting...</> : 'Request Access'}
             </button>
