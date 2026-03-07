@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { newsletterApi } from '@/lib/api';
 import { ArrowLeft, Mail, Send, Users, Loader2, Trash2 } from 'lucide-react';
 import Link from 'next/link';
+import RichTextEditor from '@/components/RichTextEditor';
 
 export default function NewsletterPage() {
   const { user, isSuperAdmin, isLoading } = useAuth();
@@ -38,7 +39,8 @@ export default function NewsletterPage() {
 
   const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.subject.trim() || !form.content.trim()) return;
+    const contentText = form.content.replace(/<[^>]*>/g, '').trim();
+    if (!form.subject.trim() || !contentText) return;
     if (!confirm(`Send newsletter "${form.subject}" to all active subscribers?`)) return;
 
     setSending(true);
@@ -164,15 +166,13 @@ export default function NewsletterPage() {
             </div>
 
             <div>
-              <label className="block font-sans text-sm text-forest-700 mb-1">Content (HTML supported)</label>
-              <textarea
+              <label className="block font-sans text-sm text-forest-700 mb-1">Content</label>
+              <RichTextEditor
                 value={form.content}
-                onChange={e => setForm({ ...form, content: e.target.value })}
-                className="input-field w-full min-h-[250px] font-body"
+                onChange={(val) => setForm({ ...form, content: val })}
                 placeholder="Write your newsletter content here..."
-                required
               />
-              <p className="text-forest-400 text-xs mt-1 font-sans">HTML tags supported for formatting. Content will be wrapped in the Hidden Ridge email template.</p>
+              <p className="text-forest-400 text-xs mt-1 font-sans">Content will be wrapped in the Hidden Ridge email template.</p>
             </div>
 
             <div className="flex justify-end gap-3 pt-4 border-t border-cream-200">
