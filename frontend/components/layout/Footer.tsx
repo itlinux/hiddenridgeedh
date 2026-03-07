@@ -75,6 +75,7 @@ export default function Footer() {
             © {new Date().getFullYear()} Hidden Ridge EDH. All rights reserved.
           </p>
           <div className="flex gap-6">
+            <Link href="/privacy" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Privacy Policy</Link>
             <Link href="/register" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Join the Neighborhood</Link>
             <Link href="/login" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Sign In</Link>
           </div>
