@@ -298,7 +298,7 @@ export default function SafetyPage() {
             Rattlesnakes are common in the El Dorado Hills foothills, especially during warmer months (April–October).
             Northern Pacific rattlesnakes are the primary species in our area.
           </p>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
             <div className="bg-white border border-red-200 rounded-sm p-4">
               <p className="font-sans text-xs font-semibold text-red-700 mb-2 uppercase tracking-wide">If You See a Snake</p>
               <ul className="font-body text-forest-600 text-sm space-y-1.5">
@@ -317,10 +317,20 @@ export default function SafetyPage() {
                 <li>• Do NOT apply ice, tourniquet, or try to suck venom</li>
               </ul>
             </div>
+            <div className="bg-red-100 border border-red-300 rounded-sm p-4">
+              <p className="font-sans text-xs font-semibold text-red-800 mb-2 uppercase tracking-wide">If Your Dog Is Bitten</p>
+              <ul className="font-body text-red-900 text-sm space-y-1.5">
+                <li>• <strong>Get to an emergency vet immediately</strong></li>
+                <li>• Keep your dog calm and limit movement</li>
+                <li>• Do NOT try to suck out venom or apply ice</li>
+                <li>• Note the time of the bite for the vet</li>
+                <li>• Ask your vet about the rattlesnake vaccine</li>
+              </ul>
+            </div>
           </div>
           <div className="bg-white border border-red-200 rounded-sm p-4">
             <p className="font-sans text-xs font-semibold text-red-700 mb-2 uppercase tracking-wide">Who to Call</p>
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
               <div>
                 <p className="text-forest-400 text-xs font-sans">Emergency (bite)</p>
                 <p className="text-red-700 font-sans font-bold text-lg">911</p>
@@ -332,6 +342,10 @@ export default function SafetyPage() {
               <div>
                 <p className="text-forest-400 text-xs font-sans">CA Poison Control</p>
                 <p className="text-forest-800 font-sans font-semibold">1-800-222-1222</p>
+              </div>
+              <div>
+                <p className="text-forest-400 text-xs font-sans">ASPCA Poison Control (pets)</p>
+                <p className="text-forest-800 font-sans font-semibold">1-888-426-4435</p>
               </div>
             </div>
           </div>
