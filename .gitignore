@@ -20,6 +20,7 @@ env/
 .dmypy.json
 .ruff_cache/
 
+CLAUDE.*
 # ─── Node / Next.js ───────────────────────────────────────────────────────────
 node_modules/
 .next/
