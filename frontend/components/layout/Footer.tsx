@@ -12,7 +12,7 @@ export default function Footer() {
   return (
     <footer className="bg-forest-800 text-cream-200 border-t border-forest-700">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-12">
 
           {/* Brand */}
           <div>
@@ -38,7 +38,7 @@ export default function Footer() {
             </div>
           </div>
 
-          {/* Quick Links */}
+          {/* Neighborhood */}
           <div>
             <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Neighborhood</h4>
             <ul className="space-y-3">
@@ -48,6 +48,26 @@ export default function Footer() {
                 { href: '/gallery', label: 'Photo Gallery' },
                 { href: '/forum', label: 'Neighborhood Forum' },
                 { href: '/members', label: 'Meet the Neighbors' },
+              ].map((link) => (
+                <li key={link.href}>
+                  <Link href={link.href} className="text-forest-300 hover:text-gold-400 font-sans text-sm transition-colors">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Resources */}
+          <div>
+            <h4 className="font-sans text-xs tracking-[0.25em] uppercase text-gold-400 mb-5">Resources</h4>
+            <ul className="space-y-3">
+              {[
+                { href: '/safety', label: 'Safety & Alerts' },
+                { href: '/resources', label: 'Local Resources' },
+                { href: '/map', label: 'Neighborhood Map' },
+                { href: '/register', label: 'Join the Neighborhood' },
+                { href: '/login', label: 'Sign In' },
               ].map((link) => (
                 <li key={link.href}>
                   <Link href={link.href} className="text-forest-300 hover:text-gold-400 font-sans text-sm transition-colors">
@@ -72,18 +92,18 @@ export default function Footer() {
               <Mail size={14} className="text-gold-400" />
               remo@remomattei.com
             </button>
+            <div className="mt-6">
+              <Link href="/privacy" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">
+                Privacy Policy
+              </Link>
+            </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-forest-700 flex flex-col sm:flex-row justify-between items-center gap-4">
+        <div className="mt-12 pt-8 border-t border-forest-700 text-center">
           <p className="text-forest-400 text-xs font-sans">
             © {new Date().getFullYear()} Hidden Ridge EDH. All rights reserved.
           </p>
-          <div className="flex gap-6">
-            <Link href="/privacy" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Privacy Policy</Link>
-            <Link href="/register" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Join the Neighborhood</Link>
-            <Link href="/login" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">Sign In</Link>
-          </div>
         </div>
       </div>
     </footer>
