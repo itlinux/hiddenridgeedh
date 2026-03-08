@@ -8,13 +8,12 @@ import { useAuth } from '@/lib/auth';
 import { Menu, X, ChevronDown, LogOut, User, Shield } from 'lucide-react';
 import clsx from 'clsx';
 
-const NAV_LINKS = [
+const BASE_LINKS = [
   { href: '/blog',    label: 'News & Blog' },
   { href: '/events',  label: 'Events' },
   { href: '/gallery', label: 'Gallery' },
   { href: '/forum',   label: 'Forum' },
   { href: '/members', label: 'Neighbors' },
-  { href: '/map',     label: 'Map' },
 ];
 
 export default function Navbar() {
@@ -22,6 +21,13 @@ export default function Navbar() {
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
+
+  const NAV_LINKS = [
+    ...BASE_LINKS,
+    user
+      ? { href: '/map', label: 'Map' }
+      : { href: '/safety', label: 'Safety & Alerts' },
+  ];
 
   return (
     <header className="bg-forest-800 border-b border-forest-700 sticky top-0 z-50">
