@@ -92,18 +92,16 @@ export default function Footer() {
               <Mail size={14} className="text-gold-400" />
               remo@remomattei.com
             </button>
-            <div className="mt-6">
-              <Link href="/privacy" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">
-                Privacy Policy
-              </Link>
-            </div>
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-forest-700 text-center">
+        <div className="mt-12 pt-8 border-t border-forest-700 flex flex-col sm:flex-row justify-between items-center gap-2">
           <p className="text-forest-400 text-xs font-sans">
             © {new Date().getFullYear()} Hidden Ridge EDH. All rights reserved.
           </p>
+          <Link href="/privacy" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">
+            Privacy Policy
+          </Link>
         </div>
       </div>
     </footer>
