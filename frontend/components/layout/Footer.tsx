@@ -2,12 +2,12 @@
 
 import Link from 'next/link';
 import Image from 'next/image';
-import { MapPin, Mail, User } from 'lucide-react';
+import { MapPin, User } from 'lucide-react';
+import { QRCodeSVG } from 'qrcode.react';
 
 export default function Footer() {
-  const handleContact = () => {
-    window.location.href = ['ma', 'ilto:', 'remo', '@', 'remomattei', '.com'].join('');
-  };
+  // Build mailto from fragments so bots can't scrape it from source
+  const mailto = ['ma', 'ilto:', 'remo', '@', 'remomattei', '.com'].join('');
 
   return (
     <footer className="bg-forest-800 text-cream-200 border-t border-forest-700">
@@ -85,13 +85,16 @@ export default function Footer() {
               <User size={14} className="text-gold-400" />
               Remo Mattei
             </div>
-            <button
-              onClick={handleContact}
-              className="flex items-center gap-2 text-forest-300 hover:text-gold-400 text-sm transition-colors"
-            >
-              <Mail size={14} className="text-gold-400" />
-              remo@remomattei.com
-            </button>
+            <div className="mt-3 bg-white rounded-lg p-2 inline-block">
+              <QRCodeSVG
+                value={mailto}
+                size={96}
+                bgColor="#FFFFFF"
+                fgColor="#1B2E1F"
+                level="M"
+              />
+            </div>
+            <p className="text-forest-400 text-xs mt-2 font-sans">Scan to email</p>
           </div>
         </div>
 
