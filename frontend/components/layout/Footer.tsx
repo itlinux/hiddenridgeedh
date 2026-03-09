@@ -95,13 +95,14 @@ export default function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-forest-700 flex flex-col sm:flex-row justify-between items-center gap-2">
+        <div className="mt-12 pt-8 border-t border-forest-700 text-center">
           <p className="text-forest-400 text-xs font-sans">
             © {new Date().getFullYear()} Hidden Ridge EDH. All rights reserved.
+            {' · '}
+            <Link href="/privacy" className="text-forest-400 hover:text-gold-400 transition-colors">
+              Privacy Policy
+            </Link>
           </p>
-          <Link href="/privacy" className="text-forest-400 hover:text-gold-400 text-xs font-sans transition-colors">
-            Privacy Policy
-          </Link>
         </div>
       </div>
     </footer>
