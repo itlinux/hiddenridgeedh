@@ -364,6 +364,13 @@ export default function SafetyPage() {
               { label: 'Rattlesnake Safety (CDFW)', url: 'https://wildlife.ca.gov/Keep-Me-Wild/Rattlesnakes' },
               { label: 'Nextdoor (EDH)', url: 'https://nextdoor.com' },
               { label: 'El Dorado Hills CSD', url: 'https://www.edhcsd.org' },
+              { label: 'CAL FIRE Incidents', url: 'https://www.fire.ca.gov/incidents' },
+              { label: 'AirNow — Air Quality', url: 'https://www.airnow.gov/?city=El%20Dorado%20Hills&state=CA' },
+              { label: 'El Dorado County Alerts (Nixle)', url: 'https://www.nixle.com' },
+              { label: 'SMUD Outage Map', url: 'https://www.smud.org/en/Customer-Support/Outage-Status' },
+              { label: 'EID Water District', url: 'https://www.eid.org' },
+              { label: 'National Weather Service — Sacramento', url: 'https://www.weather.gov/sto/' },
+              { label: 'Ring Neighbors (Crime Alerts)', url: 'https://neighbors.ring.com' },
             ].map((link) => (
               <a
                 key={link.label}
