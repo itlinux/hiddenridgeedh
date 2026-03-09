@@ -138,7 +138,7 @@ export default function AdminSafetyLinksPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         {/* Back + Actions */}
         <div className="flex items-center justify-between mb-6">
-          <Link href="/admin" className="flex items-center gap-2 text-forest-500 hover:text-gold-500 text-sm font-sans transition-colors">
+          <Link href="/edh" className="flex items-center gap-2 text-forest-500 hover:text-gold-500 text-sm font-sans transition-colors">
             <ArrowLeft size={14} /> Back to Admin
           </Link>
           <div className="flex items-center gap-3">
