@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { alertsApi } from '@/lib/api';
+import { alertsApi, safetyLinksApi } from '@/lib/api';
 import { toast } from 'sonner';
 import {
   ShieldAlert, Phone, AlertTriangle, Loader2, MessageSquare,
@@ -29,10 +29,38 @@ export default function SafetyPage() {
   const [newCategory, setNewCategory] = useState('general');
   const [submitting, setSubmitting] = useState(false);
 
+  interface SafetyLink { id: string; label: string; url: string; sort_order: number; }
+  const [usefulLinks, setUsefulLinks] = useState<SafetyLink[]>([]);
+  const [linksLoading, setLinksLoading] = useState(true);
+
   useEffect(() => {
     if (user) fetchAlerts();
     else setAlertsLoading(false);
   }, [user]);
+
+  useEffect(() => {
+    fetchLinks();
+  }, []);
+
+  const FALLBACK_LINKS = [
+    { id: '1', label: 'El Dorado County Sheriff', url: 'https://www.edcgov.us/Government/Sheriff', sort_order: 0 },
+    { id: '2', label: 'El Dorado Hills Fire', url: 'https://www.edhfire.com', sort_order: 1 },
+    { id: '3', label: 'Ready for Wildfire', url: 'https://www.readyforwildfire.org', sort_order: 2 },
+    { id: '4', label: 'PG&E Outage Map', url: 'https://pgealerts.alerts.pge.com/outagecenter/', sort_order: 3 },
+    { id: '5', label: 'El Dorado Hills CSD', url: 'https://www.edhcsd.org', sort_order: 4 },
+  ];
+
+  const fetchLinks = async () => {
+    try {
+      const res = await safetyLinksApi.list();
+      const links = res.data.links;
+      setUsefulLinks(links.length > 0 ? links : FALLBACK_LINKS);
+    } catch {
+      setUsefulLinks(FALLBACK_LINKS);
+    } finally {
+      setLinksLoading(false);
+    }
+  };
 
   const fetchAlerts = async () => {
     try {
@@ -355,34 +383,25 @@ export default function SafetyPage() {
         {/* ── Useful Links (public) ───────────────────────────────── */}
         <div className="card p-8">
           <h2 className="font-serif text-2xl text-forest-800 mb-6">Useful Links</h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {[
-              { label: 'El Dorado County Sheriff', url: 'https://www.edcgov.us/Government/Sheriff' },
-              { label: 'El Dorado Hills Fire', url: 'https://www.edhfire.com' },
-              { label: 'Ready for Wildfire', url: 'https://www.readyforwildfire.org' },
-              { label: 'PG&E Outage Map', url: 'https://pgealerts.alerts.pge.com/outagecenter/' },
-              { label: 'Rattlesnake Safety (CDFW)', url: 'https://wildlife.ca.gov/Keep-Me-Wild/Rattlesnakes' },
-              { label: 'Nextdoor (EDH)', url: 'https://nextdoor.com' },
-              { label: 'El Dorado Hills CSD', url: 'https://www.edhcsd.org' },
-              { label: 'CAL FIRE Incidents', url: 'https://www.fire.ca.gov/incidents' },
-              { label: 'AirNow — Air Quality', url: 'https://www.airnow.gov/?city=El%20Dorado%20Hills&state=CA' },
-              { label: 'El Dorado County Alerts (Nixle)', url: 'https://www.nixle.com' },
-              { label: 'SMUD Outage Map', url: 'https://www.smud.org/en/Customer-Support/Outage-Status' },
-              { label: 'EID Water District', url: 'https://www.eid.org' },
-              { label: 'National Weather Service — Sacramento', url: 'https://www.weather.gov/sto/' },
-              { label: 'Ring Neighbors (Crime Alerts)', url: 'https://neighbors.ring.com' },
-            ].map((link) => (
-              <a
-                key={link.label}
-                href={link.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-cream-100 rounded-sm p-3 text-forest-600 font-sans text-sm hover:text-gold-500 hover:bg-cream-200 transition-colors"
-              >
-                {link.label} &rarr;
-              </a>
-            ))}
-          </div>
+          {linksLoading ? (
+            <div className="flex justify-center py-8">
+              <Loader2 className="animate-spin text-forest-400" size={24} />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              {usefulLinks.map((link) => (
+                <a
+                  key={link.id}
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="bg-cream-100 rounded-sm p-3 text-forest-600 font-sans text-sm hover:text-gold-500 hover:bg-cream-200 transition-colors"
+                >
+                  {link.label} &rarr;
+                </a>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>
