@@ -108,6 +108,15 @@ export const newsApi = {
   list: (params?: any) => api.get('/api/news', { params }),
 };
 
+// ─── Safety Links ─────────────────────────────────────────────────────────────
+export const safetyLinksApi = {
+  list: () => api.get('/api/safety-links'),
+  create: (data: { label: string; url: string; sort_order?: number }) => api.post('/api/safety-links', data),
+  update: (id: string, data: any) => api.put(`/api/safety-links/${id}`, data),
+  delete: (id: string) => api.delete(`/api/safety-links/${id}`),
+  seed: () => api.post('/api/safety-links/seed'),
+};
+
 // ─── Members ──────────────────────────────────────────────────────────────────
 export const membersApi = {
   list: (params?: any) => api.get('/api/members', { params }),
