@@ -4,6 +4,7 @@ import { useState, useRef } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { getApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import Turnstile from '@/components/Turnstile';
@@ -39,8 +40,7 @@ export default function LoginPage() {
       const role = result.user?.role;
       router.push(role === 'super_admin' || role === 'content_admin' ? '/edh' : '/');
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Login failed. Please try again.';
-      toast.error(msg);
+      toast.error(getApiError(err, 'Login failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -57,8 +57,7 @@ export default function LoginPage() {
       const role = stored ? JSON.parse(stored).role : '';
       router.push(role === 'super_admin' || role === 'content_admin' ? '/edh' : '/');
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Invalid code. Please try again.';
-      toast.error(msg);
+      toast.error(getApiError(err, 'Invalid code. Please try again.'));
     } finally {
       setLoading(false);
     }
