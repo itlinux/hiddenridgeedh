@@ -1,8 +1,8 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { getApiError } from '@/lib/api';
 import { toast } from 'sonner';
@@ -12,6 +12,7 @@ import Turnstile from '@/components/Turnstile';
 export default function LoginPage() {
   const { login, verify2FA } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -24,6 +25,15 @@ export default function LoginPage() {
   const [tempToken, setTempToken] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const codeInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      toast.success('Email verified! Your account is pending admin approval.');
+    } else if (verified === 'already') {
+      toast.info('Your email was already verified.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();

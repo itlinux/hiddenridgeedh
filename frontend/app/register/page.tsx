@@ -63,13 +63,17 @@ export default function RegisterPage() {
         <div className="max-w-md w-full text-center">
           <div className="card p-10">
             <CheckCircle className="text-green-500 mx-auto mb-5" size={56} />
-            <h1 className="font-serif text-3xl text-forest-800 mb-4">Registration Received</h1>
+            <h1 className="font-serif text-3xl text-forest-800 mb-4">Check Your Email</h1>
             <p className="font-body text-forest-500 leading-relaxed mb-2">
               Thank you for registering with Hidden Ridge EDH.
             </p>
-            <p className="font-body text-forest-500 leading-relaxed mb-8">
-              Your account is <strong>pending approval</strong> by a neighborhood administrator.
-              You'll receive an email once your account has been approved.
+            <p className="font-body text-forest-500 leading-relaxed mb-2">
+              We&apos;ve sent a <strong>verification email</strong> to your address.
+              Please click the link in the email to verify your account.
+            </p>
+            <p className="font-body text-forest-400 text-sm leading-relaxed mb-8">
+              The email also contains the password you chose for your reference.
+              After verification, an administrator will review and approve your account.
             </p>
             <Link href="/" className="btn-gold text-sm px-8 py-3 inline-block">
               Back to Home

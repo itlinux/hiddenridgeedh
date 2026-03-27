@@ -46,7 +46,7 @@ export default function AdminDashboard() {
         totalEvents: eventsRes.data.total,
         subscribers: 0,
       });
-      setPendingUsers(pendingRes.data.items.slice(0, 5));
+      setPendingUsers((pendingRes.data.pending || pendingRes.data.items || []).slice(0, 5));
     } catch (err) {
       console.error('Failed to load stats', err);
     }
