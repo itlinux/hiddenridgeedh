@@ -48,11 +48,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const storedToken = localStorage.getItem('hr_token');
-    const storedUser = localStorage.getItem('hr_user');
-    if (storedToken && storedUser) {
-      setToken(storedToken);
-      setUser(JSON.parse(storedUser));
+    try {
+      const storedToken = localStorage.getItem('hr_token');
+      const storedUser = localStorage.getItem('hr_user');
+      if (storedToken && storedUser) {
+        const parsed = JSON.parse(storedUser);
+        if (parsed && parsed.id && parsed.email) {
+          setToken(storedToken);
+          setUser(parsed);
+        } else {
+          localStorage.removeItem('hr_token');
+          localStorage.removeItem('hr_user');
+        }
+      }
+    } catch {
+      localStorage.removeItem('hr_token');
+      localStorage.removeItem('hr_user');
     }
     setIsLoading(false);
   }, []);
