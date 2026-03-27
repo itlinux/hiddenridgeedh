@@ -121,6 +121,7 @@ export default function ManageMembersPage() {
       await membersApi.delete(userId);
       setMembers(prev => prev.filter(m => m.id !== userId));
       setPending(prev => prev.filter(p => p.id !== userId));
+      setRejected(prev => prev.filter(r => r.id !== userId));
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to delete');
     }
