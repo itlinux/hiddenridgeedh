@@ -164,7 +164,12 @@ async def send_approval_notification(to_email: str, full_name: str):
         <p>Hi {full_name},</p>
         <p>Great news! Your Hidden Ridge EDH account has been <strong>approved</strong>.</p>
         <p>You can now log in and access the forum, photo gallery, events, and member directory.</p>
-        <p><a href="{settings.app_url}/login" style="color: #C9A84C;">Sign In Now</a></p>
+        <p>Your login email is: <strong>{to_email}</strong></p>
+        <p style="text-align: center; margin: 24px 0;">
+            <a href="{settings.app_url}/login" target="_blank" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block; border-radius: 4px;">
+                Sign In Now
+            </a>
+        </p>
         """,
     )
     try:
