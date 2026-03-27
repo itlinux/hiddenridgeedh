@@ -62,6 +62,17 @@ async def list_pending(
     return {"pending": pending, "total": len(pending)}
 
 
+@router.get("/rejected")
+async def list_rejected(
+    current_user: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    query = {"role": "rejected"}
+    cursor = db.users.find(query).sort("rejected_at", -1)
+    rejected = [serialize_member(u, include_email=True) async for u in cursor]
+    return {"rejected": rejected, "total": len(rejected)}
+
+
 # ── Update own profile (any authenticated user) ─────────────────
 @router.put("/me")
 async def update_my_profile(
@@ -166,15 +177,6 @@ async def reject_member(
     return {"message": "Member rejected"}
 
 
-@router.get("/rejected")
-async def list_rejected(
-    current_user: dict = Depends(require_super_admin),
-):
-    db = get_db()
-    query = {"role": "rejected"}
-    cursor = db.users.find(query).sort("rejected_at", -1)
-    rejected = [serialize_member(u, include_email=True) async for u in cursor]
-    return {"rejected": rejected, "total": len(rejected)}
 
 
 @router.put("/{user_id}/role")
