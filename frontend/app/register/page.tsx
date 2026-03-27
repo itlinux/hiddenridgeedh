@@ -142,6 +142,11 @@ export default function RegisterPage() {
                 placeholder="your@email.com"
                 required
               />
+              {form.email.includes('@') && (
+                <p className="text-forest-400 text-xs mt-1 font-sans">
+                  Your username will be: <strong className="text-forest-600">{form.email.split('@')[0].toLowerCase()}</strong>
+                </p>
+              )}
             </div>
 
             <div>
