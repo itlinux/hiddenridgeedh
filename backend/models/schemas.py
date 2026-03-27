@@ -18,7 +18,7 @@ class UserRole(str, Enum):
 
 class UserCreate(BaseModel):
     email: EmailStr
-    username: str = Field(..., min_length=3, max_length=30)
+    username: Optional[str] = Field(None, min_length=3, max_length=30)
     full_name: str = Field(..., min_length=2, max_length=100)
     password: str = Field(..., min_length=8, max_length=128)
     address: Optional[str] = Field(None, max_length=200)
@@ -32,8 +32,8 @@ class UserCreate(BaseModel):
 
     @field_validator("username")
     @classmethod
-    def username_alphanumeric(cls, v: str) -> str:
-        if not re.match(r"^[a-zA-Z0-9_\-]+$", v):
+    def username_alphanumeric(cls, v: str | None) -> str | None:
+        if v is not None and not re.match(r"^[a-zA-Z0-9_\-]+$", v):
             raise ValueError("Username may only contain letters, numbers, underscores, and hyphens")
         return v
 
