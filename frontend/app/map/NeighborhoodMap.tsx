@@ -59,7 +59,7 @@ export default function NeighborhoodMap({ members, initialSearch = '' }: Props) 
         const pos = { lat: location.lat(), lng: location.lng() };
         setSearchMarker({ ...pos, name: result.results[0].formatted_address });
         map.panTo(pos);
-        map.setZoom(18);
+        map.setZoom(16);
       }
     }).catch(() => {});
   }, []);
