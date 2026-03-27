@@ -62,6 +62,16 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleReject = async (userId: string) => {
+    try {
+      await membersApi.reject(userId);
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      if (stats) setStats({ ...stats, pendingMembers: stats.pendingMembers - 1 });
+    } catch (err) {
+      console.error('Reject failed', err);
+    }
+  };
+
   if (isLoading) return <div className="min-h-screen bg-cream-50 flex items-center justify-center"><div className="text-forest-500">Loading...</div></div>;
   if (!isAdmin) return null;
 
@@ -123,12 +133,20 @@ export default function AdminDashboard() {
                       {user.address && <div className="text-forest-400 text-xs">{user.address}</div>}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleApprove(user.id, user.full_name)}
-                    className="btn-primary text-xs py-2 px-4 whitespace-nowrap"
-                  >
-                    Approve
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleApprove(user.id, user.full_name)}
+                      className="btn-gold text-xs py-2 px-4 whitespace-nowrap"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleReject(user.id)}
+                      className="px-3 py-2 text-xs font-sans bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition-colors whitespace-nowrap"
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>
