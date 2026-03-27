@@ -4,7 +4,7 @@ from bson import ObjectId
 from database import get_db, get_settings
 from models.schemas import UserCreate, UserInDB, Token, LoginRequest, UserRole
 from middleware.auth import hash_password, verify_password, create_access_token, get_current_user
-from utils.email import send_pending_notification, send_admin_new_user_alert
+from utils.email import send_pending_notification, send_admin_new_user_alert, send_verification_email
 from utils.turnstile import verify_turnstile
 from utils.rate_limit import is_ip_blocked, record_failed_login, record_successful_login, get_all_blocked_ips, unblock_ip
 from utils.limiter import limiter
@@ -23,6 +23,7 @@ def serialize_user(user: dict) -> dict:
     user.pop("password_hash", None)
     user.pop("totp_secret", None)
     user.pop("totp_backup_codes", None)
+    user.pop("verification_token", None)
     user["totp_enabled"] = user.get("totp_enabled", False)
     user["sms_opt_in"] = user.get("sms_opt_in", False)
     return user
@@ -42,6 +43,8 @@ async def register(request: Request, data: UserCreate):
         field = "email" if existing.get("email") == data.email else "username"
         raise HTTPException(400, detail=f"That {field} is already registered.")
 
+    verification_token = secrets.token_urlsafe(32)
+
     user_doc = {
         "email": data.email,
         "username": data.username,
@@ -56,6 +59,8 @@ async def register(request: Request, data: UserCreate):
         "role": UserRole.PENDING,
         "is_active": True,
         "is_approved": False,
+        "email_verified": False,
+        "verification_token": verification_token,
         "created_at": datetime.utcnow(),
         "approved_at": None,
         "approved_by": None,
@@ -64,17 +69,46 @@ async def register(request: Request, data: UserCreate):
     result = await db.users.insert_one(user_doc)
     user_doc["id"] = str(result.inserted_id)
 
-    # Email notifications
+    # Send verification email (with password for user reference)
     try:
-        await send_pending_notification(data.email, data.full_name)
-        if settings.admin_email:
-            await send_admin_new_user_alert(
-                settings.admin_email, data.full_name, data.email, settings.app_url
-            )
+        verify_url = f"{settings.app_url}/api/auth/verify-email?token={verification_token}"
+        await send_verification_email(data.email, data.full_name, data.password, verify_url)
     except Exception:
         pass  # Don't fail registration if email fails
 
-    return {"message": "Registration successful. Your account is pending approval.", "user_id": user_doc["id"]}
+    return {"message": "Please check your email to verify your address.", "user_id": user_doc["id"]}
+
+
+@router.get("/verify-email")
+async def verify_email(token: str):
+    from fastapi.responses import RedirectResponse
+
+    db = get_db()
+    settings = get_settings()
+
+    user = await db.users.find_one({"verification_token": token})
+    if not user:
+        raise HTTPException(400, detail="Invalid or expired verification link.")
+
+    if user.get("email_verified"):
+        return RedirectResponse(f"{settings.app_url}/login?verified=already")
+
+    await db.users.update_one(
+        {"_id": user["_id"]},
+        {"$set": {"email_verified": True}, "$unset": {"verification_token": ""}},
+    )
+
+    # Now send pending notification to user and admin alert
+    try:
+        await send_pending_notification(user["email"], user["full_name"])
+        if settings.admin_email:
+            await send_admin_new_user_alert(
+                settings.admin_email, user["full_name"], user["email"], settings.app_url
+            )
+    except Exception:
+        pass
+
+    return RedirectResponse(f"{settings.app_url}/login?verified=true")
 
 
 def _get_client_ip(request: Request) -> str:
@@ -136,6 +170,9 @@ async def login(data: LoginRequest, request: Request):
 
     if not user.get("is_active"):
         raise HTTPException(status_code=400, detail="Account deactivated")
+
+    if not user.get("email_verified", True):
+        raise HTTPException(status_code=400, detail="Please verify your email address first. Check your inbox for the verification link.")
 
     # Successful credentials — clear rate limit
     record_successful_login(client_ip)
