@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
 import { membersApi, authApi } from '@/lib/api';
 import Image from 'next/image';
-import { Loader2, Save, Lock, Eye, EyeOff, ShieldCheck, ShieldOff, Copy, Check } from 'lucide-react';
+import { Loader2, Save, Lock, Eye, EyeOff, ShieldCheck, ShieldOff, Copy, Check, Camera } from 'lucide-react';
 import { toast } from 'sonner';
 import PageHeader from '@/components/layout/PageHeader';
 
@@ -76,14 +76,38 @@ export default function ProfilePage() {
       <div className="max-w-lg mx-auto px-4 py-12 space-y-8">
         <div className="card p-8">
           <div className="text-center mb-8">
-            <div className="w-20 h-20 bg-forest-100 border-2 border-forest-200 rounded-full flex items-center justify-center mx-auto mb-4">
-              {user.avatar_url ? (
-                <img src={user.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
-              ) : (
-                <span className="text-forest-600 font-serif font-bold text-2xl">
-                  {user.full_name.charAt(0)}
-                </span>
-              )}
+            <div className="relative w-20 h-20 mx-auto mb-4 group">
+              <div className="w-20 h-20 bg-forest-100 border-2 border-forest-200 rounded-full flex items-center justify-center overflow-hidden">
+                {user.avatar_url ? (
+                  <img src={user.avatar_url} alt="" className="w-full h-full rounded-full object-cover" />
+                ) : (
+                  <span className="text-forest-600 font-serif font-bold text-2xl">
+                    {user.full_name.charAt(0)}
+                  </span>
+                )}
+              </div>
+              <label className="absolute inset-0 flex items-center justify-center bg-black/40 rounded-full opacity-0 group-hover:opacity-100 cursor-pointer transition-opacity">
+                <Camera size={20} className="text-white" />
+                <input
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp"
+                  className="hidden"
+                  onChange={async (e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    if (file.size > 5 * 1024 * 1024) { toast.error('Image must be under 5MB'); return; }
+                    const fd = new FormData();
+                    fd.append('file', file);
+                    try {
+                      await membersApi.uploadAvatar(fd);
+                      await refreshUser();
+                      toast.success('Photo updated');
+                    } catch {
+                      toast.error('Failed to upload photo');
+                    }
+                  }}
+                />
+              </label>
             </div>
             <p className="text-forest-400 text-sm font-sans">{user.email}</p>
             <span className="inline-block bg-forest-100 text-forest-600 text-xs font-sans px-3 py-1 rounded-sm uppercase tracking-wider mt-2">

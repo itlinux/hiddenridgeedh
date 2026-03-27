@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
@@ -33,9 +33,10 @@ interface MemberPin {
 
 interface Props {
   members: MemberPin[];
+  initialSearch?: string;
 }
 
-export default function NeighborhoodMap({ members }: Props) {
+export default function NeighborhoodMap({ members, initialSearch = '' }: Props) {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '',
     libraries: LIBRARIES,
@@ -46,10 +47,32 @@ export default function NeighborhoodMap({ members }: Props) {
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; name: string } | null>(null);
+  const initialSearchDone = useRef(false);
 
   const onLoad = useCallback((map: google.maps.Map) => {
     mapRef.current = map;
   }, []);
+
+  // Auto-search when arriving with ?search= param
+  useEffect(() => {
+    if (initialSearch && isLoaded && mapRef.current && !initialSearchDone.current) {
+      initialSearchDone.current = true;
+      setQuery(initialSearch);
+      const geocoder = new google.maps.Geocoder();
+      const searchQuery = initialSearch.toLowerCase().includes('el dorado') || initialSearch.toLowerCase().includes('edh')
+        ? initialSearch
+        : `${initialSearch}, El Dorado Hills, CA`;
+      geocoder.geocode({ address: searchQuery }).then((result) => {
+        if (result.results.length > 0) {
+          const location = result.results[0].geometry.location;
+          const pos = { lat: location.lat(), lng: location.lng() };
+          setSearchMarker({ ...pos, name: result.results[0].formatted_address });
+          mapRef.current?.panTo(pos);
+          mapRef.current?.setZoom(18);
+        }
+      }).catch(() => {});
+    }
+  }, [initialSearch, isLoaded]);
 
   const handleSearch = useCallback(async (e: React.FormEvent) => {
     e.preventDefault();
@@ -150,7 +173,9 @@ export default function NeighborhoodMap({ members }: Props) {
             onCloseClick={() => setSelectedMember(null)}
           >
             <div className="text-sm p-1">
-              <strong className="text-forest-800">{selectedMember.full_name}</strong>
+              <a href={`/members/${selectedMember.id}`} className="text-forest-800 font-bold hover:text-gold-500 transition-colors">
+                {selectedMember.full_name}
+              </a>
               {selectedMember.address && (
                 <p className="text-forest-500 mt-1 text-xs">{selectedMember.address}</p>
               )}
