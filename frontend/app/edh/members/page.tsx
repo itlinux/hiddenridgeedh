@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { membersApi } from '@/lib/api';
-import { ArrowLeft, Users, CheckCircle, Shield, UserX, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, Shield, UserX, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
@@ -46,6 +46,7 @@ export default function ManageMembersPage() {
   const [rejected, setRejected] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'all' | 'pending' | 'rejected'>('all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!isLoading && !isAdmin) router.push('/');
@@ -164,8 +165,9 @@ export default function ManageMembersPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6">
+        {/* Tabs + Search */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <div className="flex gap-1 flex-1 min-w-0">
           <button
             onClick={() => setTab('all')}
             className={`px-5 py-2 text-sm font-sans rounded-sm transition-colors ${tab === 'all' ? 'bg-forest-800 text-cream-100' : 'bg-cream-200 text-forest-600 hover:bg-cream-300'}`}
@@ -188,6 +190,19 @@ export default function ManageMembersPage() {
                 Rejected ({rejected.length})
               </button>
             </>
+          )}
+          </div>
+          {tab === 'all' && (
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-forest-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search members..."
+                className="input-field pl-8 py-2 text-sm w-56"
+              />
+            </div>
           )}
         </div>
 
@@ -254,14 +269,17 @@ export default function ManageMembersPage() {
             </div>
           )
         ) : (
-          members.length === 0 ? (
+          (() => {
+            const q = search.trim().toLowerCase();
+            const filtered = q ? members.filter(m => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q)) : members;
+            return filtered.length === 0 ? (
             <div className="card p-8 text-center">
               <Users className="text-forest-300 mx-auto mb-3" size={32} />
-              <p className="text-forest-400 font-body">No approved members yet</p>
+              <p className="text-forest-400 font-body">{search ? 'No members match your search' : 'No approved members yet'}</p>
             </div>
           ) : (
             <div className="card divide-y divide-cream-100">
-              {members.map((m) => (
+              {filtered.map((m) => (
                 <div key={m.id} className={`p-5 flex items-center justify-between gap-4 ${m.is_suspended ? 'bg-amber-50' : ''}`}>
                   <div className="flex items-center gap-3 flex-1 min-w-0">
                     <div className={`w-10 h-10 border rounded-full flex items-center justify-center shrink-0 ${m.is_suspended ? 'bg-amber-100 border-amber-300' : 'bg-forest-100 border-forest-200'}`}>
@@ -310,7 +328,8 @@ export default function ManageMembersPage() {
                 </div>
               ))}
             </div>
-          )
+          );
+          })()
         )}
       </div>
     </div>
