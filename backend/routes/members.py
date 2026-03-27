@@ -112,7 +112,7 @@ async def get_member(
     user = await db.users.find_one({"_id": ObjectId(user_id), "is_approved": True, "is_active": True})
     if not user:
         raise HTTPException(404, "Member not found")
-    return serialize_member(user)
+    return serialize_member(user, include_email=True)
 
 
 @router.put("/{user_id}/approve")
