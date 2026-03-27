@@ -14,7 +14,7 @@ def _build_html(title: str, body: str) -> str:
     return f"""
     <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #1B2E1F; padding: 24px; text-align: center;">
-            <img src="{logo_url}" alt="Hidden Ridge EDH" width="80" height="80" style="margin-bottom: 12px;" />
+            <img src="{logo_url}" alt="Hidden Ridge EDH" width="80" height="80" style="margin-bottom: 12px; border-radius: 4px;" />
             <h1 style="color: #C9A84C; margin: 0; font-size: 24px;">Hidden Ridge EDH</h1>
         </div>
         <div style="padding: 32px 24px; background-color: #F5F0E8;">
@@ -100,9 +100,13 @@ async def send_verification_email(
         <p>Thank you for registering with Hidden Ridge EDH.
         Please verify your email address by clicking the button below:</p>
         <p style="text-align: center; margin: 24px 0;">
-            <a href="{verify_url}" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block;">
+            <a href="{verify_url}" target="_blank" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block; border-radius: 4px;">
                 Verify Email Address
             </a>
+        </p>
+        <p style="text-align: center; font-size: 12px; color: #666;">
+            Or copy and paste this link into your browser:<br/>
+            <a href="{verify_url}" style="color: #C9A84C; word-break: break-all;">{verify_url}</a>
         </p>
         <p>For your reference, the password you chose is:</p>
         <p style="background-color: #fff; border: 1px solid #ddd; padding: 12px 16px; font-family: monospace; font-size: 15px; letter-spacing: 1px;">{password}</p>
