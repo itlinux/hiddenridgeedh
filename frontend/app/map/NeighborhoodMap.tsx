@@ -47,59 +47,40 @@ export default function NeighborhoodMap({ members, initialSearch = '' }: Props) 
   const [query, setQuery] = useState('');
   const [searching, setSearching] = useState(false);
   const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; name: string } | null>(null);
-  const initialSearchDone = useRef(false);
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
-  }, []);
-
-  // Auto-search when arriving with ?search= param
-  useEffect(() => {
-    if (initialSearch && isLoaded && mapRef.current && !initialSearchDone.current) {
-      initialSearchDone.current = true;
-      setQuery(initialSearch);
-      const geocoder = new google.maps.Geocoder();
-      const searchQuery = initialSearch.toLowerCase().includes('el dorado') || initialSearch.toLowerCase().includes('edh')
-        ? initialSearch
-        : `${initialSearch}, El Dorado Hills, CA`;
-      geocoder.geocode({ address: searchQuery }).then((result) => {
-        if (result.results.length > 0) {
-          const location = result.results[0].geometry.location;
-          const pos = { lat: location.lat(), lng: location.lng() };
-          setSearchMarker({ ...pos, name: result.results[0].formatted_address });
-          mapRef.current?.panTo(pos);
-          mapRef.current?.setZoom(18);
-        }
-      }).catch(() => {});
-    }
-  }, [initialSearch, isLoaded]);
-
-  const handleSearch = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim() || !mapRef.current) return;
-
-    setSearching(true);
-    try {
-      const geocoder = new google.maps.Geocoder();
-      const searchQuery = query.toLowerCase().includes('el dorado') || query.toLowerCase().includes('edh')
-        ? query
-        : `${query}, El Dorado Hills, CA`;
-
-      const result = await geocoder.geocode({ address: searchQuery });
+  const doGeocode = useCallback((address: string, map: google.maps.Map) => {
+    const geocoder = new google.maps.Geocoder();
+    const searchQuery = address.toLowerCase().includes('el dorado') || address.toLowerCase().includes('edh')
+      ? address
+      : `${address}, El Dorado Hills, CA`;
+    geocoder.geocode({ address: searchQuery }).then((result) => {
       if (result.results.length > 0) {
         const location = result.results[0].geometry.location;
         const pos = { lat: location.lat(), lng: location.lng() };
         setSearchMarker({ ...pos, name: result.results[0].formatted_address });
-        mapRef.current.panTo(pos);
-        mapRef.current.setZoom(18);
-        setSelectedMember(null);
+        map.panTo(pos);
+        map.setZoom(18);
       }
-    } catch {
-      // Geocoding failed
-    } finally {
-      setSearching(false);
+    }).catch(() => {});
+  }, []);
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+    // Auto-search when arriving with ?search= param
+    if (initialSearch) {
+      setQuery(initialSearch);
+      doGeocode(initialSearch, map);
     }
-  }, [query]);
+  }, [initialSearch, doGeocode]);
+
+  const handleSearch = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim() || !mapRef.current) return;
+    setSearching(true);
+    setSelectedMember(null);
+    doGeocode(query, mapRef.current);
+    setSearching(false);
+  }, [query, doGeocode]);
 
   const clearSearch = () => {
     setQuery('');
