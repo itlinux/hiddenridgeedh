@@ -143,17 +143,15 @@ async def upload_avatar(
         raise HTTPException(400, "File too large. Maximum 5MB.")
 
     settings = get_settings()
-    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
-    filename = f"avatar_{uuid.uuid4()}.{ext}"
+    filename = f"avatar_{uuid.uuid4()}.jpg"
     file_path = os.path.join(settings.upload_dir, filename)
 
-    # Save and resize to 300x300
-    with open(file_path, "wb") as f:
-        f.write(contents)
-
-    img = Image.open(file_path)
+    # Save, convert to RGB (handles PNG transparency), and resize to 300x300
+    import io as _io
+    img = Image.open(_io.BytesIO(contents))
+    img = img.convert("RGB")
     img.thumbnail((300, 300))
-    img.save(file_path, quality=90)
+    img.save(file_path, format="JPEG", quality=90)
 
     avatar_url = f"/uploads/{filename}"
 
