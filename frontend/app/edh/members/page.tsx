@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { membersApi } from '@/lib/api';
-import { ArrowLeft, Users, CheckCircle, Shield, UserX, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
@@ -63,7 +63,7 @@ export default function ManageMembersPage() {
         isSuperAdmin ? membersApi.pending() : Promise.resolve({ data: { pending: [] } }),
         isSuperAdmin ? membersApi.rejected() : Promise.resolve({ data: { rejected: [] } }),
       ]);
-      setMembers((membersRes.data.members || []).map((m: any) => ({ ...m, is_approved: true, is_active: true })));
+      setMembers((membersRes.data.members || []).map((m: any) => ({ is_approved: true, ...m })));
       setPending((pendingRes.data.pending || []).map((m: any) => ({ ...m })));
       setRejected((rejectedRes.data.rejected || []).map((m: any) => ({ ...m })));
     } catch {
