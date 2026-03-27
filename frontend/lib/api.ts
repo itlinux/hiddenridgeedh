@@ -31,6 +31,16 @@ api.interceptors.response.use(
 
 export default api;
 
+/** Extract a human-readable error message from an Axios error (handles FastAPI 422 arrays). */
+export function getApiError(err: any, fallback = 'Something went wrong. Please try again.'): string {
+  const detail = err?.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    return detail.map((e: any) => e.msg || String(e)).join('. ');
+  }
+  return fallback;
+}
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
   register: (data: any) => api.post('/api/auth/register', data),

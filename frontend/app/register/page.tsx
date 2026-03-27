@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api';
+import { authApi, getApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import Turnstile from '@/components/Turnstile';
@@ -15,6 +15,7 @@ export default function RegisterPage() {
   const [success, setSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
   const [smsOptIn, setSmsOptIn] = useState(false);
+  const [emailOptIn, setEmailOptIn] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     email: '',
@@ -42,12 +43,12 @@ export default function RegisterPage() {
       await authApi.register({
         ...form,
         sms_opt_in: smsOptIn,
+        email_opt_in: emailOptIn,
         turnstile_token: turnstileToken || undefined,
       });
       setSuccess(true);
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Registration failed. Please try again.';
-      toast.error(msg);
+      toast.error(getApiError(err, 'Registration failed. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -211,6 +212,26 @@ export default function RegisterPage() {
                 <p className="text-forest-400 font-sans text-xs mt-1">
                   We will never spam you or share your number. SMS is only used for emergencies and is never
                   sent to members who have not opted in.
+                </p>
+              </div>
+            </div>
+
+            {/* Email opt-in */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="email_opt_in"
+                checked={emailOptIn}
+                onChange={(e) => setEmailOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
+              />
+              <div>
+                <label htmlFor="email_opt_in" className="text-forest-600 font-sans text-sm leading-relaxed cursor-pointer">
+                  I&apos;d like to receive <strong>email notifications</strong> for neighborhood news,
+                  events, and community updates.
+                </label>
+                <p className="text-forest-400 font-sans text-xs mt-1">
+                  You can unsubscribe at any time from your profile settings.
                 </p>
               </div>
             </div>
