@@ -38,16 +38,24 @@ async def register(request: Request, data: UserCreate):
     db = get_db()
     settings = get_settings()
 
-    existing = await db.users.find_one({"$or": [{"email": data.email}, {"username": data.username}]})
+    existing = await db.users.find_one({"email": data.email})
     if existing:
-        field = "email" if existing.get("email") == data.email else "username"
-        raise HTTPException(400, detail=f"That {field} is already registered.")
+        raise HTTPException(400, detail="That email is already registered.")
+
+    # Auto-generate username from email prefix
+    username = data.email.split("@")[0].lower()
+    # Ensure uniqueness by appending a number if needed
+    base_username = username
+    counter = 1
+    while await db.users.find_one({"username": username}):
+        username = f"{base_username}{counter}"
+        counter += 1
 
     verification_token = secrets.token_urlsafe(32)
 
     user_doc = {
         "email": data.email,
-        "username": data.username,
+        "username": username,
         "full_name": data.full_name,
         "address": data.address,
         "bio": data.bio,

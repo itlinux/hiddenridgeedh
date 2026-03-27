@@ -20,7 +20,6 @@ export default function RegisterPage() {
   const [form, setForm] = useState({
     full_name: '',
     email: '',
-    username: '',
     password: '',
     address: '',
     phone: '',
@@ -141,18 +140,6 @@ export default function RegisterPage() {
                 onChange={update('email')}
                 className="input-field"
                 placeholder="your@email.com"
-                required
-              />
-            </div>
-
-            <div>
-              <label className="section-label block mb-2">Username *</label>
-              <input
-                type="text"
-                value={form.username}
-                onChange={update('username')}
-                className="input-field"
-                placeholder="johnsmith"
                 required
               />
             </div>
