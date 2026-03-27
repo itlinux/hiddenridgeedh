@@ -25,6 +25,7 @@ class UserCreate(BaseModel):
     bio: Optional[str] = Field(None, max_length=500)
     phone: Optional[str] = Field(None, max_length=20)
     sms_opt_in: bool = False
+    email_opt_in: bool = False
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     turnstile_token: Optional[str] = None

@@ -50,6 +50,7 @@ async def register(request: Request, data: UserCreate):
         "bio": data.bio,
         "phone": data.phone,
         "sms_opt_in": data.sms_opt_in,
+        "email_opt_in": data.email_opt_in,
         "avatar_url": None,
         "password_hash": hash_password(data.password),
         "role": UserRole.PENDING,
