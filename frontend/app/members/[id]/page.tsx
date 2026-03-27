@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ArrowLeft, Loader2 } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Phone, Mail } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -14,6 +14,8 @@ interface Member {
   bio?: string;
   avatar_url?: string;
   address?: string;
+  email?: string;
+  phone?: string;
   role?: string;
 }
 
@@ -69,6 +71,29 @@ export default function MemberProfilePage() {
           )}
           {member.bio && (
             <p className="font-body text-forest-500 mt-6 leading-relaxed">{member.bio}</p>
+          )}
+
+          {(member.address || member.email || member.phone) && (
+            <div className="mt-8 pt-6 border-t border-forest-100 space-y-3 text-left">
+              {member.address && (
+                <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
+                  <MapPin size={16} className="text-forest-400 flex-shrink-0" />
+                  <span>{member.address}</span>
+                </div>
+              )}
+              {member.email && (
+                <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
+                  <Mail size={16} className="text-forest-400 flex-shrink-0" />
+                  <a href={`mailto:${member.email}`} className="hover:text-gold-500 transition-colors">{member.email}</a>
+                </div>
+              )}
+              {member.phone && (
+                <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
+                  <Phone size={16} className="text-forest-400 flex-shrink-0" />
+                  <a href={`tel:${member.phone}`} className="hover:text-gold-500 transition-colors">{member.phone}</a>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>
