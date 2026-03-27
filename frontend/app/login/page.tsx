@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
@@ -10,6 +10,14 @@ import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import Turnstile from '@/components/Turnstile';
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const { login, verify2FA } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
