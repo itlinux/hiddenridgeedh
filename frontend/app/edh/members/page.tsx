@@ -42,8 +42,9 @@ export default function ManageMembersPage() {
   const router = useRouter();
   const [members, setMembers] = useState<Member[]>([]);
   const [pending, setPending] = useState<Member[]>([]);
+  const [rejected, setRejected] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
-  const [tab, setTab] = useState<'all' | 'pending'>('all');
+  const [tab, setTab] = useState<'all' | 'pending' | 'rejected'>('all');
 
   useEffect(() => {
     if (!isLoading && !isAdmin) router.push('/');
@@ -55,15 +56,18 @@ export default function ManageMembersPage() {
 
   const loadAll = async () => {
     try {
-      const [membersRes, pendingRes] = await Promise.all([
+      const [membersRes, pendingRes, rejectedRes] = await Promise.all([
         membersApi.list({ limit: 200 }),
         isSuperAdmin ? membersApi.pending() : Promise.resolve({ data: { pending: [] } }),
+        isSuperAdmin ? membersApi.rejected() : Promise.resolve({ data: { rejected: [] } }),
       ]);
       setMembers((membersRes.data.members || []).map((m: any) => ({ ...m, is_approved: true, is_active: true })));
-      setPending((pendingRes.data.pending || pendingRes.data.items || []).map((m: any) => ({ ...m })));
+      setPending((pendingRes.data.pending || []).map((m: any) => ({ ...m })));
+      setRejected((rejectedRes.data.rejected || []).map((m: any) => ({ ...m })));
     } catch {
       setMembers([]);
       setPending([]);
+      setRejected([]);
     } finally {
       setLoading(false);
     }
@@ -72,11 +76,23 @@ export default function ManageMembersPage() {
   const handleApprove = async (userId: string) => {
     try {
       await membersApi.approve(userId);
-      const approved = pending.find(p => p.id === userId);
+      const approved = pending.find(p => p.id === userId) || rejected.find(r => r.id === userId);
       setPending(prev => prev.filter(p => p.id !== userId));
+      setRejected(prev => prev.filter(r => r.id !== userId));
       if (approved) setMembers(prev => [{ ...approved, role: 'member', is_approved: true, is_active: true }, ...prev]);
     } catch (err: any) {
       alert(err.response?.data?.detail || 'Failed to approve');
+    }
+  };
+
+  const handleReject = async (userId: string) => {
+    try {
+      await membersApi.reject(userId);
+      const rejectedUser = pending.find(p => p.id === userId);
+      setPending(prev => prev.filter(p => p.id !== userId));
+      if (rejectedUser) setRejected(prev => [{ ...rejectedUser, role: 'rejected' }, ...prev]);
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to reject');
     }
   };
 
@@ -136,13 +152,21 @@ export default function ManageMembersPage() {
             All Members ({members.length})
           </button>
           {isSuperAdmin && (
-            <button
-              onClick={() => setTab('pending')}
-              className={`px-5 py-2 text-sm font-sans rounded-sm transition-colors flex items-center gap-2 ${tab === 'pending' ? 'bg-forest-800 text-cream-100' : 'bg-cream-200 text-forest-600 hover:bg-cream-300'}`}
-            >
-              Pending ({pending.length})
-              {pending.length > 0 && <span className="w-2 h-2 bg-amber-500 rounded-full" />}
-            </button>
+            <>
+              <button
+                onClick={() => setTab('pending')}
+                className={`px-5 py-2 text-sm font-sans rounded-sm transition-colors flex items-center gap-2 ${tab === 'pending' ? 'bg-forest-800 text-cream-100' : 'bg-cream-200 text-forest-600 hover:bg-cream-300'}`}
+              >
+                Pending ({pending.length})
+                {pending.length > 0 && <span className="w-2 h-2 bg-amber-500 rounded-full" />}
+              </button>
+              <button
+                onClick={() => setTab('rejected')}
+                className={`px-5 py-2 text-sm font-sans rounded-sm transition-colors flex items-center gap-2 ${tab === 'rejected' ? 'bg-forest-800 text-cream-100' : 'bg-cream-200 text-forest-600 hover:bg-cream-300'}`}
+              >
+                Rejected ({rejected.length})
+              </button>
+            </>
           )}
         </div>
 
@@ -171,7 +195,36 @@ export default function ManageMembersPage() {
                   </div>
                   <div className="flex items-center gap-2">
                     <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
-                    <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Deny & Delete">
+                    <button onClick={() => handleReject(m.id)} className="px-4 py-2 text-xs font-sans bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition-colors">Reject</button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )
+        ) : tab === 'rejected' ? (
+          rejected.length === 0 ? (
+            <div className="card p-8 text-center">
+              <CheckCircle className="text-forest-400 mx-auto mb-3" size={32} />
+              <p className="text-forest-400 font-body">No rejected members</p>
+            </div>
+          ) : (
+            <div className="card divide-y divide-cream-100">
+              {rejected.map((m) => (
+                <div key={m.id} className="p-5 flex items-center justify-between gap-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 bg-red-50 border border-red-200 rounded-full flex items-center justify-center">
+                      <XCircle size={16} className="text-red-400" />
+                    </div>
+                    <div>
+                      <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
+                      <div className="text-forest-400 text-xs">{m.email}</div>
+                      {m.address && <div className="text-forest-400 text-xs">{m.address}</div>}
+                      {m.created_at && <div className="text-forest-400 text-xs">Registered {format(new Date(m.created_at), 'MMM d, yyyy')}</div>}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
+                    <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Delete permanently">
                       <Trash2 size={14} className="text-red-500" />
                     </button>
                   </div>

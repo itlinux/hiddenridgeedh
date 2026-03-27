@@ -147,6 +147,36 @@ async def approve_member(
     return {"message": "Member approved"}
 
 
+@router.put("/{user_id}/reject")
+async def reject_member(
+    user_id: str,
+    current_user: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(404, "User not found")
+    if user.get("is_approved"):
+        raise HTTPException(400, "Cannot reject an already approved member")
+
+    await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"role": "rejected", "rejected_at": datetime.utcnow(), "rejected_by": str(current_user["_id"])}},
+    )
+    return {"message": "Member rejected"}
+
+
+@router.get("/rejected")
+async def list_rejected(
+    current_user: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    query = {"role": "rejected"}
+    cursor = db.users.find(query).sort("rejected_at", -1)
+    rejected = [serialize_member(u, include_email=True) async for u in cursor]
+    return {"rejected": rejected, "total": len(rejected)}
+
+
 @router.put("/{user_id}/role")
 async def update_role(
     user_id: str,
