@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ArrowLeft, Loader2, MapPin, Phone, Mail } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Phone, Mail, MessageSquare } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -16,6 +16,7 @@ interface Member {
   address?: string;
   email?: string;
   phone?: string;
+  sms_opt_in?: boolean;
   role?: string;
 }
 
@@ -78,7 +79,9 @@ export default function MemberProfilePage() {
               {member.address && (
                 <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
                   <MapPin size={16} className="text-forest-400 flex-shrink-0" />
-                  <span>{member.address}</span>
+                  <Link href={`/map?search=${encodeURIComponent(member.address)}`} className="hover:text-gold-500 transition-colors">
+                    {member.address}
+                  </Link>
                 </div>
               )}
               {member.email && (
@@ -91,6 +94,11 @@ export default function MemberProfilePage() {
                 <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
                   <Phone size={16} className="text-forest-400 flex-shrink-0" />
                   <a href={`tel:${member.phone}`} className="hover:text-gold-500 transition-colors">{member.phone}</a>
+                  {member.sms_opt_in && (
+                    <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
+                      <MessageSquare size={12} /> SMS OK
+                    </span>
+                  )}
                 </div>
               )}
             </div>

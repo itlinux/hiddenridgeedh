@@ -18,15 +18,16 @@ router = APIRouter(prefix="/api/auth", tags=["auth"])
 
 
 def serialize_user(user: dict) -> dict:
-    user["id"] = str(user["_id"])
-    del user["_id"]
-    user.pop("password_hash", None)
-    user.pop("totp_secret", None)
-    user.pop("totp_backup_codes", None)
-    user.pop("verification_token", None)
-    user["totp_enabled"] = user.get("totp_enabled", False)
-    user["sms_opt_in"] = user.get("sms_opt_in", False)
-    return user
+    data = {**user}
+    data["id"] = str(data.pop("_id"))
+    data.pop("password_hash", None)
+    data.pop("totp_secret", None)
+    data.pop("totp_backup_codes", None)
+    data.pop("verification_token", None)
+    data["totp_enabled"] = data.get("totp_enabled", False)
+    data["sms_opt_in"] = data.get("sms_opt_in", False)
+    data["email_opt_in"] = data.get("email_opt_in", False)
+    return data
 
 
 @router.post("/register", status_code=201)

@@ -1,11 +1,17 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+import os
+import uuid
+from fastapi import APIRouter, HTTPException, Depends, Query, Request, UploadFile, File
 from datetime import datetime
 from bson import ObjectId
+from PIL import Image
 
-from database import get_db
+from database import get_db, get_settings
 from models.schemas import RoleUpdate, ProfileUpdate
 from middleware.auth import require_member, require_super_admin, get_current_user
 from utils.email import send_approval_notification
+
+AVATAR_TYPES = {"image/jpeg", "image/png", "image/webp"}
+AVATAR_MAX_SIZE = 5 * 1024 * 1024  # 5MB
 
 router = APIRouter(prefix="/api/members", tags=["members"])
 
@@ -92,6 +98,8 @@ async def update_my_profile(
 
     if data.full_name is not None:
         update_fields["full_name"] = data.full_name
+    if data.username is not None:
+        update_fields["username"] = data.username
     if data.bio is not None:
         update_fields["bio"] = data.bio
     if data.address is not None:
@@ -120,6 +128,49 @@ async def update_my_profile(
     # Return updated user
     updated = await db.users.find_one({"_id": current_user["_id"]})
     return serialize_member(updated, include_email=True)
+
+
+@router.put("/me/avatar")
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    if file.content_type not in AVATAR_TYPES:
+        raise HTTPException(400, "File type not allowed. Use JPEG, PNG, or WebP.")
+
+    contents = await file.read()
+    if len(contents) > AVATAR_MAX_SIZE:
+        raise HTTPException(400, "File too large. Maximum 5MB.")
+
+    settings = get_settings()
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
+    filename = f"avatar_{uuid.uuid4()}.{ext}"
+    file_path = os.path.join(settings.upload_dir, filename)
+
+    # Save and resize to 300x300
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    img = Image.open(file_path)
+    img.thumbnail((300, 300))
+    img.save(file_path, quality=90)
+
+    avatar_url = f"/uploads/{filename}"
+
+    # Delete old avatar file if exists
+    db = get_db()
+    old_avatar = current_user.get("avatar_url")
+    if old_avatar and old_avatar.startswith("/uploads/avatar_"):
+        old_path = os.path.join(settings.upload_dir, os.path.basename(old_avatar))
+        if os.path.exists(old_path):
+            os.remove(old_path)
+
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"avatar_url": avatar_url, "updated_at": datetime.utcnow()}},
+    )
+
+    return {"avatar_url": avatar_url}
 
 
 @router.get("/{user_id}")

@@ -133,6 +133,9 @@ export const membersApi = {
   pending: () => api.get('/api/members/pending'),
   get: (id: string) => api.get(`/api/members/${id}`),
   updateMe: (data: any) => api.put('/api/members/me', data),
+  uploadAvatar: (formData: FormData) => api.put('/api/members/me/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
   approve: (id: string) => api.put(`/api/members/${id}/approve`),
   reject: (id: string) => api.put(`/api/members/${id}/reject`),
   rejected: () => api.get('/api/members/rejected'),
