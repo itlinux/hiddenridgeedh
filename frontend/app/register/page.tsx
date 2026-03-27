@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api';
+import { authApi, getApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import Turnstile from '@/components/Turnstile';
@@ -48,8 +48,7 @@ export default function RegisterPage() {
       });
       setSuccess(true);
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Registration failed. Please try again.';
-      toast.error(msg);
+      toast.error(getApiError(err, 'Registration failed. Please try again.'));
     } finally {
       setLoading(false);
     }
