@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { Suspense, useEffect, useState, useMemo } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
@@ -27,6 +27,14 @@ const NeighborhoodMap = dynamic(() => import('./NeighborhoodMap'), {
 });
 
 export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-cream-50 flex items-center justify-center"><Loader2 className="animate-spin text-forest-400" size={32} /></div>}>
+      <MapPageContent />
+    </Suspense>
+  );
+}
+
+function MapPageContent() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
   const searchParams = useSearchParams();
