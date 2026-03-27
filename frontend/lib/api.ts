@@ -138,5 +138,7 @@ export const membersApi = {
   rejected: () => api.get('/api/members/rejected'),
   updateRole: (id: string, data: any) => api.put(`/api/members/${id}/role`, data),
   deactivate: (id: string) => api.put(`/api/members/${id}/deactivate`),
+  suspend: (id: string) => api.put(`/api/members/${id}/suspend`),
+  unsuspend: (id: string) => api.put(`/api/members/${id}/unsuspend`),
   delete: (id: string) => api.delete(`/api/members/${id}`),
 };

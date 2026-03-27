@@ -29,6 +29,7 @@ def serialize_member(user: dict, include_email: bool = False) -> dict:
         member["email_opt_in"] = user.get("email_opt_in", False)
         member["is_active"] = user.get("is_active")
         member["is_approved"] = user.get("is_approved")
+        member["is_suspended"] = user.get("is_suspended", False)
         member["created_at"] = user.get("created_at")
     return member
 
@@ -38,16 +39,23 @@ async def list_members(
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=200),
     search: str | None = None,
+    include_suspended: bool = Query(False),
     current_user: dict = Depends(require_member),
 ):
     db = get_db()
-    query = {"is_approved": True, "is_active": True}
+    is_admin = current_user.get("role") in ("super_admin", "content_admin")
+
+    if include_suspended and is_admin:
+        query: dict = {"is_approved": True}
+    else:
+        query = {"is_approved": True, "is_active": True, "is_suspended": {"$ne": True}}
+
     if search:
         query["full_name"] = {"$regex": search, "$options": "i"}
 
     total = await db.users.count_documents(query)
     cursor = db.users.find(query).sort("full_name", 1).skip(skip).limit(limit)
-    members = [serialize_member(u) async for u in cursor]
+    members = [serialize_member(u, include_email=is_admin) async for u in cursor]
     return {"members": members, "total": total}
 
 
@@ -216,6 +224,39 @@ async def deactivate_member(
     if result.matched_count == 0:
         raise HTTPException(404, "User not found")
     return {"message": "Member deactivated"}
+
+
+@router.put("/{user_id}/suspend")
+async def suspend_member(
+    user_id: str,
+    current_user: dict = Depends(require_super_admin),
+):
+    if str(current_user["_id"]) == user_id:
+        raise HTTPException(400, "Cannot suspend your own account")
+
+    db = get_db()
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"is_active": False, "is_suspended": True, "suspended_at": datetime.utcnow(), "suspended_by": str(current_user["_id"])}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(404, "User not found")
+    return {"message": "Member suspended"}
+
+
+@router.put("/{user_id}/unsuspend")
+async def unsuspend_member(
+    user_id: str,
+    current_user: dict = Depends(require_super_admin),
+):
+    db = get_db()
+    result = await db.users.update_one(
+        {"_id": ObjectId(user_id)},
+        {"$set": {"is_active": True, "is_suspended": False}, "$unset": {"suspended_at": "", "suspended_by": ""}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(404, "User not found")
+    return {"message": "Member unsuspended"}
 
 
 @router.delete("/{user_id}")
