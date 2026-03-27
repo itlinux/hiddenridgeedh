@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { membersApi } from '@/lib/api';
-import { ArrowLeft, Users, CheckCircle, Shield, UserX, Trash2, Loader2, Clock, XCircle } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, Shield, UserX, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
@@ -18,6 +18,7 @@ interface Member {
   role: string;
   is_active: boolean;
   is_approved: boolean;
+  is_suspended?: boolean;
   created_at: string;
   latitude?: number;
   longitude?: number;
@@ -45,6 +46,7 @@ export default function ManageMembersPage() {
   const [rejected, setRejected] = useState<Member[]>([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'all' | 'pending' | 'rejected'>('all');
+  const [search, setSearch] = useState('');
 
   useEffect(() => {
     if (!isLoading && !isAdmin) router.push('/');
@@ -57,7 +59,7 @@ export default function ManageMembersPage() {
   const loadAll = async () => {
     try {
       const [membersRes, pendingRes, rejectedRes] = await Promise.all([
-        membersApi.list({ limit: 200 }),
+        membersApi.list({ limit: 200, include_suspended: true }),
         isSuperAdmin ? membersApi.pending() : Promise.resolve({ data: { pending: [] } }),
         isSuperAdmin ? membersApi.rejected() : Promise.resolve({ data: { rejected: [] } }),
       ]);
@@ -115,6 +117,25 @@ export default function ManageMembersPage() {
     }
   };
 
+  const handleSuspend = async (userId: string, name: string) => {
+    if (!confirm(`Suspend ${name}? They will lose access until unsuspended.`)) return;
+    try {
+      await membersApi.suspend(userId);
+      setMembers(prev => prev.map(m => m.id === userId ? { ...m, is_active: false, is_suspended: true } : m));
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to suspend');
+    }
+  };
+
+  const handleUnsuspend = async (userId: string) => {
+    try {
+      await membersApi.unsuspend(userId);
+      setMembers(prev => prev.map(m => m.id === userId ? { ...m, is_active: true, is_suspended: false } : m));
+    } catch (err: any) {
+      alert(err.response?.data?.detail || 'Failed to unsuspend');
+    }
+  };
+
   const handleDelete = async (userId: string, name: string) => {
     if (!confirm(`Permanently delete ${name}? This cannot be undone. All their data will be removed.`)) return;
     try {
@@ -144,8 +165,9 @@ export default function ManageMembersPage() {
       </div>
 
       <div className="max-w-7xl mx-auto px-4 py-8">
-        {/* Tabs */}
-        <div className="flex gap-1 mb-6">
+        {/* Tabs + Search */}
+        <div className="flex flex-wrap items-center gap-2 mb-6">
+          <div className="flex gap-1 flex-1 min-w-0">
           <button
             onClick={() => setTab('all')}
             className={`px-5 py-2 text-sm font-sans rounded-sm transition-colors ${tab === 'all' ? 'bg-forest-800 text-cream-100' : 'bg-cream-200 text-forest-600 hover:bg-cream-300'}`}
@@ -168,6 +190,19 @@ export default function ManageMembersPage() {
                 Rejected ({rejected.length})
               </button>
             </>
+          )}
+          </div>
+          {tab === 'all' && (
+            <div className="relative">
+              <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-forest-400" />
+              <input
+                type="text"
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                placeholder="Search members..."
+                className="input-field pl-8 py-2 text-sm w-56"
+              />
+            </div>
           )}
         </div>
 
@@ -234,18 +269,21 @@ export default function ManageMembersPage() {
             </div>
           )
         ) : (
-          members.length === 0 ? (
+          (() => {
+            const q = search.trim().toLowerCase();
+            const filtered = q ? members.filter(m => m.full_name?.toLowerCase().includes(q) || m.email?.toLowerCase().includes(q)) : members;
+            return filtered.length === 0 ? (
             <div className="card p-8 text-center">
               <Users className="text-forest-300 mx-auto mb-3" size={32} />
-              <p className="text-forest-400 font-body">No approved members yet</p>
+              <p className="text-forest-400 font-body">{search ? 'No members match your search' : 'No approved members yet'}</p>
             </div>
           ) : (
             <div className="card divide-y divide-cream-100">
-              {members.map((m) => (
-                <div key={m.id} className="p-5 flex items-center justify-between gap-4">
+              {filtered.map((m) => (
+                <div key={m.id} className={`p-5 flex items-center justify-between gap-4 ${m.is_suspended ? 'bg-amber-50' : ''}`}>
                   <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className="w-10 h-10 bg-forest-100 border border-forest-200 rounded-full flex items-center justify-center shrink-0">
-                      <span className="text-forest-600 font-serif font-bold">{m.full_name?.charAt(0)}</span>
+                    <div className={`w-10 h-10 border rounded-full flex items-center justify-center shrink-0 ${m.is_suspended ? 'bg-amber-100 border-amber-300' : 'bg-forest-100 border-forest-200'}`}>
+                      <span className={`font-serif font-bold ${m.is_suspended ? 'text-amber-600' : 'text-forest-600'}`}>{m.full_name?.charAt(0)}</span>
                     </div>
                     <div className="min-w-0">
                       <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
@@ -254,21 +292,34 @@ export default function ManageMembersPage() {
                     <span className={`text-xs px-2 py-0.5 rounded-sm font-sans shrink-0 ${ROLE_COLORS[m.role] || 'bg-cream-200 text-forest-600'}`}>
                       {ROLE_LABELS[m.role] || m.role}
                     </span>
+                    {m.is_suspended && (
+                      <span className="text-xs px-2 py-0.5 rounded-sm font-sans shrink-0 bg-amber-100 text-amber-700">
+                        Suspended
+                      </span>
+                    )}
                   </div>
                   {isSuperAdmin && m.id !== user?.id && (
                     <div className="flex items-center gap-2 shrink-0">
-                      <select
-                        value={m.role}
-                        onChange={e => handleRoleChange(m.id, e.target.value)}
-                        className="input-field text-xs py-1 px-2"
-                      >
-                        <option value="member">Member</option>
-                        <option value="content_admin">Content Admin</option>
-                        <option value="super_admin">Super Admin</option>
-                      </select>
-                      <button onClick={() => handleDeactivate(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Deactivate">
-                        <UserX size={14} className="text-red-500" />
-                      </button>
+                      {!m.is_suspended && (
+                        <select
+                          value={m.role}
+                          onChange={e => handleRoleChange(m.id, e.target.value)}
+                          className="input-field text-xs py-1 px-2"
+                        >
+                          <option value="member">Member</option>
+                          <option value="content_admin">Content Admin</option>
+                          <option value="super_admin">Super Admin</option>
+                        </select>
+                      )}
+                      {m.is_suspended ? (
+                        <button onClick={() => handleUnsuspend(m.id)} className="p-2 hover:bg-green-50 rounded-sm transition-colors" title="Unsuspend account">
+                          <PlayCircle size={14} className="text-green-600" />
+                        </button>
+                      ) : (
+                        <button onClick={() => handleSuspend(m.id, m.full_name)} className="p-2 hover:bg-amber-50 rounded-sm transition-colors" title="Suspend account">
+                          <PauseCircle size={14} className="text-amber-500" />
+                        </button>
+                      )}
                       <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Delete permanently">
                         <Trash2 size={14} className="text-red-500" />
                       </button>
@@ -277,7 +328,8 @@ export default function ManageMembersPage() {
                 </div>
               ))}
             </div>
-          )
+          );
+          })()
         )}
       </div>
     </div>
