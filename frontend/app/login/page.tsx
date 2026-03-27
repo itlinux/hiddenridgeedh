@@ -17,6 +17,7 @@ export default function LoginPage() {
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   // 2FA state
   const [needs2FA, setNeeds2FA] = useState(false);
@@ -41,6 +42,8 @@ export default function LoginPage() {
       router.push(role === 'super_admin' || role === 'content_admin' ? '/edh' : '/');
     } catch (err: any) {
       toast.error(getApiError(err, 'Login failed. Please try again.'));
+      setTurnstileToken('');
+      setTurnstileResetKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -133,7 +136,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <Turnstile onVerify={setTurnstileToken} />
+                <Turnstile onVerify={setTurnstileToken} resetKey={turnstileResetKey} />
 
                 <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
                   {loading ? <><Loader2 size={16} className="animate-spin" /> Signing In...</> : 'Sign In'}
