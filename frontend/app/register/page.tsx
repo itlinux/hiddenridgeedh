@@ -14,6 +14,7 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [smsOptIn, setSmsOptIn] = useState(false);
   const [emailOptIn, setEmailOptIn] = useState(false);
   const [form, setForm] = useState({
@@ -49,6 +50,8 @@ export default function RegisterPage() {
       setSuccess(true);
     } catch (err: any) {
       toast.error(getApiError(err, 'Registration failed. Please try again.'));
+      setTurnstileToken('');
+      setTurnstileResetKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -236,7 +239,7 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Turnstile onVerify={setTurnstileToken} />
+            <Turnstile onVerify={setTurnstileToken} resetKey={turnstileResetKey} />
 
             {/* Privacy notice */}
             <div className="bg-cream-100 border border-cream-200 rounded-sm p-4">

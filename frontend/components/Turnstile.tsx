@@ -6,13 +6,23 @@ const SITE_KEY = process.env.NEXT_PUBLIC_TURNSTILE_SITE_KEY || '';
 
 interface TurnstileProps {
   onVerify: (token: string) => void;
+  resetKey?: number;
 }
 
-export default function Turnstile({ onVerify }: TurnstileProps) {
+export default function Turnstile({ onVerify, resetKey }: TurnstileProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const widgetRef = useRef<string | null>(null);
   const onVerifyRef = useRef(onVerify);
   onVerifyRef.current = onVerify;
+
+  // Reset the widget when resetKey changes (e.g. after a failed submission)
+  useEffect(() => {
+    if (widgetRef.current && (window as any).turnstile) {
+      try {
+        (window as any).turnstile.reset(widgetRef.current);
+      } catch {}
+    }
+  }, [resetKey]);
 
   useEffect(() => {
     const renderWidget = () => {
