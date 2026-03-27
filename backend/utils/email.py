@@ -106,7 +106,7 @@ async def send_verification_email(
         </p>
         <p style="text-align: center; font-size: 12px; color: #666;">
             Or copy and paste this link into your browser:<br/>
-            <a href="{verify_url}" style="color: #C9A84C; word-break: break-all;">{verify_url}</a>
+            <a href="{verify_url}" style="color: #1B2E1F; word-break: break-all; text-decoration: underline;">{verify_url}</a>
         </p>
         <p>For your reference, the password you chose is:</p>
         <p style="background-color: #fff; border: 1px solid #ddd; padding: 12px 16px; font-family: monospace; font-size: 15px; letter-spacing: 1px;">{password}</p>
