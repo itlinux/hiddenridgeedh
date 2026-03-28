@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { membersApi } from '@/lib/api';
-import { ArrowLeft, Users, CheckCircle, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search, ChevronDown, ChevronUp, MapPin, Phone, Mail, MessageSquare, Eye } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
@@ -15,6 +15,9 @@ interface Member {
   username: string;
   phone?: string;
   address?: string;
+  bio?: string;
+  sms_opt_in?: boolean;
+  email_opt_in?: boolean;
   role: string;
   is_active: boolean;
   is_approved: boolean;
@@ -47,6 +50,7 @@ export default function ManageMembersPage() {
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState<'all' | 'pending' | 'rejected'>('all');
   const [search, setSearch] = useState('');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) router.push('/');
@@ -148,6 +152,63 @@ export default function ManageMembersPage() {
     }
   };
 
+  const toggleExpand = (id: string) => setExpandedId(prev => prev === id ? null : id);
+
+  const MemberDetails = ({ m }: { m: Member }) => (
+    <div className="px-5 pb-5 pt-2 bg-cream-50 border-t border-cream-100">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
+        {m.email && (
+          <div className="flex items-center gap-2 text-forest-600">
+            <Mail size={14} className="text-forest-400" />
+            <a href={`mailto:${m.email}`} className="hover:text-gold-500 transition-colors">{m.email}</a>
+          </div>
+        )}
+        {m.phone && (
+          <div className="flex items-center gap-2 text-forest-600">
+            <Phone size={14} className="text-forest-400" />
+            <a href={`tel:${m.phone}`} className="hover:text-gold-500 transition-colors">{m.phone}</a>
+            {m.sms_opt_in && (
+              <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs px-1.5 py-0.5 rounded-sm">
+                <MessageSquare size={10} /> SMS
+              </span>
+            )}
+          </div>
+        )}
+        {m.address && (
+          <div className="flex items-center gap-2 text-forest-600">
+            <MapPin size={14} className="text-forest-400" />
+            <Link href={`/map?search=${encodeURIComponent(m.address)}`} className="hover:text-gold-500 transition-colors">{m.address}</Link>
+          </div>
+        )}
+        {m.username && (
+          <div className="text-forest-500 text-xs">
+            <span className="text-forest-400">Username:</span> {m.username}
+          </div>
+        )}
+        {m.latitude && m.longitude && (
+          <div className="text-forest-500 text-xs">
+            <span className="text-forest-400">Coords:</span> {m.latitude}, {m.longitude}
+          </div>
+        )}
+        {m.created_at && (
+          <div className="text-forest-500 text-xs">
+            <span className="text-forest-400">Registered:</span> {format(new Date(m.created_at), 'MMM d, yyyy h:mm a')}
+          </div>
+        )}
+        <div className="text-forest-500 text-xs flex items-center gap-3">
+          {m.email_opt_in && <span className="bg-blue-50 text-blue-700 px-1.5 py-0.5 rounded-sm">Email alerts</span>}
+          {m.sms_opt_in && <span className="bg-green-50 text-green-700 px-1.5 py-0.5 rounded-sm">SMS alerts</span>}
+        </div>
+      </div>
+      {m.bio && <p className="text-forest-500 text-xs mt-3 italic">{m.bio}</p>}
+      <div className="mt-3">
+        <Link href={`/members/${m.id}`} className="text-gold-500 hover:text-gold-600 text-xs font-sans transition-colors flex items-center gap-1">
+          <Eye size={12} /> View public profile
+        </Link>
+      </div>
+    </div>
+  );
+
   if (isLoading || !isAdmin) return null;
 
   return (
@@ -217,22 +278,26 @@ export default function ManageMembersPage() {
           ) : (
             <div className="card divide-y divide-cream-100">
               {pending.map((m) => (
-                <div key={m.id} className="p-5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center">
-                      <Clock size={16} className="text-amber-500" />
+                <div key={m.id}>
+                  <div className="p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-cream-50 transition-colors" onClick={() => toggleExpand(m.id)}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-amber-50 border border-amber-200 rounded-full flex items-center justify-center">
+                        <Clock size={16} className="text-amber-500" />
+                      </div>
+                      <div>
+                        <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
+                        <div className="text-forest-400 text-xs">{m.email}</div>
+                        {m.address && <div className="text-forest-400 text-xs">{m.address}</div>}
+                        {m.created_at && <div className="text-forest-400 text-xs">Registered {format(new Date(m.created_at), 'MMM d, yyyy')}</div>}
+                      </div>
+                      {expandedId === m.id ? <ChevronUp size={14} className="text-forest-400" /> : <ChevronDown size={14} className="text-forest-400" />}
                     </div>
-                    <div>
-                      <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
-                      <div className="text-forest-400 text-xs">{m.email}</div>
-                      {m.address && <div className="text-forest-400 text-xs">{m.address}</div>}
-                      {m.created_at && <div className="text-forest-400 text-xs">Registered {format(new Date(m.created_at), 'MMM d, yyyy')}</div>}
+                    <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
+                      <button onClick={() => handleReject(m.id)} className="px-4 py-2 text-xs font-sans bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition-colors">Reject</button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
-                    <button onClick={() => handleReject(m.id)} className="px-4 py-2 text-xs font-sans bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition-colors">Reject</button>
-                  </div>
+                  {expandedId === m.id && <MemberDetails m={m} />}
                 </div>
               ))}
             </div>
@@ -246,24 +311,28 @@ export default function ManageMembersPage() {
           ) : (
             <div className="card divide-y divide-cream-100">
               {rejected.map((m) => (
-                <div key={m.id} className="p-5 flex items-center justify-between gap-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-10 h-10 bg-red-50 border border-red-200 rounded-full flex items-center justify-center">
-                      <XCircle size={16} className="text-red-400" />
+                <div key={m.id}>
+                  <div className="p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-cream-50 transition-colors" onClick={() => toggleExpand(m.id)}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-red-50 border border-red-200 rounded-full flex items-center justify-center">
+                        <XCircle size={16} className="text-red-400" />
+                      </div>
+                      <div>
+                        <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
+                        <div className="text-forest-400 text-xs">{m.email}</div>
+                        {m.address && <div className="text-forest-400 text-xs">{m.address}</div>}
+                        {m.created_at && <div className="text-forest-400 text-xs">Registered {format(new Date(m.created_at), 'MMM d, yyyy')}</div>}
+                      </div>
+                      {expandedId === m.id ? <ChevronUp size={14} className="text-forest-400" /> : <ChevronDown size={14} className="text-forest-400" />}
                     </div>
-                    <div>
-                      <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
-                      <div className="text-forest-400 text-xs">{m.email}</div>
-                      {m.address && <div className="text-forest-400 text-xs">{m.address}</div>}
-                      {m.created_at && <div className="text-forest-400 text-xs">Registered {format(new Date(m.created_at), 'MMM d, yyyy')}</div>}
+                    <div className="flex items-center gap-2" onClick={e => e.stopPropagation()}>
+                      <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
+                      <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Delete permanently">
+                        <Trash2 size={14} className="text-red-500" />
+                      </button>
                     </div>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <button onClick={() => handleApprove(m.id)} className="btn-gold text-xs py-2 px-5">Approve</button>
-                    <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Delete permanently">
-                      <Trash2 size={14} className="text-red-500" />
-                    </button>
-                  </div>
+                  {expandedId === m.id && <MemberDetails m={m} />}
                 </div>
               ))}
             </div>
@@ -280,51 +349,57 @@ export default function ManageMembersPage() {
           ) : (
             <div className="card divide-y divide-cream-100">
               {filtered.map((m) => (
-                <div key={m.id} className={`p-5 flex items-center justify-between gap-4 ${m.is_suspended ? 'bg-amber-50' : ''}`}>
-                  <div className="flex items-center gap-3 flex-1 min-w-0">
-                    <div className={`w-10 h-10 border rounded-full flex items-center justify-center shrink-0 ${m.is_suspended ? 'bg-amber-100 border-amber-300' : 'bg-forest-100 border-forest-200'}`}>
-                      <span className={`font-serif font-bold ${m.is_suspended ? 'text-amber-600' : 'text-forest-600'}`}>{m.full_name?.charAt(0)}</span>
-                    </div>
-                    <div className="min-w-0">
-                      <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
-                      <div className="text-forest-400 text-xs truncate">{m.email}</div>
-                    </div>
-                    <span className={`text-xs px-2 py-0.5 rounded-sm font-sans shrink-0 ${ROLE_COLORS[m.role] || 'bg-cream-200 text-forest-600'}`}>
-                      {ROLE_LABELS[m.role] || m.role}
-                    </span>
-                    {m.is_suspended && (
-                      <span className="text-xs px-2 py-0.5 rounded-sm font-sans shrink-0 bg-amber-100 text-amber-700">
-                        Suspended
+                <div key={m.id}>
+                  <div className={`p-5 flex items-center justify-between gap-4 cursor-pointer hover:bg-cream-50 transition-colors ${m.is_suspended ? 'bg-amber-50' : ''}`} onClick={() => toggleExpand(m.id)}>
+                    <div className="flex items-center gap-3 flex-1 min-w-0">
+                      <div className={`w-10 h-10 border rounded-full flex items-center justify-center shrink-0 ${m.is_suspended ? 'bg-amber-100 border-amber-300' : 'bg-forest-100 border-forest-200'}`}>
+                        <span className={`font-serif font-bold ${m.is_suspended ? 'text-amber-600' : 'text-forest-600'}`}>{m.full_name?.charAt(0)}</span>
+                      </div>
+                      <div className="min-w-0">
+                        <div className="font-sans font-medium text-forest-800 text-sm">{m.full_name}</div>
+                        <div className="text-forest-400 text-xs truncate">{m.email}</div>
+                      </div>
+                      <span className={`text-xs px-2 py-0.5 rounded-sm font-sans shrink-0 ${ROLE_COLORS[m.role] || 'bg-cream-200 text-forest-600'}`}>
+                        {ROLE_LABELS[m.role] || m.role}
                       </span>
-                    )}
-                  </div>
-                  {isSuperAdmin && m.id !== user?.id && (
-                    <div className="flex items-center gap-2 shrink-0">
-                      {!m.is_suspended && (
-                        <select
-                          value={m.role}
-                          onChange={e => handleRoleChange(m.id, e.target.value)}
-                          className="input-field text-xs py-1 px-2"
-                        >
-                          <option value="member">Member</option>
-                          <option value="content_admin">Content Admin</option>
-                          <option value="super_admin">Super Admin</option>
-                        </select>
+                      {m.is_suspended && (
+                        <span className="text-xs px-2 py-0.5 rounded-sm font-sans shrink-0 bg-amber-100 text-amber-700">
+                          Suspended
+                        </span>
                       )}
-                      {m.is_suspended ? (
-                        <button onClick={() => handleUnsuspend(m.id)} className="p-2 hover:bg-green-50 rounded-sm transition-colors" title="Unsuspend account">
-                          <PlayCircle size={14} className="text-green-600" />
-                        </button>
-                      ) : (
-                        <button onClick={() => handleSuspend(m.id, m.full_name)} className="p-2 hover:bg-amber-50 rounded-sm transition-colors" title="Suspend account">
-                          <PauseCircle size={14} className="text-amber-500" />
-                        </button>
-                      )}
-                      <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Delete permanently">
-                        <Trash2 size={14} className="text-red-500" />
-                      </button>
+                      {expandedId === m.id ? <ChevronUp size={14} className="text-forest-400 shrink-0" /> : <ChevronDown size={14} className="text-forest-400 shrink-0" />}
                     </div>
-                  )}
+                    <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                      {isSuperAdmin && m.id !== user?.id && (
+                        <>
+                          {!m.is_suspended && (
+                            <select
+                              value={m.role}
+                              onChange={e => handleRoleChange(m.id, e.target.value)}
+                              className="input-field text-xs py-1 px-2"
+                            >
+                              <option value="member">Member</option>
+                              <option value="content_admin">Content Admin</option>
+                              <option value="super_admin">Super Admin</option>
+                            </select>
+                          )}
+                          {m.is_suspended ? (
+                            <button onClick={() => handleUnsuspend(m.id)} className="p-2 hover:bg-green-50 rounded-sm transition-colors" title="Unsuspend account">
+                              <PlayCircle size={14} className="text-green-600" />
+                            </button>
+                          ) : (
+                            <button onClick={() => handleSuspend(m.id, m.full_name)} className="p-2 hover:bg-amber-50 rounded-sm transition-colors" title="Suspend account">
+                              <PauseCircle size={14} className="text-amber-500" />
+                            </button>
+                          )}
+                          <button onClick={() => handleDelete(m.id, m.full_name)} className="p-2 hover:bg-red-50 rounded-sm transition-colors" title="Delete permanently">
+                            <Trash2 size={14} className="text-red-500" />
+                          </button>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                  {expandedId === m.id && <MemberDetails m={m} />}
                 </div>
               ))}
             </div>
