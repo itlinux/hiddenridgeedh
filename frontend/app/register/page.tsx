@@ -70,9 +70,12 @@ export default function RegisterPage() {
               We&apos;ve sent a <strong>verification email</strong> to your address.
               Please click the link in the email to verify your account.
             </p>
-            <p className="font-body text-forest-400 text-sm leading-relaxed mb-8">
+            <p className="font-body text-forest-400 text-sm leading-relaxed mb-4">
               The email also contains the password you chose for your reference.
               After verification, an administrator will review and approve your account.
+            </p>
+            <p className="font-body text-amber-600 text-sm leading-relaxed mb-8 bg-amber-50 border border-amber-200 rounded-sm px-4 py-3">
+              Don&apos;t see the email? Please check your <strong>Spam</strong> or <strong>Junk</strong> folder.
             </p>
             <Link href="/" className="btn-gold text-sm px-8 py-3 inline-block">
               Back to Home
