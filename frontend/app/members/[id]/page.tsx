@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ArrowLeft, Loader2, MapPin, Phone, Mail, MessageSquare } from 'lucide-react';
+import { ArrowLeft, Loader2, MapPin, Phone, Mail, MessageSquare, ExternalLink } from 'lucide-react';
 
 interface Member {
   id: string;
@@ -18,6 +18,8 @@ interface Member {
   phone?: string;
   sms_opt_in?: boolean;
   role?: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 export default function MemberProfilePage() {
@@ -46,6 +48,21 @@ export default function MemberProfilePage() {
       </div>
     </div>
   );
+
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
+  const mapQuery = member.latitude && member.longitude
+    ? `${member.latitude},${member.longitude}`
+    : member.address ? encodeURIComponent(member.address) : null;
+
+  const mapEmbedUrl = mapQuery && apiKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${mapQuery}&zoom=17&maptype=satellite`
+    : null;
+
+  const mapsLink = member.latitude && member.longitude
+    ? `https://www.google.com/maps?q=${member.latitude},${member.longitude}`
+    : member.address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(member.address)}`
+    : null;
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -104,6 +121,33 @@ export default function MemberProfilePage() {
             </div>
           )}
         </div>
+
+        {/* Mini map */}
+        {mapEmbedUrl && (
+          <div className="card overflow-hidden mt-4">
+            <iframe
+              src={mapEmbedUrl}
+              width="100%"
+              height="280"
+              style={{ border: 0, display: 'block' }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            {mapsLink && (
+              <div className="px-4 py-2 bg-white border-t border-cream-100 flex justify-end">
+                <a
+                  href={mapsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-forest-400 hover:text-gold-500 font-sans flex items-center gap-1 transition-colors"
+                >
+                  Open in Google Maps <ExternalLink size={11} />
+                </a>
+              </div>
+            )}
+          </div>
+        )}
       </div>
     </div>
   );
