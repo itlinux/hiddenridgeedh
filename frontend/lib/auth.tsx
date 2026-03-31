@@ -16,6 +16,12 @@ interface User {
   phone?: string;
   latitude?: number;
   longitude?: number;
+  school?: string;
+  has_dog?: boolean;
+  dog_friendly?: boolean;
+  dog_photo_url?: string;
+  house_photo_url?: string;
+  family_members?: { name: string; bio?: string; photo_url?: string }[];
   totp_enabled?: boolean;
   sms_opt_in?: boolean;
   email_opt_in?: boolean;
