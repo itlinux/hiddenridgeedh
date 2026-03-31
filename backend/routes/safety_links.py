@@ -38,6 +38,9 @@ DEFAULT_LINKS = [
     {"label": "EID Water District", "url": "https://www.eid.org", "sort_order": 11},
     {"label": "National Weather Service — Sacramento", "url": "https://www.weather.gov/sto/", "sort_order": 12},
     {"label": "Ring Neighbors (Crime Alerts)", "url": "https://neighbors.ring.com", "sort_order": 13},
+    {"label": "Rescue Union School District", "url": "https://www.rescueusd.org", "sort_order": 14},
+    {"label": "Oak Ridge High School", "url": "https://www.eduhsd.net/OakRidge", "sort_order": 15},
+    {"label": "Republic Services — EDH Trash & Recycling", "url": "https://www.republicservices.com/municipality/el-dorado-hills-ca", "sort_order": 16},
 ]
 
 
