@@ -3,7 +3,7 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { authApi } from '@/lib/api';
+import { authApi, getApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, CheckCircle } from 'lucide-react';
 import Turnstile from '@/components/Turnstile';
@@ -14,11 +14,12 @@ export default function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
   const [smsOptIn, setSmsOptIn] = useState(false);
+  const [emailOptIn, setEmailOptIn] = useState(false);
   const [form, setForm] = useState({
     full_name: '',
     email: '',
-    username: '',
     password: '',
     address: '',
     phone: '',
@@ -42,12 +43,14 @@ export default function RegisterPage() {
       await authApi.register({
         ...form,
         sms_opt_in: smsOptIn,
+        email_opt_in: emailOptIn,
         turnstile_token: turnstileToken || undefined,
       });
       setSuccess(true);
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Registration failed. Please try again.';
-      toast.error(msg);
+      toast.error(getApiError(err, 'Registration failed. Please try again.'));
+      setTurnstileToken('');
+      setTurnstileResetKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -59,13 +62,20 @@ export default function RegisterPage() {
         <div className="max-w-md w-full text-center">
           <div className="card p-10">
             <CheckCircle className="text-green-500 mx-auto mb-5" size={56} />
-            <h1 className="font-serif text-3xl text-forest-800 mb-4">Registration Received</h1>
+            <h1 className="font-serif text-3xl text-forest-800 mb-4">Check Your Email</h1>
             <p className="font-body text-forest-500 leading-relaxed mb-2">
               Thank you for registering with Hidden Ridge EDH.
             </p>
-            <p className="font-body text-forest-500 leading-relaxed mb-8">
-              Your account is <strong>pending approval</strong> by a neighborhood administrator.
-              You'll receive an email once your account has been approved.
+            <p className="font-body text-forest-500 leading-relaxed mb-2">
+              We&apos;ve sent a <strong>verification email</strong> to your address.
+              Please click the link in the email to verify your account.
+            </p>
+            <p className="font-body text-forest-400 text-sm leading-relaxed mb-4">
+              The email also contains the password you chose for your reference.
+              After verification, an administrator will review and approve your account.
+            </p>
+            <p className="font-body text-amber-600 text-sm leading-relaxed mb-8 bg-amber-50 border border-amber-200 rounded-sm px-4 py-3">
+              Don&apos;t see the email? Please check your <strong>Spam</strong> or <strong>Junk</strong> folder.
             </p>
             <Link href="/" className="btn-gold text-sm px-8 py-3 inline-block">
               Back to Home
@@ -135,18 +145,11 @@ export default function RegisterPage() {
                 placeholder="your@email.com"
                 required
               />
-            </div>
-
-            <div>
-              <label className="section-label block mb-2">Username *</label>
-              <input
-                type="text"
-                value={form.username}
-                onChange={update('username')}
-                className="input-field"
-                placeholder="johnsmith"
-                required
-              />
+              {form.email.includes('@') && (
+                <p className="text-forest-400 text-xs mt-1 font-sans">
+                  Your username will be: <strong className="text-forest-600">{form.email.split('@')[0].toLowerCase()}</strong>
+                </p>
+              )}
             </div>
 
             <div>
@@ -215,7 +218,27 @@ export default function RegisterPage() {
               </div>
             </div>
 
-            <Turnstile onVerify={setTurnstileToken} />
+            {/* Email opt-in */}
+            <div className="flex items-start gap-3">
+              <input
+                type="checkbox"
+                id="email_opt_in"
+                checked={emailOptIn}
+                onChange={(e) => setEmailOptIn(e.target.checked)}
+                className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
+              />
+              <div>
+                <label htmlFor="email_opt_in" className="text-forest-600 font-sans text-sm leading-relaxed cursor-pointer">
+                  I&apos;d like to receive <strong>email notifications</strong> for neighborhood news,
+                  events, and community updates.
+                </label>
+                <p className="text-forest-400 font-sans text-xs mt-1">
+                  You can unsubscribe at any time from your profile settings.
+                </p>
+              </div>
+            </div>
+
+            <Turnstile onVerify={setTurnstileToken} resetKey={turnstileResetKey} />
 
             {/* Privacy notice */}
             <div className="bg-cream-100 border border-cream-200 rounded-sm p-4">

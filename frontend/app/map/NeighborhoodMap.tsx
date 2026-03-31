@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useCallback, useRef } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import {
   GoogleMap,
   useJsApiLoader,
@@ -33,9 +33,10 @@ interface MemberPin {
 
 interface Props {
   members: MemberPin[];
+  initialSearch?: string;
 }
 
-export default function NeighborhoodMap({ members }: Props) {
+export default function NeighborhoodMap({ members, initialSearch = '' }: Props) {
   const { isLoaded, loadError } = useJsApiLoader({
     googleMapsApiKey: process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '',
     libraries: LIBRARIES,
@@ -47,36 +48,39 @@ export default function NeighborhoodMap({ members }: Props) {
   const [searching, setSearching] = useState(false);
   const [searchMarker, setSearchMarker] = useState<{ lat: number; lng: number; name: string } | null>(null);
 
-  const onLoad = useCallback((map: google.maps.Map) => {
-    mapRef.current = map;
-  }, []);
-
-  const handleSearch = useCallback(async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!query.trim() || !mapRef.current) return;
-
-    setSearching(true);
-    try {
-      const geocoder = new google.maps.Geocoder();
-      const searchQuery = query.toLowerCase().includes('el dorado') || query.toLowerCase().includes('edh')
-        ? query
-        : `${query}, El Dorado Hills, CA`;
-
-      const result = await geocoder.geocode({ address: searchQuery });
+  const doGeocode = useCallback((address: string, map: google.maps.Map) => {
+    const geocoder = new google.maps.Geocoder();
+    const searchQuery = address.toLowerCase().includes('el dorado') || address.toLowerCase().includes('edh')
+      ? address
+      : `${address}, El Dorado Hills, CA`;
+    geocoder.geocode({ address: searchQuery }).then((result) => {
       if (result.results.length > 0) {
         const location = result.results[0].geometry.location;
         const pos = { lat: location.lat(), lng: location.lng() };
         setSearchMarker({ ...pos, name: result.results[0].formatted_address });
-        mapRef.current.panTo(pos);
-        mapRef.current.setZoom(18);
-        setSelectedMember(null);
+        map.panTo(pos);
+        map.setZoom(16);
       }
-    } catch {
-      // Geocoding failed
-    } finally {
-      setSearching(false);
+    }).catch(() => {});
+  }, []);
+
+  const onLoad = useCallback((map: google.maps.Map) => {
+    mapRef.current = map;
+    // Auto-search when arriving with ?search= param
+    if (initialSearch) {
+      setQuery(initialSearch);
+      doGeocode(initialSearch, map);
     }
-  }, [query]);
+  }, [initialSearch, doGeocode]);
+
+  const handleSearch = useCallback(async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!query.trim() || !mapRef.current) return;
+    setSearching(true);
+    setSelectedMember(null);
+    doGeocode(query, mapRef.current);
+    setSearching(false);
+  }, [query, doGeocode]);
 
   const clearSearch = () => {
     setQuery('');
@@ -150,7 +154,9 @@ export default function NeighborhoodMap({ members }: Props) {
             onCloseClick={() => setSelectedMember(null)}
           >
             <div className="text-sm p-1">
-              <strong className="text-forest-800">{selectedMember.full_name}</strong>
+              <a href={`/members/${selectedMember.id}`} className="text-forest-800 font-bold hover:text-gold-500 transition-colors">
+                {selectedMember.full_name}
+              </a>
               {selectedMember.address && (
                 <p className="text-forest-500 mt-1 text-xs">{selectedMember.address}</p>
               )}

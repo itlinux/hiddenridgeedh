@@ -18,21 +18,22 @@ class UserRole(str, Enum):
 
 class UserCreate(BaseModel):
     email: EmailStr
-    username: str = Field(..., min_length=3, max_length=30)
+    username: Optional[str] = Field(None, min_length=3, max_length=30)
     full_name: str = Field(..., min_length=2, max_length=100)
     password: str = Field(..., min_length=8, max_length=128)
     address: Optional[str] = Field(None, max_length=200)
     bio: Optional[str] = Field(None, max_length=500)
     phone: Optional[str] = Field(None, max_length=20)
     sms_opt_in: bool = False
+    email_opt_in: bool = False
     latitude: Optional[float] = None
     longitude: Optional[float] = None
     turnstile_token: Optional[str] = None
 
     @field_validator("username")
     @classmethod
-    def username_alphanumeric(cls, v: str) -> str:
-        if not re.match(r"^[a-zA-Z0-9_\-]+$", v):
+    def username_alphanumeric(cls, v: str | None) -> str | None:
+        if v is not None and not re.match(r"^[a-zA-Z0-9_\-]+$", v):
             raise ValueError("Username may only contain letters, numbers, underscores, and hyphens")
         return v
 
@@ -168,6 +169,7 @@ class AlertCreate(BaseModel):
 
 class ProfileUpdate(BaseModel):
     full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    username: Optional[str] = Field(None, min_length=3, max_length=30)
     bio: Optional[str] = Field(None, max_length=500)
     address: Optional[str] = Field(None, max_length=200)
     phone: Optional[str] = Field(None, max_length=20)

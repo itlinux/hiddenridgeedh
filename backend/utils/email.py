@@ -14,7 +14,7 @@ def _build_html(title: str, body: str) -> str:
     return f"""
     <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #1B2E1F; padding: 24px; text-align: center;">
-            <img src="{logo_url}" alt="Hidden Ridge EDH" width="80" height="80" style="margin-bottom: 12px;" />
+            <img src="{logo_url}" alt="Hidden Ridge EDH" width="80" height="80" style="margin-bottom: 12px; border-radius: 4px;" />
             <h1 style="color: #C9A84C; margin: 0; font-size: 24px;">Hidden Ridge EDH</h1>
         </div>
         <div style="padding: 32px 24px; background-color: #F5F0E8;">
@@ -89,6 +89,38 @@ async def _send_email(to_email: str, subject: str, html_content: str):
         await _send_via_sendgrid(to_email, subject, html_content)
 
 
+async def send_verification_email(
+    to_email: str, full_name: str, password: str, verify_url: str
+):
+    """Send email verification link with the user's chosen password."""
+    html = _build_html(
+        "Verify Your Email",
+        f"""
+        <p>Hi {full_name},</p>
+        <p>Thank you for registering with Hidden Ridge EDH.
+        Please verify your email address by clicking the button below:</p>
+        <p style="text-align: center; margin: 24px 0;">
+            <a href="{verify_url}" target="_blank" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block; border-radius: 4px;">
+                Verify Email Address
+            </a>
+        </p>
+        <p style="text-align: center; font-size: 13px; color: #333; margin-top: 16px;">
+            If the button doesn't work, copy this link:
+        </p>
+        <p style="background-color: #fff; border: 1px solid #ddd; padding: 10px 14px; font-size: 12px; word-break: break-all; text-align: center;">
+            <a href="{verify_url}" style="color: #1B2E1F; text-decoration: underline;">{verify_url}</a>
+        </p>
+        <p>For your reference, the password you chose is:</p>
+        <p style="background-color: #fff; border: 1px solid #ddd; padding: 12px 16px; font-family: monospace; font-size: 15px; letter-spacing: 1px;">{password}</p>
+        <p style="color: #666; font-size: 13px;">If you didn't register, you can safely ignore this email.</p>
+        """,
+    )
+    try:
+        await _send_email(to_email, "Hidden Ridge EDH — Verify Your Email", html)
+    except Exception as e:
+        logger.error(f"Failed to send verification email to {to_email}: {e}")
+
+
 async def send_pending_notification(to_email: str, full_name: str):
     html = _build_html(
         "Registration Received",
@@ -134,7 +166,12 @@ async def send_approval_notification(to_email: str, full_name: str):
         <p>Hi {full_name},</p>
         <p>Great news! Your Hidden Ridge EDH account has been <strong>approved</strong>.</p>
         <p>You can now log in and access the forum, photo gallery, events, and member directory.</p>
-        <p><a href="{settings.app_url}/login" style="color: #C9A84C;">Sign In Now</a></p>
+        <p>Your login email is: <strong>{to_email}</strong></p>
+        <p style="text-align: center; margin: 24px 0;">
+            <a href="{settings.app_url}/login" target="_blank" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block; border-radius: 4px;">
+                Sign In Now
+            </a>
+        </p>
         """,
     )
     try:

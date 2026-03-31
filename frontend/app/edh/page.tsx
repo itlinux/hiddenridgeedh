@@ -46,7 +46,7 @@ export default function AdminDashboard() {
         totalEvents: eventsRes.data.total,
         subscribers: 0,
       });
-      setPendingUsers(pendingRes.data.items.slice(0, 5));
+      setPendingUsers((pendingRes.data.pending || pendingRes.data.items || []).slice(0, 5));
     } catch (err) {
       console.error('Failed to load stats', err);
     }
@@ -59,6 +59,16 @@ export default function AdminDashboard() {
       if (stats) setStats({ ...stats, pendingMembers: stats.pendingMembers - 1, totalMembers: stats.totalMembers + 1 });
     } catch (err) {
       console.error('Approval failed', err);
+    }
+  };
+
+  const handleReject = async (userId: string) => {
+    try {
+      await membersApi.reject(userId);
+      setPendingUsers(prev => prev.filter(u => u.id !== userId));
+      if (stats) setStats({ ...stats, pendingMembers: stats.pendingMembers - 1 });
+    } catch (err) {
+      console.error('Reject failed', err);
     }
   };
 
@@ -123,12 +133,20 @@ export default function AdminDashboard() {
                       {user.address && <div className="text-forest-400 text-xs">{user.address}</div>}
                     </div>
                   </div>
-                  <button
-                    onClick={() => handleApprove(user.id, user.full_name)}
-                    className="btn-primary text-xs py-2 px-4 whitespace-nowrap"
-                  >
-                    Approve
-                  </button>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => handleApprove(user.id, user.full_name)}
+                      className="btn-gold text-xs py-2 px-4 whitespace-nowrap"
+                    >
+                      Approve
+                    </button>
+                    <button
+                      onClick={() => handleReject(user.id)}
+                      className="px-3 py-2 text-xs font-sans bg-red-50 text-red-600 hover:bg-red-100 rounded-sm transition-colors whitespace-nowrap"
+                    >
+                      Reject
+                    </button>
+                  </div>
                 </div>
               ))}
             </div>

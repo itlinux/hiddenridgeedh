@@ -1,27 +1,47 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { Suspense, useState, useRef, useEffect } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
+import { getApiError } from '@/lib/api';
 import { toast } from 'sonner';
 import { Eye, EyeOff, Loader2, ShieldCheck } from 'lucide-react';
 import Turnstile from '@/components/Turnstile';
 
 export default function LoginPage() {
+  return (
+    <Suspense>
+      <LoginContent />
+    </Suspense>
+  );
+}
+
+function LoginContent() {
   const { login, verify2FA } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading] = useState(false);
   const [turnstileToken, setTurnstileToken] = useState('');
+  const [turnstileResetKey, setTurnstileResetKey] = useState(0);
 
   // 2FA state
   const [needs2FA, setNeeds2FA] = useState(false);
   const [tempToken, setTempToken] = useState('');
   const [totpCode, setTotpCode] = useState('');
   const codeInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    const verified = searchParams.get('verified');
+    if (verified === 'true') {
+      toast.success('Email verified! Your account is pending admin approval.');
+    } else if (verified === 'already') {
+      toast.info('Your email was already verified.');
+    }
+  }, [searchParams]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,8 +59,9 @@ export default function LoginPage() {
       const role = result.user?.role;
       router.push(role === 'super_admin' || role === 'content_admin' ? '/edh' : '/');
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Login failed. Please try again.';
-      toast.error(msg);
+      toast.error(getApiError(err, 'Login failed. Please try again.'));
+      setTurnstileToken('');
+      setTurnstileResetKey((k) => k + 1);
     } finally {
       setLoading(false);
     }
@@ -57,8 +78,7 @@ export default function LoginPage() {
       const role = stored ? JSON.parse(stored).role : '';
       router.push(role === 'super_admin' || role === 'content_admin' ? '/edh' : '/');
     } catch (err: any) {
-      const msg = err.response?.data?.detail || 'Invalid code. Please try again.';
-      toast.error(msg);
+      toast.error(getApiError(err, 'Invalid code. Please try again.'));
     } finally {
       setLoading(false);
     }
@@ -134,7 +154,7 @@ export default function LoginPage() {
                   </div>
                 </div>
 
-                <Turnstile onVerify={setTurnstileToken} />
+                <Turnstile onVerify={setTurnstileToken} resetKey={turnstileResetKey} />
 
                 <button type="submit" disabled={loading} className="btn-primary w-full flex items-center justify-center gap-2">
                   {loading ? <><Loader2 size={16} className="animate-spin" /> Signing In...</> : 'Sign In'}

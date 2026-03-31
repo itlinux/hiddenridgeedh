@@ -31,6 +31,16 @@ api.interceptors.response.use(
 
 export default api;
 
+/** Extract a human-readable error message from an Axios error (handles FastAPI 422 arrays). */
+export function getApiError(err: any, fallback = 'Something went wrong. Please try again.'): string {
+  const detail = err?.response?.data?.detail;
+  if (typeof detail === 'string') return detail;
+  if (Array.isArray(detail) && detail.length > 0) {
+    return detail.map((e: any) => e.msg || String(e)).join('. ');
+  }
+  return fallback;
+}
+
 // ─── Auth ─────────────────────────────────────────────────────────────────────
 export const authApi = {
   register: (data: any) => api.post('/api/auth/register', data),
@@ -124,11 +134,15 @@ export const membersApi = {
   get: (id: string) => api.get(`/api/members/${id}`),
   updateMe: (data: any) => api.put('/api/members/me', data),
   approve: (id: string) => api.put(`/api/members/${id}/approve`),
+  reject: (id: string) => api.put(`/api/members/${id}/reject`),
+  rejected: () => api.get('/api/members/rejected'),
   updateRole: (id: string, data: any) => api.put(`/api/members/${id}/role`, data),
   deactivate: (id: string) => api.put(`/api/members/${id}/deactivate`),
+  suspend: (id: string) => api.put(`/api/members/${id}/suspend`),
+  unsuspend: (id: string) => api.put(`/api/members/${id}/unsuspend`),
   delete: (id: string) => api.delete(`/api/members/${id}`),
   // Avatar
-  uploadAvatar: (formData: FormData) => api.post('/api/members/me/avatar', formData, {
+  uploadAvatar: (formData: FormData) => api.put('/api/members/me/avatar', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   deleteAvatar: () => api.delete('/api/members/me/avatar'),

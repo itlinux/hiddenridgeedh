@@ -1,7 +1,7 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import { useRouter } from 'next/navigation';
+import { Suspense, useEffect, useState, useMemo } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { Loader2, MapPin } from 'lucide-react';
@@ -27,8 +27,18 @@ const NeighborhoodMap = dynamic(() => import('./NeighborhoodMap'), {
 });
 
 export default function MapPage() {
+  return (
+    <Suspense fallback={<div className="min-h-screen bg-cream-50 flex items-center justify-center"><Loader2 className="animate-spin text-forest-400" size={32} /></div>}>
+      <MapPageContent />
+    </Suspense>
+  );
+}
+
+function MapPageContent() {
   const { user, isLoading: authLoading } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialSearch = searchParams.get('search') || '';
   const [members, setMembers] = useState<MemberPin[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -82,7 +92,7 @@ export default function MapPage() {
               </p>
             </div>
             <div className="card overflow-hidden" style={{ height: 'calc(100vh - 220px)', minHeight: '400px' }}>
-              <NeighborhoodMap members={members} />
+              <NeighborhoodMap members={members} initialSearch={initialSearch} />
             </div>
             {members.length === 0 && (
               <p className="text-forest-400 font-body text-sm mt-4 text-center">

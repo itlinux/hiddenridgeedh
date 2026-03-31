@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ArrowLeft, Loader2, Dog, GraduationCap, Home, Users } from 'lucide-react';
+import { ArrowLeft, Loader2, Dog, GraduationCap, Users, MapPin, Phone, Mail, MessageSquare, ExternalLink } from 'lucide-react';
 
 interface FamilyMember {
   name: string;
@@ -20,6 +20,9 @@ interface Member {
   bio?: string;
   avatar_url?: string;
   address?: string;
+  email?: string;
+  phone?: string;
+  sms_opt_in?: boolean;
   role?: string;
   school?: string;
   has_dog?: boolean;
@@ -27,6 +30,8 @@ interface Member {
   dog_photo_url?: string;
   house_photo_url?: string;
   family_members?: FamilyMember[];
+  latitude?: number;
+  longitude?: number;
 }
 
 export default function MemberProfilePage() {
@@ -57,6 +62,21 @@ export default function MemberProfilePage() {
   );
 
   const familyMembers = member.family_members || [];
+
+  const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
+  const mapQuery = member.latitude && member.longitude
+    ? `${member.latitude},${member.longitude}`
+    : member.address ? encodeURIComponent(member.address) : null;
+
+  const mapEmbedUrl = mapQuery && apiKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${apiKey}&q=${mapQuery}&zoom=17&maptype=satellite`
+    : null;
+
+  const mapsLink = member.latitude && member.longitude
+    ? `https://www.google.com/maps?q=${member.latitude},${member.longitude}`
+    : member.address
+    ? `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(member.address)}`
+    : null;
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -122,6 +142,37 @@ export default function MemberProfilePage() {
               />
             </div>
           )}
+
+          {/* Contact info */}
+          {(member.address || member.email || member.phone) && (
+            <div className="mt-8 pt-6 border-t border-forest-100 space-y-3 text-left">
+              {member.address && (
+                <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
+                  <MapPin size={16} className="text-forest-400 flex-shrink-0" />
+                  <Link href={`/map?search=${encodeURIComponent(member.address)}`} className="hover:text-gold-500 transition-colors">
+                    {member.address}
+                  </Link>
+                </div>
+              )}
+              {member.email && (
+                <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
+                  <Mail size={16} className="text-forest-400 flex-shrink-0" />
+                  <a href={`mailto:${member.email}`} className="hover:text-gold-500 transition-colors">{member.email}</a>
+                </div>
+              )}
+              {member.phone && (
+                <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
+                  <Phone size={16} className="text-forest-400 flex-shrink-0" />
+                  <a href={`tel:${member.phone}`} className="hover:text-gold-500 transition-colors">{member.phone}</a>
+                  {member.sms_opt_in && (
+                    <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
+                      <MessageSquare size={12} /> SMS OK
+                    </span>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Family Members */}
@@ -150,6 +201,33 @@ export default function MemberProfilePage() {
                 </div>
               ))}
             </div>
+          </div>
+        )}
+
+        {/* Mini map */}
+        {mapEmbedUrl && (
+          <div className="card overflow-hidden mt-4">
+            <iframe
+              src={mapEmbedUrl}
+              width="100%"
+              height="280"
+              style={{ border: 0, display: 'block' }}
+              allowFullScreen
+              loading="lazy"
+              referrerPolicy="no-referrer-when-downgrade"
+            />
+            {mapsLink && (
+              <div className="px-4 py-2 bg-white border-t border-cream-100 flex justify-end">
+                <a
+                  href={mapsLink}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-forest-400 hover:text-gold-500 font-sans flex items-center gap-1 transition-colors"
+                >
+                  Open in Google Maps <ExternalLink size={11} />
+                </a>
+              </div>
+            )}
           </div>
         )}
       </div>
