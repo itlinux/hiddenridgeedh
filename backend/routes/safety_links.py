@@ -39,7 +39,7 @@ DEFAULT_LINKS = [
     {"label": "National Weather Service — Sacramento", "url": "https://www.weather.gov/sto/", "sort_order": 12},
     {"label": "Ring Neighbors (Crime Alerts)", "url": "https://neighbors.ring.com", "sort_order": 13},
     {"label": "Rescue Union School District", "url": "https://www.rescueusd.org", "sort_order": 14},
-    {"label": "Oak Ridge High School", "url": "https://www.eduhsd.net/OakRidge", "sort_order": 15},
+    {"label": "Oak Ridge High School", "url": "https://orhs.eduhsd.k12.ca.us", "sort_order": 15},
     {"label": "El Dorado Disposal — Trash & Recycling", "url": "https://www.eldoradodisposal.com", "sort_order": 16},
 ]
 
