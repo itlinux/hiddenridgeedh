@@ -24,9 +24,13 @@ export default function Navbar() {
 
   const NAV_LINKS = [
     ...BASE_LINKS,
-    user
-      ? { href: '/map', label: 'Map' }
-      : { href: '/safety', label: 'Safety & Alerts' },
+    ...(user
+      ? [
+          { href: '/resources', label: 'Resources' },
+          { href: '/safety', label: 'Safety' },
+          { href: '/map', label: 'Map' },
+        ]
+      : [{ href: '/safety', label: 'Safety & Alerts' }]),
   ];
 
   return (
