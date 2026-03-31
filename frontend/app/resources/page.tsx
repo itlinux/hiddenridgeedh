@@ -43,7 +43,7 @@ const RESOURCE_CATEGORIES = [
     items: [
       { name: 'El Dorado Irrigation District (EID)', url: 'https://www.eid.org', desc: 'Water service — pay bills, report leaks, conservation info' },
       { name: 'PG&E', url: 'https://www.pge.com/outages', desc: 'Electric & gas — outage map, billing, start/stop service' },
-      { name: 'Republic Services — El Dorado Hills', url: 'https://www.republicservices.com/municipality/el-dorado-hills-ca', desc: 'Trash, recycling & green waste pickup schedules' },
+      { name: 'El Dorado Disposal', url: 'https://www.eldoradodisposal.com', desc: 'Trash, recycling & green waste pickup schedules' },
       { name: 'Consolidated Communications', url: 'https://www.consolidated.com/residential/internet', desc: 'Internet & phone service' },
       { name: 'SMUD', url: 'https://www.smud.org/en/Customer-Support/Outage-Status', desc: 'Electric service — outage map and billing' },
     ],
