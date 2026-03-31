@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { membersApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Users, Search, Loader2 } from 'lucide-react';
+import { Users, Search, Loader2, Dog } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 
 interface Member {
@@ -15,6 +15,8 @@ interface Member {
   bio?: string;
   avatar_url?: string;
   role?: string;
+  has_dog?: boolean;
+  dog_friendly?: boolean;
 }
 
 export default function MembersPage() {
@@ -92,10 +94,15 @@ export default function MembersPage() {
                     </span>
                   )}
                 </div>
-                <div>
-                  <h3 className="font-sans font-medium text-forest-800 group-hover:text-forest-600 transition-colors">
-                    {member.full_name}
-                  </h3>
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-sans font-medium text-forest-800 group-hover:text-forest-600 transition-colors">
+                      {member.full_name}
+                    </h3>
+                    {member.has_dog && (
+                      <Dog size={14} className={member.dog_friendly ? 'text-gold-500' : 'text-forest-400'} title={member.dog_friendly ? 'Has a friendly dog' : 'Has a dog'} />
+                    )}
+                  </div>
                   {member.bio && (
                     <p className="text-forest-400 text-xs font-body line-clamp-1 mt-1">{member.bio}</p>
                   )}
