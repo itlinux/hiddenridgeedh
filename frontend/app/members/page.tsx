@@ -100,7 +100,9 @@ export default function MembersPage() {
                       {member.full_name}
                     </h3>
                     {member.has_dog && (
-                      <Dog size={14} className={member.dog_friendly ? 'text-gold-500' : 'text-forest-400'} title={member.dog_friendly ? 'Has a friendly dog' : 'Has a dog'} />
+                      <span title={member.dog_friendly ? 'Has a friendly dog' : 'Has a dog'}>
+                        <Dog size={14} className={member.dog_friendly ? 'text-gold-500' : 'text-forest-400'} />
+                      </span>
                     )}
                   </div>
                   {member.bio && (
