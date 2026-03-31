@@ -127,4 +127,27 @@ export const membersApi = {
   updateRole: (id: string, data: any) => api.put(`/api/members/${id}/role`, data),
   deactivate: (id: string) => api.put(`/api/members/${id}/deactivate`),
   delete: (id: string) => api.delete(`/api/members/${id}`),
+  // Avatar
+  uploadAvatar: (formData: FormData) => api.post('/api/members/me/avatar', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteAvatar: () => api.delete('/api/members/me/avatar'),
+  // Dog photo
+  uploadDogPhoto: (formData: FormData) => api.post('/api/members/me/dog-photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteDogPhoto: () => api.delete('/api/members/me/dog-photo'),
+  // House photo
+  uploadHousePhoto: (formData: FormData) => api.post('/api/members/me/house-photo', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteHousePhoto: () => api.delete('/api/members/me/house-photo'),
+  // Family members
+  addFamily: (data: { name: string; bio?: string }) => api.post('/api/members/me/family', data),
+  updateFamily: (index: number, data: { name: string; bio?: string }) => api.put(`/api/members/me/family/${index}`, data),
+  deleteFamily: (index: number) => api.delete(`/api/members/me/family/${index}`),
+  uploadFamilyPhoto: (index: number, formData: FormData) => api.post(`/api/members/me/family/${index}/photo`, formData, {
+    headers: { 'Content-Type': 'multipart/form-data' },
+  }),
+  deleteFamilyPhoto: (index: number) => api.delete(`/api/members/me/family/${index}/photo`),
 };

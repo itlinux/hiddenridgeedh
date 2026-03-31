@@ -171,10 +171,18 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = Field(None, max_length=500)
     address: Optional[str] = Field(None, max_length=200)
     phone: Optional[str] = Field(None, max_length=20)
+    school: Optional[str] = Field(None, max_length=200)
+    has_dog: Optional[bool] = None
+    dog_friendly: Optional[bool] = None
     sms_opt_in: Optional[bool] = None
     email_opt_in: Optional[bool] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
+
+
+class FamilyMemberCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=100)
+    bio: Optional[str] = Field(None, max_length=300)
 
 
 class RoleUpdate(BaseModel):

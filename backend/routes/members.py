@@ -1,13 +1,19 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+import os
+import uuid
+from fastapi import APIRouter, HTTPException, Depends, Query, Request, UploadFile, File, Form
 from datetime import datetime
 from bson import ObjectId
+from PIL import Image
 
-from database import get_db
-from models.schemas import RoleUpdate, ProfileUpdate
+from database import get_db, get_settings
+from models.schemas import RoleUpdate, ProfileUpdate, FamilyMemberCreate
 from middleware.auth import require_member, require_super_admin, get_current_user
 from utils.email import send_approval_notification
 
 router = APIRouter(prefix="/api/members", tags=["members"])
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
+MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 
 def serialize_member(user: dict, include_email: bool = False) -> dict:
@@ -21,6 +27,12 @@ def serialize_member(user: dict, include_email: bool = False) -> dict:
         "latitude": user.get("latitude"),
         "longitude": user.get("longitude"),
         "role": user.get("role"),
+        "school": user.get("school"),
+        "has_dog": user.get("has_dog", False),
+        "dog_friendly": user.get("dog_friendly", False),
+        "dog_photo_url": user.get("dog_photo_url"),
+        "house_photo_url": user.get("house_photo_url"),
+        "family_members": user.get("family_members", []),
     }
     if include_email:
         member["email"] = user.get("email")
@@ -31,6 +43,53 @@ def serialize_member(user: dict, include_email: bool = False) -> dict:
         member["is_approved"] = user.get("is_approved")
         member["created_at"] = user.get("created_at")
     return member
+
+
+async def _save_upload(file: UploadFile, subfolder: str = "") -> str:
+    """Save an uploaded image file and return its URL path."""
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(400, "File type not allowed. Use JPEG, PNG, WebP, or GIF.")
+
+    contents = await file.read()
+    if len(contents) > MAX_FILE_SIZE:
+        raise HTTPException(400, "File too large. Maximum 10MB.")
+
+    settings = get_settings()
+    ext = file.filename.rsplit(".", 1)[-1].lower() if file.filename and "." in file.filename else "jpg"
+    filename = f"{uuid.uuid4()}.{ext}"
+
+    target_dir = os.path.join(settings.upload_dir, subfolder) if subfolder else settings.upload_dir
+    os.makedirs(target_dir, exist_ok=True)
+
+    file_path = os.path.join(target_dir, filename)
+    with open(file_path, "wb") as f:
+        f.write(contents)
+
+    # Generate thumbnail
+    thumb_dir = os.path.join(settings.upload_dir, "thumbnails")
+    os.makedirs(thumb_dir, exist_ok=True)
+    thumb_path = os.path.join(thumb_dir, filename)
+    img = Image.open(file_path)
+    img.thumbnail((300, 300))
+    img.save(thumb_path, quality=85)
+
+    url_path = f"/uploads/{subfolder + '/' if subfolder else ''}{filename}"
+    return url_path
+
+
+def _delete_upload(url: str | None):
+    """Delete an uploaded file from disk if it exists."""
+    if not url:
+        return
+    settings = get_settings()
+    rel = url.replace("/uploads/", "", 1)
+    file_path = os.path.join(settings.upload_dir, rel)
+    if os.path.exists(file_path):
+        os.remove(file_path)
+    # Also try thumbnail
+    thumb_path = os.path.join(settings.upload_dir, "thumbnails", os.path.basename(rel))
+    if os.path.exists(thumb_path):
+        os.remove(thumb_path)
 
 
 @router.get("")
@@ -79,6 +138,12 @@ async def update_my_profile(
         update_fields["address"] = data.address
     if data.phone is not None:
         update_fields["phone"] = data.phone
+    if data.school is not None:
+        update_fields["school"] = data.school
+    if data.has_dog is not None:
+        update_fields["has_dog"] = data.has_dog
+    if data.dog_friendly is not None:
+        update_fields["dog_friendly"] = data.dog_friendly
     if data.sms_opt_in is not None:
         update_fields["sms_opt_in"] = data.sms_opt_in
     if data.email_opt_in is not None:
@@ -101,6 +166,210 @@ async def update_my_profile(
     # Return updated user
     updated = await db.users.find_one({"_id": current_user["_id"]})
     return serialize_member(updated, include_email=True)
+
+
+# ── Avatar upload ────────────────────────────────────────────────
+@router.post("/me/avatar", status_code=200)
+async def upload_avatar(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    # Delete old avatar if exists
+    _delete_upload(current_user.get("avatar_url"))
+
+    url = await _save_upload(file, "avatars")
+    db = get_db()
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"avatar_url": url, "updated_at": datetime.utcnow()}},
+    )
+    return {"avatar_url": url}
+
+
+@router.delete("/me/avatar", status_code=200)
+async def delete_avatar(
+    current_user: dict = Depends(get_current_user),
+):
+    _delete_upload(current_user.get("avatar_url"))
+    db = get_db()
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"avatar_url": None, "updated_at": datetime.utcnow()}},
+    )
+    return {"message": "Avatar removed"}
+
+
+# ── House photo upload ───────────────────────────────────────────
+@router.post("/me/house-photo", status_code=200)
+async def upload_house_photo(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    _delete_upload(current_user.get("house_photo_url"))
+
+    url = await _save_upload(file, "houses")
+    db = get_db()
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"house_photo_url": url, "updated_at": datetime.utcnow()}},
+    )
+    return {"house_photo_url": url}
+
+
+@router.delete("/me/house-photo", status_code=200)
+async def delete_house_photo(
+    current_user: dict = Depends(get_current_user),
+):
+    _delete_upload(current_user.get("house_photo_url"))
+    db = get_db()
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"house_photo_url": None, "updated_at": datetime.utcnow()}},
+    )
+    return {"message": "House photo removed"}
+
+
+# ── Dog photo upload ─────────────────────────────────────────────
+@router.post("/me/dog-photo", status_code=200)
+async def upload_dog_photo(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    _delete_upload(current_user.get("dog_photo_url"))
+
+    url = await _save_upload(file, "dogs")
+    db = get_db()
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"dog_photo_url": url, "updated_at": datetime.utcnow()}},
+    )
+    return {"dog_photo_url": url}
+
+
+@router.delete("/me/dog-photo", status_code=200)
+async def delete_dog_photo(
+    current_user: dict = Depends(get_current_user),
+):
+    _delete_upload(current_user.get("dog_photo_url"))
+    db = get_db()
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"dog_photo_url": None, "updated_at": datetime.utcnow()}},
+    )
+    return {"message": "Dog photo removed"}
+
+
+# ── Family members CRUD ──────────────────────────────────────────
+@router.post("/me/family", status_code=201)
+async def add_family_member(
+    data: FamilyMemberCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    db = get_db()
+    family = current_user.get("family_members", [])
+    if len(family) >= 10:
+        raise HTTPException(400, "Maximum 10 family members allowed")
+
+    member_doc = {
+        "name": data.name,
+        "bio": data.bio,
+        "photo_url": None,
+    }
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {
+            "$push": {"family_members": member_doc},
+            "$set": {"updated_at": datetime.utcnow()},
+        },
+    )
+    updated = await db.users.find_one({"_id": current_user["_id"]})
+    return {"family_members": updated.get("family_members", [])}
+
+
+@router.put("/me/family/{index}")
+async def update_family_member(
+    index: int,
+    data: FamilyMemberCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    db = get_db()
+    family = current_user.get("family_members", [])
+    if index < 0 or index >= len(family):
+        raise HTTPException(404, "Family member not found")
+
+    family[index]["name"] = data.name
+    family[index]["bio"] = data.bio
+
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"family_members": family, "updated_at": datetime.utcnow()}},
+    )
+    return {"family_members": family}
+
+
+@router.delete("/me/family/{index}")
+async def delete_family_member(
+    index: int,
+    current_user: dict = Depends(get_current_user),
+):
+    db = get_db()
+    family = current_user.get("family_members", [])
+    if index < 0 or index >= len(family):
+        raise HTTPException(404, "Family member not found")
+
+    # Delete photo if exists
+    _delete_upload(family[index].get("photo_url"))
+
+    family.pop(index)
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"family_members": family, "updated_at": datetime.utcnow()}},
+    )
+    return {"family_members": family}
+
+
+@router.post("/me/family/{index}/photo", status_code=200)
+async def upload_family_photo(
+    index: int,
+    file: UploadFile = File(...),
+    current_user: dict = Depends(get_current_user),
+):
+    db = get_db()
+    family = current_user.get("family_members", [])
+    if index < 0 or index >= len(family):
+        raise HTTPException(404, "Family member not found")
+
+    # Delete old photo
+    _delete_upload(family[index].get("photo_url"))
+
+    url = await _save_upload(file, "family")
+    family[index]["photo_url"] = url
+
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"family_members": family, "updated_at": datetime.utcnow()}},
+    )
+    return {"family_members": family}
+
+
+@router.delete("/me/family/{index}/photo", status_code=200)
+async def delete_family_photo(
+    index: int,
+    current_user: dict = Depends(get_current_user),
+):
+    db = get_db()
+    family = current_user.get("family_members", [])
+    if index < 0 or index >= len(family):
+        raise HTTPException(404, "Family member not found")
+
+    _delete_upload(family[index].get("photo_url"))
+    family[index]["photo_url"] = None
+
+    await db.users.update_one(
+        {"_id": current_user["_id"]},
+        {"$set": {"family_members": family, "updated_at": datetime.utcnow()}},
+    )
+    return {"family_members": family}
 
 
 @router.get("/{user_id}")
@@ -199,6 +468,13 @@ async def delete_member(
     user = await db.users.find_one({"_id": ObjectId(user_id)})
     if not user:
         raise HTTPException(404, "User not found")
+
+    # Clean up uploaded photos
+    _delete_upload(user.get("avatar_url"))
+    _delete_upload(user.get("house_photo_url"))
+    _delete_upload(user.get("dog_photo_url"))
+    for fm in user.get("family_members", []):
+        _delete_upload(fm.get("photo_url"))
 
     # Delete the user
     await db.users.delete_one({"_id": ObjectId(user_id)})
