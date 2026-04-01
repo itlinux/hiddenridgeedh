@@ -8,30 +8,29 @@ import { useAuth } from '@/lib/auth';
 import { Menu, X, ChevronDown, LogOut, User, Shield, Info } from 'lucide-react';
 import clsx from 'clsx';
 
-const BASE_LINKS = [
-  { href: '/blog',    label: 'News & Blog' },
-  { href: '/events',  label: 'Events' },
-  { href: '/gallery', label: 'Gallery' },
-  { href: '/forum',   label: 'Forum' },
-  { href: '/members', label: 'Neighbors' },
-];
-
 export default function Navbar() {
   const pathname = usePathname();
   const { user, logout, isAdmin, isSuperAdmin } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const [profileOpen, setProfileOpen] = useState(false);
 
-  const NAV_LINKS = [
-    ...BASE_LINKS,
-    ...(user
-      ? [
-          { href: '/resources', label: 'Resources' },
-          { href: '/safety', label: 'Safety' },
-          { href: '/map', label: 'Map' },
-        ]
-      : [{ href: '/safety', label: 'Safety & Alerts' }]),
-  ];
+  const NAV_LINKS = user
+    ? [
+        { href: '/map',      label: 'Map' },
+        { href: '/members',  label: 'Neighbors' },
+        { href: '/forum',    label: 'Forum' },
+        { href: '/safety',   label: 'Safety' },
+        { href: '/resources',label: 'Resources' },
+        { href: '/events',   label: 'Events' },
+        { href: '/gallery',  label: 'Gallery' },
+        { href: '/blog',     label: 'Area News & Blog' },
+      ]
+    : [
+        { href: '/safety',   label: 'Safety & Alerts' },
+        { href: '/events',   label: 'Events' },
+        { href: '/gallery',  label: 'Gallery' },
+        { href: '/blog',     label: 'Area News & Blog' },
+      ];
 
   return (
     <header className="bg-forest-800 border-b border-forest-700 sticky top-0 z-50">
