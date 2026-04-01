@@ -14,6 +14,9 @@ interface User {
   bio?: string;
   address?: string;
   phone?: string;
+  alt_phone?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
   latitude?: number;
   longitude?: number;
   school?: string;

@@ -24,6 +24,9 @@ export default function ProfilePage() {
     address: '',
     phone: '',
     school: '',
+    alt_phone: '',
+    emergency_contact_name: '',
+    emergency_contact_phone: '',
     has_dog: false,
     dog_friendly: false,
     dog_bio: '',
@@ -44,6 +47,9 @@ export default function ProfilePage() {
         address: user.address || '',
         phone: user.phone || '',
         school: user.school || '',
+        alt_phone: user.alt_phone || '',
+        emergency_contact_name: user.emergency_contact_name || '',
+        emergency_contact_phone: user.emergency_contact_phone || '',
         has_dog: user.has_dog || false,
         dog_friendly: user.dog_friendly || false,
         dog_bio: user.dog_bio || '',
@@ -134,6 +140,38 @@ export default function ProfilePage() {
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="input-field w-full"
               />
+            </div>
+            <div>
+              <label className="section-label block mb-2">Alternative Phone</label>
+              <input
+                value={form.alt_phone}
+                onChange={(e) => setForm({ ...form, alt_phone: e.target.value })}
+                className="input-field w-full"
+                placeholder="e.g. work or cell"
+              />
+            </div>
+
+            {/* Emergency Contact */}
+            <div className="bg-cream-100 rounded-sm p-4 space-y-3">
+              <p className="section-label text-xs mb-1">Emergency Contact</p>
+              <div>
+                <label className="section-label text-xs block mb-1">Name</label>
+                <input
+                  value={form.emergency_contact_name}
+                  onChange={(e) => setForm({ ...form, emergency_contact_name: e.target.value })}
+                  className="input-field w-full"
+                  placeholder="e.g. Jane Doe"
+                />
+              </div>
+              <div>
+                <label className="section-label text-xs block mb-1">Phone</label>
+                <input
+                  value={form.emergency_contact_phone}
+                  onChange={(e) => setForm({ ...form, emergency_contact_phone: e.target.value })}
+                  className="input-field w-full"
+                  placeholder="e.g. (916) 555-0100"
+                />
+              </div>
             </div>
 
             {/* School */}

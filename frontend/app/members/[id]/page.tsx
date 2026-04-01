@@ -22,6 +22,9 @@ interface Member {
   address?: string;
   email?: string;
   phone?: string;
+  alt_phone?: string;
+  emergency_contact_name?: string;
+  emergency_contact_phone?: string;
   sms_opt_in?: boolean;
   role?: string;
   school?: string;
@@ -150,7 +153,7 @@ export default function MemberProfilePage() {
           )}
 
           {/* Contact info */}
-          {(member.address || member.email || member.phone) && (
+          {(member.address || member.email || member.phone || member.alt_phone || member.emergency_contact_phone) && (
             <div className="mt-8 pt-6 border-t border-forest-100 space-y-3 text-left">
               {member.address && (
                 <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
@@ -174,6 +177,26 @@ export default function MemberProfilePage() {
                     <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
                       <MessageSquare size={12} /> SMS OK
                     </span>
+                  )}
+                </div>
+              )}
+              {member.alt_phone && (
+                <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
+                  <Phone size={16} className="text-forest-400 flex-shrink-0" />
+                  <a href={`tel:${member.alt_phone}`} className="hover:text-gold-500 transition-colors">{member.alt_phone}</a>
+                  <span className="text-forest-400 text-xs font-sans">alt</span>
+                </div>
+              )}
+              {(member.emergency_contact_name || member.emergency_contact_phone) && (
+                <div className="mt-3 pt-3 border-t border-forest-100">
+                  <p className="text-forest-400 text-xs font-sans uppercase tracking-wider mb-1">Emergency Contact</p>
+                  {member.emergency_contact_name && (
+                    <p className="text-forest-600 font-body text-sm">{member.emergency_contact_name}</p>
+                  )}
+                  {member.emergency_contact_phone && (
+                    <a href={`tel:${member.emergency_contact_phone}`} className="text-forest-600 font-body text-sm hover:text-gold-500 transition-colors">
+                      {member.emergency_contact_phone}
+                    </a>
                   )}
                 </div>
               )}
