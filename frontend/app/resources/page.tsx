@@ -8,22 +8,6 @@ import PageHeader from '@/components/layout/PageHeader';
 
 const RESOURCE_CATEGORIES = [
   {
-    category: 'Schools',
-    icon: 'school',
-    items: [
-      { name: 'Rescue Union School District', url: 'https://www.rescueusd.org', desc: 'K-8 district serving El Dorado Hills' },
-      { name: 'Jackson Elementary School', url: 'https://www.myjacksonelementary.com', desc: 'Grades K-5' },
-      { name: 'Lakeview Elementary School', url: 'https://www.mylakevieweagles.com', desc: 'Grades K-5' },
-      { name: 'Lake Forest Elementary School', url: 'https://www.lakeforestlakers.com', desc: 'Grades K-5' },
-      { name: 'Rescue Elementary School', url: 'https://www.rescueelementary.org', desc: 'Grades K-5' },
-      { name: 'Marina Village Middle School', url: 'https://www.marinamustangs.com', desc: 'Grades 6-8' },
-      { name: 'Pleasant Grove Middle School', url: 'https://www.pleasantgrovepumas.org', desc: 'Grades 6-8' },
-      { name: 'Rolling Hills Middle School', url: 'https://rhms.buckeyeusd.org', desc: 'Grades 6-8 (Buckeye Union SD)' },
-      { name: 'Oak Ridge High School', url: 'https://orhs.eduhsd.k12.ca.us', desc: 'Grades 9-12' },
-      { name: 'El Dorado Union High School District', url: 'https://www.eduhsd.k12.ca.us', desc: 'High school district' },
-    ],
-  },
-  {
     category: 'Home & Repair',
     icon: 'wrench',
     items: [
@@ -32,6 +16,13 @@ const RESOURCE_CATEGORIES = [
   },
   {
     category: 'Landscaping & Yard',
+    icon: 'wrench',
+    items: [
+      { name: 'Post your recommendation in the Forum', type: 'tip' },
+    ],
+  },
+  {
+    category: 'House Cleaning',
     icon: 'wrench',
     items: [
       { name: 'Post your recommendation in the Forum', type: 'tip' },
@@ -57,6 +48,22 @@ const RESOURCE_CATEGORIES = [
       { name: 'El Dorado Hills Town Center', url: 'https://www.eldoradohillstowncenter.com', desc: 'Shopping, dining, and events calendar' },
       { name: 'El Dorado County Library — EDH Branch', url: 'https://www.eldoradolibrary.org', desc: 'Library hours, events, and digital resources' },
       { name: 'El Dorado Hills Chamber of Commerce', url: 'https://eldoradohillschamber.org', desc: 'Local business directory and community events' },
+    ],
+  },
+  {
+    category: 'Schools',
+    icon: 'school',
+    items: [
+      { name: 'Rescue Union School District', url: 'https://www.rescueusd.org', desc: 'K-8 district serving El Dorado Hills' },
+      { name: 'Jackson Elementary School', url: 'https://www.myjacksonelementary.com', desc: 'Grades K-5' },
+      { name: 'Lakeview Elementary School', url: 'https://www.mylakevieweagles.com', desc: 'Grades K-5' },
+      { name: 'Lake Forest Elementary School', url: 'https://www.lakeforestlakers.com', desc: 'Grades K-5' },
+      { name: 'Rescue Elementary School', url: 'https://www.rescueelementary.org', desc: 'Grades K-5' },
+      { name: 'Marina Village Middle School', url: 'https://www.marinamustangs.com', desc: 'Grades 6-8' },
+      { name: 'Pleasant Grove Middle School', url: 'https://www.pleasantgrovepumas.org', desc: 'Grades 6-8' },
+      { name: 'Rolling Hills Middle School', url: 'https://rhms.buckeyeusd.org', desc: 'Grades 6-8 (Buckeye Union SD)' },
+      { name: 'Oak Ridge High School', url: 'https://orhs.eduhsd.k12.ca.us', desc: 'Grades 9-12' },
+      { name: 'El Dorado Union High School District', url: 'https://www.eduhsd.k12.ca.us', desc: 'High school district' },
     ],
   },
 ];
