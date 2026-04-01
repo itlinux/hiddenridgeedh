@@ -335,6 +335,8 @@ export default function SafetyPage() {
                 <li>• Do not attempt to handle or kill it</li>
                 <li>• Keep children and pets away</li>
                 <li>• Watch where you step on trails and in yards</li>
+                <li>• <strong>Call Animal Control</strong> for safe removal — El Dorado County: <a href="tel:5306215795" className="text-red-700 underline">(530) 621-5795</a></li>
+                <li>• <strong>Report the sighting</strong> on this site — post the location, date, and time in the <a href="/forum" className="text-red-700 underline">Forum</a> so neighbors stay aware</li>
               </ul>
             </div>
             <div className="bg-red-100 border border-red-300 rounded-sm p-4">
