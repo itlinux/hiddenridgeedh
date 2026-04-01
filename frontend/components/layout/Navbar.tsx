@@ -5,7 +5,7 @@ import Image from 'next/image';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { useAuth } from '@/lib/auth';
-import { Menu, X, ChevronDown, LogOut, User, Shield } from 'lucide-react';
+import { Menu, X, ChevronDown, LogOut, User, Shield, Info } from 'lucide-react';
 import clsx from 'clsx';
 
 const BASE_LINKS = [
@@ -103,9 +103,12 @@ export default function Navbar() {
                 </button>
 
                 {profileOpen && (
-                  <div className="absolute right-0 mt-2 w-48 bg-white shadow-xl border border-cream-200 rounded-sm py-1 z-50">
+                  <div className="absolute right-0 mt-2 w-52 bg-white shadow-xl border border-cream-200 rounded-sm py-1 z-50">
                     <Link href="/profile" className="flex items-center gap-2 px-4 py-2 text-sm text-forest-700 hover:bg-cream-50 font-sans" onClick={() => setProfileOpen(false)}>
                       <User size={14} /> My Profile
+                    </Link>
+                    <Link href="/forum/about" className="flex items-center gap-2 px-4 py-2 text-sm text-forest-700 hover:bg-cream-50 font-sans" onClick={() => setProfileOpen(false)}>
+                      <Info size={14} /> About the Forum
                     </Link>
                     {isAdmin && (
                       <Link href="/edh" className="flex items-center gap-2 px-4 py-2 text-sm text-forest-700 hover:bg-cream-50 font-sans" onClick={() => setProfileOpen(false)}>
