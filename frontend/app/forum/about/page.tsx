@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, Bell, ShieldAlert, XCircle, Users, Info } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Bell, ShieldAlert, XCircle, Users, Info, PartyPopper, Eye } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 
 export default function ForumAboutPage() {
@@ -73,8 +73,38 @@ export default function ForumAboutPage() {
                     <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Safety &amp; security</p>
                     <p className="font-body text-sm text-forest-600 leading-relaxed">
                       Spotting a rattlesnake on the trail, a garage door left open overnight,
-                      a suspicious vehicle parked for days, or any other situation where a
-                      neighbor&apos;s awareness could make a difference.
+                      a suspicious vehicle parked for days, an unfamiliar person walking
+                      through the neighborhood — any situation where a neighbor&apos;s
+                      awareness could make a difference.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
+                <div className="flex items-start gap-3">
+                  <Eye size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Strangers &amp; unfamiliar activity</p>
+                    <p className="font-body text-sm text-forest-600 leading-relaxed">
+                      If you see someone you don&apos;t recognize lingering around the neighborhood,
+                      an unknown vehicle parked for an extended time, or anything that feels
+                      off — post it here so neighbors can stay aware. When in doubt, also
+                      call non-emergency dispatch.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
+                <div className="flex items-start gap-3">
+                  <PartyPopper size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Neighborhood events &amp; gatherings</p>
+                    <p className="font-body text-sm text-forest-600 leading-relaxed">
+                      Planning a block BBQ, organizing a garage sale, hosting a holiday
+                      get-together? This is the place to spread the word and get neighbors
+                      involved.
                     </p>
                   </div>
                 </div>
