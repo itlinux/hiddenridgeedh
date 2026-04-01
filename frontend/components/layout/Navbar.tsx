@@ -107,7 +107,7 @@ export default function Navbar() {
                       <User size={14} /> My Profile
                     </Link>
                     <Link href="/forum/about" className="flex items-center gap-2 px-4 py-2 text-sm text-forest-700 hover:bg-cream-50 font-sans" onClick={() => setProfileOpen(false)}>
-                      <Info size={14} /> About the Forum
+                      <Info size={14} /> How to Use this Site
                     </Link>
                     {isAdmin && (
                       <Link href="/edh" className="flex items-center gap-2 px-4 py-2 text-sm text-forest-700 hover:bg-cream-50 font-sans" onClick={() => setProfileOpen(false)}>

@@ -1,11 +1,11 @@
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, Bell, ShieldAlert, XCircle, Users, Info, PartyPopper, Eye } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Bell, ShieldAlert, XCircle, Users, Info, PartyPopper, Eye, Briefcase, CheckCircle2 } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 
 export default function ForumAboutPage() {
   return (
     <div className="min-h-screen bg-cream-50">
-      <PageHeader label="Forum" title="About This Forum" />
+      <PageHeader label="Community Guide" title="How to Use this Site" />
 
       <div className="max-w-2xl mx-auto px-4 py-12">
         <Link
@@ -22,7 +22,7 @@ export default function ForumAboutPage() {
           <div className="card p-8">
             <div className="flex items-center gap-3 mb-4">
               <Info className="text-gold-400 flex-shrink-0" size={24} />
-              <h2 className="font-serif text-2xl text-forest-800">What is this forum for?</h2>
+              <h2 className="font-serif text-2xl text-forest-800">What is this site for?</h2>
             </div>
             <p className="font-body text-forest-600 leading-relaxed">
               This is a private space for Hidden Ridge neighbors to connect, share information,
@@ -35,7 +35,7 @@ export default function ForumAboutPage() {
           <div>
             <h2 className="font-serif text-xl text-forest-800 mb-4 flex items-center gap-2">
               <MessageSquare size={18} className="text-gold-400" />
-              What this forum <span className="text-gold-500 italic ml-1">is</span>
+              What this site <span className="text-gold-500 italic ml-1">is</span>
             </h2>
             <div className="space-y-4">
 
@@ -102,9 +102,9 @@ export default function ForumAboutPage() {
                   <div>
                     <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Neighborhood events &amp; gatherings</p>
                     <p className="font-body text-sm text-forest-600 leading-relaxed">
-                      Planning a block BBQ, organizing a garage sale, hosting a holiday
-                      get-together? This is the place to spread the word and get neighbors
-                      involved.
+                      Planning a block BBQ, hosting a holiday get-together, or setting up a
+                      kids&apos; lemonade stand? This is the place to spread the word and get
+                      neighbors involved.
                     </p>
                   </div>
                 </div>
@@ -117,7 +117,7 @@ export default function ForumAboutPage() {
           <div>
             <h2 className="font-serif text-xl text-forest-800 mb-4 flex items-center gap-2">
               <XCircle size={18} className="text-red-400" />
-              What this forum is <span className="text-red-400 italic ml-1">not</span>
+              What this site is <span className="text-red-400 italic ml-1">not</span>
             </h2>
 
             <div className="bg-red-50 border border-red-100 rounded-sm p-6 space-y-4">
@@ -137,13 +137,46 @@ export default function ForumAboutPage() {
                   it neighborly. Treat everyone here as you would face-to-face.
                 </p>
               </div>
-              <div className="flex items-start gap-3">
-                <XCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
-                <p className="font-body text-sm text-forest-700 leading-relaxed">
-                  <strong>Not a commercial space.</strong> No advertising, soliciting, or
-                  promoting businesses.
-                </p>
+            </div>
+          </div>
+
+          {/* Also welcome */}
+          <div>
+            <h2 className="font-serif text-xl text-forest-800 mb-4 flex items-center gap-2">
+              <CheckCircle2 size={18} className="text-green-500" />
+              Also welcome here
+            </h2>
+            <div className="space-y-4">
+
+              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
+                <div className="flex items-start gap-3">
+                  <Briefcase size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Sharing what you do</p>
+                    <p className="font-body text-sm text-forest-600 leading-relaxed">
+                      Feel free to share your professional background on your profile or
+                      introduce yourself in the forum. We want to know who our neighbors are
+                      — what you do for work is part of that.
+                    </p>
+                  </div>
+                </div>
               </div>
+
+              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
+                <div className="flex items-start gap-3">
+                  <PartyPopper size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Garage sales, lemonade stands &amp; neighborhood fun</p>
+                    <p className="font-body text-sm text-forest-600 leading-relaxed">
+                      Post your garage sale dates, let neighbors know the kids have a lemonade
+                      stand running, or share anything lighthearted that brings the neighborhood
+                      together. These are exactly the kinds of posts that make a community feel
+                      like home.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
             </div>
           </div>
 
