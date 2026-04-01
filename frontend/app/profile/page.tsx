@@ -26,6 +26,7 @@ export default function ProfilePage() {
     school: '',
     has_dog: false,
     dog_friendly: false,
+    dog_bio: '',
     latitude: '',
     longitude: '',
   });
@@ -45,6 +46,7 @@ export default function ProfilePage() {
         school: user.school || '',
         has_dog: user.has_dog || false,
         dog_friendly: user.dog_friendly || false,
+        dog_bio: user.dog_bio || '',
         latitude: user.latitude?.toString() || '',
         longitude: user.longitude?.toString() || '',
       });
@@ -179,6 +181,17 @@ export default function ProfilePage() {
                     </label>
                   </div>
                   <DogPhotoUpload user={user} onUpdated={refreshUser} />
+                  <div>
+                    <label className="section-label text-xs block mb-1">About my dog</label>
+                    <textarea
+                      value={form.dog_bio}
+                      onChange={(e) => setForm({ ...form, dog_bio: e.target.value })}
+                      rows={3}
+                      maxLength={500}
+                      className="input-field w-full resize-none"
+                      placeholder="e.g. Friendly with other dogs, loves kids, name is Buddy..."
+                    />
+                  </div>
                 </>
               )}
             </div>

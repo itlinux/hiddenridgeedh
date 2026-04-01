@@ -27,6 +27,7 @@ interface Member {
   school?: string;
   has_dog?: boolean;
   dog_friendly?: boolean;
+  dog_bio?: string;
   dog_photo_url?: string;
   house_photo_url?: string;
   family_members?: FamilyMember[];
@@ -132,14 +133,19 @@ export default function MemberProfilePage() {
             )}
           </div>
 
-          {/* Dog Photo */}
-          {member.has_dog && member.dog_photo_url && (
-            <div className="mt-6">
-              <img
-                src={member.dog_photo_url}
-                alt={`${member.full_name}'s dog`}
-                className="w-32 h-32 object-cover rounded-sm border border-cream-200 mx-auto"
-              />
+          {/* Dog Photo + Bio */}
+          {member.has_dog && (member.dog_photo_url || member.dog_bio) && (
+            <div className="mt-6 space-y-3">
+              {member.dog_photo_url && (
+                <img
+                  src={member.dog_photo_url}
+                  alt={`${member.full_name}'s dog`}
+                  className="w-32 h-32 object-cover rounded-sm border border-cream-200 mx-auto"
+                />
+              )}
+              {member.dog_bio && (
+                <p className="text-forest-600 font-sans text-sm text-center italic max-w-xs mx-auto">{member.dog_bio}</p>
+              )}
             </div>
           )}
 

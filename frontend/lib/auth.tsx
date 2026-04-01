@@ -19,6 +19,7 @@ interface User {
   school?: string;
   has_dog?: boolean;
   dog_friendly?: boolean;
+  dog_bio?: string;
   dog_photo_url?: string;
   house_photo_url?: string;
   family_members?: { name: string; bio?: string; photo_url?: string }[];
