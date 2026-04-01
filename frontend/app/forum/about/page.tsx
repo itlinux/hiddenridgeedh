@@ -108,16 +108,6 @@ export default function ForumAboutPage() {
             </div>
           </div>
 
-          {/* HOA contact callout */}
-          <div className="bg-cream-100 border border-cream-200 rounded-sm p-6">
-            <p className="font-sans text-xs uppercase tracking-wider text-forest-400 mb-2">Need the HOA?</p>
-            <p className="font-body text-sm text-forest-600 leading-relaxed">
-              Hidden Ridge is managed by <strong>FirstService Residential</strong>. For complaints,
-              rule violations, maintenance requests, or any official HOA matter, please reach out
-              to them directly through the HOA portal or your account manager.
-            </p>
-          </div>
-
           {/* What it is NOT */}
           <div>
             <h2 className="font-serif text-xl text-forest-800 mb-4 flex items-center gap-2">
@@ -142,6 +132,16 @@ export default function ForumAboutPage() {
                 </p>
               </div>
             </div>
+          </div>
+
+          {/* HOA contact callout */}
+          <div className="bg-cream-100 border border-cream-200 rounded-sm p-6">
+            <p className="font-sans text-xs uppercase tracking-wider text-forest-400 mb-2">Need the HOA?</p>
+            <p className="font-body text-sm text-forest-600 leading-relaxed">
+              Hidden Ridge is managed by <strong>FirstService Residential</strong>. For complaints,
+              rule violations, maintenance requests, or any official HOA matter, please reach out
+              to them directly through the HOA portal or your account manager.
+            </p>
           </div>
 
           <div className="text-center pt-4">
