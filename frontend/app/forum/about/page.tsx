@@ -1,5 +1,5 @@
 import Link from 'next/link';
-import { ArrowLeft, MessageSquare, Bell, ShieldAlert, XCircle, Users, Info, PartyPopper, Eye, Briefcase, CheckCircle2 } from 'lucide-react';
+import { ArrowLeft, MessageSquare, Bell, ShieldAlert, XCircle, Users, Info, PartyPopper, Briefcase, CheckCircle2 } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 
 export default function ForumAboutPage() {
@@ -58,9 +58,8 @@ export default function ForumAboutPage() {
                   <div>
                     <p className="font-sans text-sm font-semibold text-forest-700 mb-1">General neighborhood notifications</p>
                     <p className="font-body text-sm text-forest-600 leading-relaxed">
-                      Heads-up posts that are useful to everyone — the gate is not working,
-                      a water main is being repaired, road work on Silva Valley Parkway,
-                      a lost pet, a package left at the wrong door.
+                      Heads-up posts useful to everyone — the gate is not working,
+                      road work on Silva Valley Parkway, a lost pet, a package left at the wrong door.
                     </p>
                   </div>
                 </div>
@@ -70,27 +69,11 @@ export default function ForumAboutPage() {
                 <div className="flex items-start gap-3">
                   <ShieldAlert size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Safety &amp; security</p>
+                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Safety, security &amp; suspicious activity</p>
                     <p className="font-body text-sm text-forest-600 leading-relaxed">
-                      Spotting a rattlesnake on the trail, a garage door left open overnight,
-                      a suspicious vehicle parked for days, an unfamiliar person walking
-                      through the neighborhood — any situation where a neighbor&apos;s
-                      awareness could make a difference.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
-                <div className="flex items-start gap-3">
-                  <Eye size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Strangers &amp; unfamiliar activity</p>
-                    <p className="font-body text-sm text-forest-600 leading-relaxed">
-                      If you see someone you don&apos;t recognize lingering around the neighborhood,
-                      an unknown vehicle parked for an extended time, or anything that feels
-                      off — post it here so neighbors can stay aware. When in doubt, also
-                      call non-emergency dispatch.
+                      Rattlesnake on the trail, a garage door left open overnight, an unfamiliar
+                      person or vehicle that doesn&apos;t feel right — post it so neighbors stay aware.
+                      When in doubt, also call non-emergency dispatch.
                     </p>
                   </div>
                 </div>
@@ -100,11 +83,23 @@ export default function ForumAboutPage() {
                 <div className="flex items-start gap-3">
                   <PartyPopper size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
                   <div>
-                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Neighborhood events &amp; gatherings</p>
+                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Events, garage sales &amp; neighborhood fun</p>
                     <p className="font-body text-sm text-forest-600 leading-relaxed">
-                      Planning a block BBQ, hosting a holiday get-together, or setting up a
-                      kids&apos; lemonade stand? This is the place to spread the word and get
-                      neighbors involved.
+                      Block BBQ, garage sale, holiday get-together, kids&apos; lemonade stand — spread
+                      the word and get neighbors involved.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
+                <div className="flex items-start gap-3">
+                  <Briefcase size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
+                  <div>
+                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Promoting your business</p>
+                    <p className="font-body text-sm text-forest-600 leading-relaxed">
+                      Neighbors supporting neighbors — feel free to share what you do and
+                      promote your business here.
                     </p>
                   </div>
                 </div>
@@ -113,13 +108,22 @@ export default function ForumAboutPage() {
             </div>
           </div>
 
+          {/* HOA contact callout */}
+          <div className="bg-cream-100 border border-cream-200 rounded-sm p-6">
+            <p className="font-sans text-xs uppercase tracking-wider text-forest-400 mb-2">Need the HOA?</p>
+            <p className="font-body text-sm text-forest-600 leading-relaxed">
+              Hidden Ridge is managed by <strong>FirstService Residential</strong>. For complaints,
+              rule violations, maintenance requests, or any official HOA matter, please reach out
+              to them directly through the HOA portal or your account manager.
+            </p>
+          </div>
+
           {/* What it is NOT */}
           <div>
             <h2 className="font-serif text-xl text-forest-800 mb-4 flex items-center gap-2">
               <XCircle size={18} className="text-red-400" />
               What this site is <span className="text-red-400 italic ml-1">not</span>
             </h2>
-
             <div className="bg-red-50 border border-red-100 rounded-sm p-6 space-y-4">
               <div className="flex items-start gap-3">
                 <XCircle size={16} className="text-red-400 flex-shrink-0 mt-0.5" />
@@ -138,56 +142,6 @@ export default function ForumAboutPage() {
                 </p>
               </div>
             </div>
-          </div>
-
-          {/* Also welcome */}
-          <div>
-            <h2 className="font-serif text-xl text-forest-800 mb-4 flex items-center gap-2">
-              <CheckCircle2 size={18} className="text-green-500" />
-              Also welcome here
-            </h2>
-            <div className="space-y-4">
-
-              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
-                <div className="flex items-start gap-3">
-                  <Briefcase size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Sharing what you do</p>
-                    <p className="font-body text-sm text-forest-600 leading-relaxed">
-                      Feel free to share your professional background on your profile or
-                      introduce yourself in the forum. We want to know who our neighbors are
-                      — what you do for work is part of that.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-cream-100 rounded-sm p-5 border border-cream-200">
-                <div className="flex items-start gap-3">
-                  <PartyPopper size={18} className="text-forest-400 flex-shrink-0 mt-0.5" />
-                  <div>
-                    <p className="font-sans text-sm font-semibold text-forest-700 mb-1">Garage sales, lemonade stands &amp; neighborhood fun</p>
-                    <p className="font-body text-sm text-forest-600 leading-relaxed">
-                      Post your garage sale dates, let neighbors know the kids have a lemonade
-                      stand running, or share anything lighthearted that brings the neighborhood
-                      together. These are exactly the kinds of posts that make a community feel
-                      like home.
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-            </div>
-          </div>
-
-          {/* HOA contact callout */}
-          <div className="bg-cream-100 border border-cream-200 rounded-sm p-6">
-            <p className="font-sans text-xs uppercase tracking-wider text-forest-400 mb-2">Need the HOA?</p>
-            <p className="font-body text-sm text-forest-600 leading-relaxed">
-              Hidden Ridge is managed by <strong>FirstService Residential</strong>. For complaints,
-              rule violations, maintenance requests, or any official HOA matter, please reach out
-              to them directly through the HOA portal or your account manager.
-            </p>
           </div>
 
           <div className="text-center pt-4">
