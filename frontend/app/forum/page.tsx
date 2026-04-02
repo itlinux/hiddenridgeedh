@@ -121,7 +121,7 @@ export default function ForumPage() {
       <div className="max-w-4xl mx-auto px-4 py-12">
 
         {/* Info banner */}
-        <Link href="/forum/about" className="flex items-center gap-3 bg-cream-100 border border-cream-200 rounded-sm px-4 py-3 mb-8 text-forest-600 hover:border-gold-300 hover:bg-cream-200 transition-colors group">
+        <Link href="/policy" className="flex items-center gap-3 bg-cream-100 border border-cream-200 rounded-sm px-4 py-3 mb-8 text-forest-600 hover:border-gold-300 hover:bg-cream-200 transition-colors group">
           <Info size={16} className="text-gold-400 flex-shrink-0" />
           <span className="font-sans text-xs leading-relaxed">
             This site is for neighbors to connect and share — <strong>not an HOA complaint channel</strong>.
