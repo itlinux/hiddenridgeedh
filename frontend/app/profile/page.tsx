@@ -29,6 +29,7 @@ export default function ProfilePage() {
     emergency_contact_phone: '',
     has_dog: false,
     dog_friendly: false,
+    dog_name: '',
     dog_bio: '',
     latitude: '',
     longitude: '',
@@ -52,6 +53,7 @@ export default function ProfilePage() {
         emergency_contact_phone: user.emergency_contact_phone || '',
         has_dog: user.has_dog || false,
         dog_friendly: user.dog_friendly || false,
+        dog_name: user.dog_name || '',
         dog_bio: user.dog_bio || '',
         latitude: user.latitude?.toString() || '',
         longitude: user.longitude?.toString() || '',
@@ -219,6 +221,16 @@ export default function ProfilePage() {
                     </label>
                   </div>
                   <DogPhotoUpload user={user} onUpdated={refreshUser} />
+                  <div>
+                    <label className="section-label text-xs block mb-1">Dog&apos;s Name</label>
+                    <input
+                      value={form.dog_name}
+                      onChange={(e) => setForm({ ...form, dog_name: e.target.value })}
+                      className="input-field w-full"
+                      placeholder="e.g. Buddy"
+                      maxLength={50}
+                    />
+                  </div>
                   <div>
                     <label className="section-label text-xs block mb-1">About my dog</label>
                     <textarea

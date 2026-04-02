@@ -30,6 +30,7 @@ interface Member {
   school?: string;
   has_dog?: boolean;
   dog_friendly?: boolean;
+  dog_name?: string;
   dog_bio?: string;
   dog_photo_url?: string;
   house_photo_url?: string;
@@ -237,7 +238,7 @@ export default function MemberProfilePage() {
                     )}
                     <div>
                       <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <p className="font-sans text-forest-800 font-medium text-sm">Family Dog</p>
+                        <p className="font-sans text-forest-800 font-medium text-sm">{member.dog_name || 'Family Dog'}</p>
                         {member.dog_friendly && (
                           <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
                             Friendly
