@@ -197,7 +197,7 @@ export default function MemberProfilePage() {
               <div>
                 <h2 className="font-serif text-xl text-forest-800">Family</h2>
                 <p className="font-sans text-xs text-forest-400 mt-0.5">
-                  {member.full_name.split(' ').slice(-1)[0]} Family
+                  {(member.full_name || '').split(' ').slice(-1)[0]} Family
                 </p>
               </div>
             </div>
