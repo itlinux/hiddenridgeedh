@@ -194,7 +194,12 @@ export default function MemberProfilePage() {
           <div className="card p-8 mt-6">
             <div className="flex items-center gap-3 mb-6">
               <Users size={20} className="text-gold-500" />
-              <h2 className="font-serif text-xl text-forest-800">Family</h2>
+              <div>
+                <h2 className="font-serif text-xl text-forest-800">Family</h2>
+                <p className="font-sans text-xs text-forest-400 mt-0.5">
+                  {member.full_name.split(' ').slice(-1)[0]} Family
+                </p>
+              </div>
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
@@ -223,7 +228,7 @@ export default function MemberProfilePage() {
               {/* Right — pet */}
               {member.has_dog && (
                 <div>
-                  <p className="section-label text-xs mb-3">Pet</p>
+                  <p className="section-label text-xs mb-3">Pets</p>
                   <div className="flex flex-col items-center text-center gap-3">
                     {member.dog_photo_url ? (
                       <img
