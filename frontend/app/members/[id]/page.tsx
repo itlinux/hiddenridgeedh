@@ -136,22 +136,6 @@ export default function MemberProfilePage() {
             )}
           </div>
 
-          {/* Dog Photo + Bio */}
-          {member.has_dog && (member.dog_photo_url || member.dog_bio) && (
-            <div className="mt-6 space-y-3">
-              {member.dog_photo_url && (
-                <img
-                  src={member.dog_photo_url}
-                  alt={`${member.full_name}'s dog`}
-                  className="w-32 h-32 object-cover rounded-sm border border-cream-200 mx-auto"
-                />
-              )}
-              {member.dog_bio && (
-                <p className="text-forest-600 font-sans text-sm text-center italic max-w-xs mx-auto">{member.dog_bio}</p>
-              )}
-            </div>
-          )}
-
           {/* Contact info */}
           {(member.address || member.email || member.phone || member.alt_phone || member.emergency_contact_phone) && (
             <div className="mt-8 pt-6 border-t border-forest-100 space-y-3 text-left">
@@ -204,12 +188,12 @@ export default function MemberProfilePage() {
           )}
         </div>
 
-        {/* Family Members */}
-        {familyMembers.length > 0 && (
+        {/* Family Members + Pet */}
+        {(familyMembers.length > 0 || member.has_dog) && (
           <div className="card p-8 mt-6">
             <div className="flex items-center gap-3 mb-6">
               <Users size={20} className="text-gold-500" />
-              <h2 className="font-serif text-xl text-forest-800">Family Members</h2>
+              <h2 className="font-serif text-xl text-forest-800">Family</h2>
             </div>
             <div className="space-y-4">
               {familyMembers.map((fm, i) => (
@@ -229,6 +213,32 @@ export default function MemberProfilePage() {
                   </div>
                 </div>
               ))}
+
+              {/* Pet */}
+              {member.has_dog && (
+                <div className="flex items-start gap-4 pt-4 border-t border-cream-200">
+                  <div className="w-12 h-12 bg-gold-50 border border-gold-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                    {member.dog_photo_url ? (
+                      <img src={member.dog_photo_url} alt="Dog" className="w-full h-full object-cover" />
+                    ) : (
+                      <Dog size={22} className="text-gold-500" />
+                    )}
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <p className="font-sans text-forest-800 font-medium text-sm">Family Dog</p>
+                      {member.dog_friendly && (
+                        <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
+                          Friendly
+                        </span>
+                      )}
+                    </div>
+                    {member.dog_bio && (
+                      <p className="font-body text-forest-500 text-xs mt-1">{member.dog_bio}</p>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
           </div>
         )}
