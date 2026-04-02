@@ -188,57 +188,70 @@ export default function MemberProfilePage() {
           )}
         </div>
 
-        {/* Family Members + Pet */}
+        {/* Family Members + Pet — two columns */}
         {(familyMembers.length > 0 || member.has_dog) && (
           <div className="card p-8 mt-6">
             <div className="flex items-center gap-3 mb-6">
               <Users size={20} className="text-gold-500" />
               <h2 className="font-serif text-xl text-forest-800">Family</h2>
             </div>
-            <div className="space-y-4">
-              {familyMembers.map((fm, i) => (
-                <div key={i} className="flex items-start gap-4">
-                  <div className="w-12 h-12 bg-forest-100 border border-forest-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
-                    {fm.photo_url ? (
-                      <img src={fm.photo_url} alt="" className="w-full h-full object-cover" />
-                    ) : (
-                      <span className="text-forest-500 font-serif font-bold text-sm">
-                        {fm.name.charAt(0)}
-                      </span>
-                    )}
-                  </div>
-                  <div>
-                    <p className="font-sans text-forest-800 font-medium text-sm">{fm.name}</p>
-                    {fm.bio && <p className="font-body text-forest-500 text-xs mt-1">{fm.bio}</p>}
-                  </div>
-                </div>
-              ))}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
 
-              {/* Pet */}
+              {/* Left — family members */}
+              {familyMembers.length > 0 && (
+                <div className="space-y-4">
+                  <p className="section-label text-xs">Members</p>
+                  {familyMembers.map((fm, i) => (
+                    <div key={i} className="flex items-start gap-3">
+                      <div className="w-12 h-12 bg-forest-100 border border-forest-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                        {fm.photo_url ? (
+                          <img src={fm.photo_url} alt="" className="w-full h-full object-cover" />
+                        ) : (
+                          <span className="text-forest-500 font-serif font-bold text-sm">{fm.name.charAt(0)}</span>
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-sans text-forest-800 font-medium text-sm">{fm.name}</p>
+                        {fm.bio && <p className="font-body text-forest-500 text-xs mt-1">{fm.bio}</p>}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              {/* Right — pet */}
               {member.has_dog && (
-                <div className="flex items-start gap-4 pt-4 border-t border-cream-200">
-                  <div className="w-12 h-12 bg-gold-50 border border-gold-200 rounded-full flex items-center justify-center overflow-hidden flex-shrink-0">
+                <div>
+                  <p className="section-label text-xs mb-3">Pet</p>
+                  <div className="flex flex-col items-center text-center gap-3">
                     {member.dog_photo_url ? (
-                      <img src={member.dog_photo_url} alt="Dog" className="w-full h-full object-cover" />
+                      <img
+                        src={member.dog_photo_url}
+                        alt="Family dog"
+                        className="w-32 h-32 object-cover rounded-sm border border-cream-200"
+                      />
                     ) : (
-                      <Dog size={22} className="text-gold-500" />
+                      <div className="w-32 h-32 bg-gold-50 border border-gold-200 rounded-sm flex items-center justify-center">
+                        <Dog size={40} className="text-gold-400" />
+                      </div>
                     )}
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-sans text-forest-800 font-medium text-sm">Family Dog</p>
-                      {member.dog_friendly && (
-                        <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
-                          Friendly
-                        </span>
+                    <div>
+                      <div className="flex items-center justify-center gap-2 flex-wrap">
+                        <p className="font-sans text-forest-800 font-medium text-sm">Family Dog</p>
+                        {member.dog_friendly && (
+                          <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
+                            Friendly
+                          </span>
+                        )}
+                      </div>
+                      {member.dog_bio && (
+                        <p className="font-body text-forest-500 text-xs mt-1 italic">{member.dog_bio}</p>
                       )}
                     </div>
-                    {member.dog_bio && (
-                      <p className="font-body text-forest-500 text-xs mt-1">{member.dog_bio}</p>
-                    )}
                   </div>
                 </div>
               )}
+
             </div>
           </div>
         )}
