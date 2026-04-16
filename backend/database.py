@@ -34,6 +34,13 @@ class Settings(BaseSettings):
     news_api_key: str = ""  # thenewsapi.com API key for local area news
     gnews_api_key: str = ""  # gnews.io API key for additional news coverage
 
+    # Mautic newsletter integration (shared instance at newsletter.rm.ht)
+    mautic_base_url: str = "https://newsletter.rm.ht"
+    mautic_client_id: str = ""
+    mautic_client_secret: str = ""
+    mautic_segment_id: int = 2          # hiddenridge segment
+    mautic_contact_owner_id: int = 3    # hiddenridge Mautic user
+
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")
 
 

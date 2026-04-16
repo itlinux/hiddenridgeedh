@@ -9,6 +9,7 @@ from middleware.auth import require_super_admin
 from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_unsubscribe_confirmation
 from utils.turnstile import verify_turnstile
 from utils.limiter import limiter
+from utils.mautic import push_to_mautic
 
 router = APIRouter(prefix="/api/newsletter", tags=["newsletter"])
 
@@ -63,6 +64,11 @@ async def confirm(token: str = Query(...)):
         {"_id": sub["_id"]},
         {"$set": {"confirmed": True, "is_active": True, "subscribed_at": datetime.utcnow()}},
     )
+    # Push confirmed subscriber to Mautic (non-blocking, non-fatal).
+    try:
+        await push_to_mautic(sub["email"])
+    except Exception:
+        pass  # Local system works even if Mautic is down
     return RedirectResponse(f"{settings.app_url}/newsletter/confirmed?status=success")
 
 
