@@ -78,3 +78,50 @@ async def push_to_mautic(email: str, first_name: str = "", last_name: str = ""):
         # Mautic is down. Log and move on.
         import logging
         logging.getLogger("mautic").warning(f"Mautic push failed for {email}: {e}")
+
+
+async def remove_from_mautic(email: str):
+    """Remove a contact from the hiddenridge segment and set DNC in Mautic."""
+    settings = get_settings()
+    base = settings.mautic_base_url
+    segment_id = settings.mautic_segment_id
+
+    try:
+        token = await _get_token()
+        headers = {
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/json",
+        }
+
+        async with httpx.AsyncClient(timeout=15) as client:
+            # Find contact by email
+            r = await client.get(
+                f"{base}/api/contacts",
+                headers=headers,
+                params={"search": f"email:{email}"},
+            )
+            r.raise_for_status()
+            contacts = r.json().get("contacts", {})
+
+            if not contacts:
+                return
+
+            # Get the first matching contact ID
+            contact_id = list(contacts.keys())[0]
+
+            # Remove from hiddenridge segment
+            await client.post(
+                f"{base}/api/segments/{segment_id}/contact/{contact_id}/remove",
+                headers=headers,
+            )
+
+            # Set Do Not Contact so Mautic won't email them
+            await client.post(
+                f"{base}/api/contacts/{contact_id}/dnc/email/add",
+                headers=headers,
+                json={"reason": 3, "comments": "Unsubscribed via hiddenridgeedh.com"},
+            )
+
+    except Exception as e:
+        import logging
+        logging.getLogger("mautic").warning(f"Mautic unsubscribe failed for {email}: {e}")

@@ -9,7 +9,7 @@ from middleware.auth import require_super_admin
 from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_welcome, send_newsletter_unsubscribe_confirmation
 from utils.turnstile import verify_turnstile
 from utils.limiter import limiter
-from utils.mautic import push_to_mautic
+from utils.mautic import push_to_mautic, remove_from_mautic
 
 router = APIRouter(prefix="/api/newsletter", tags=["newsletter"])
 
@@ -86,6 +86,11 @@ async def unsubscribe(token: str = Query(...)):
         {"_id": sub["_id"]},
         {"$set": {"is_active": False}},
     )
+    # Remove from Mautic segment + set DNC (non-fatal).
+    try:
+        await remove_from_mautic(sub["email"])
+    except Exception:
+        pass
     await send_newsletter_unsubscribe_confirmation(sub["email"])
     return RedirectResponse(f"{settings.app_url}/newsletter/unsubscribed?status=success")
 
