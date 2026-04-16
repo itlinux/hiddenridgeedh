@@ -8,9 +8,17 @@ from database import get_settings
 logger = logging.getLogger(__name__)
 
 
-def _build_html(title: str, body: str) -> str:
+def _build_html(title: str, body: str, unsubscribe_url: str = "") -> str:
     settings = get_settings()
     logo_url = f"{settings.app_url}/images/logo.png"
+    unsub_block = ""
+    if unsubscribe_url:
+        unsub_block = f"""
+            <p style="color: #8B7355; margin: 8px 0 0; font-size: 11px;">
+                <a href="{unsubscribe_url}" style="color: #8B7355; text-decoration: underline;">Unsubscribe</a>
+                from this newsletter
+            </p>
+        """
     return f"""
     <div style="font-family: 'Georgia', serif; max-width: 600px; margin: 0 auto;">
         <div style="background-color: #1B2E1F; padding: 24px; text-align: center;">
@@ -25,6 +33,7 @@ def _build_html(title: str, body: str) -> str:
             <p style="color: #8B7355; margin: 0; font-size: 12px;">
                 Hidden Ridge &middot; El Dorado Hills, CA
             </p>
+            {unsub_block}
         </div>
     </div>
     """
@@ -202,8 +211,9 @@ async def send_newsletter_confirm_email(to_email: str, confirm_token: str):
         logger.error(f"Failed to send email to {to_email}: {e}")
 
 
-async def send_newsletter_welcome(to_email: str):
+async def send_newsletter_welcome(to_email: str, unsub_token: str = ""):
     settings = get_settings()
+    unsub_url = f"{settings.app_url}/api/newsletter/unsubscribe?token={unsub_token}" if unsub_token else ""
     html = _build_html(
         "Welcome to the Neighborhood!",
         f"""
@@ -221,10 +231,8 @@ async def send_newsletter_welcome(to_email: str):
                 Visit Hidden Ridge EDH
             </a>
         </p>
-        <p style="color: #666; font-size: 13px;">
-            You can unsubscribe at any time by clicking the unsubscribe link in any of our emails.
-        </p>
         """,
+        unsubscribe_url=unsub_url,
     )
     try:
         await _send_email(to_email, "Welcome to Hidden Ridge EDH! 🏡", html)

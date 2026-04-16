@@ -64,8 +64,8 @@ async def confirm(token: str = Query(...)):
         {"_id": sub["_id"]},
         {"$set": {"confirmed": True, "is_active": True, "subscribed_at": datetime.utcnow()}},
     )
-    # Send welcome email to the new subscriber.
-    await send_newsletter_welcome(sub["email"])
+    # Send welcome email with unsubscribe link.
+    await send_newsletter_welcome(sub["email"], sub.get("unsubscribe_token", ""))
 
     # Push confirmed subscriber to Mautic (non-blocking, non-fatal).
     try:
