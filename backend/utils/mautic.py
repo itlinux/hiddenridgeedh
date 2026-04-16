@@ -49,20 +49,40 @@ async def push_to_mautic(email: str, first_name: str = "", last_name: str = ""):
         }
 
         async with httpx.AsyncClient(timeout=15) as client:
-            # Create or update contact
-            r = await client.post(
-                f"{base}/api/contacts/new",
+            # Check if contact already exists
+            r = await client.get(
+                f"{base}/api/contacts",
                 headers=headers,
-                json={
-                    "email": email,
-                    "firstname": first_name,
-                    "lastname": last_name,
-                    "tags": ["hiddenridge", "newsletter"],
-                    "owner": owner_id,
-                },
+                params={"search": f"email:{email}"},
             )
             r.raise_for_status()
-            contact_id = r.json().get("contact", {}).get("id")
+            existing = r.json().get("contacts", {})
+
+            if existing:
+                # Contact exists — just add tags + segment, don't change owner
+                contact_id = list(existing.keys())[0]
+                await client.patch(
+                    f"{base}/api/contacts/{contact_id}/edit",
+                    headers=headers,
+                    json={
+                        "tags": ["hiddenridge", "newsletter"],
+                    },
+                )
+            else:
+                # New contact — set owner
+                r = await client.post(
+                    f"{base}/api/contacts/new",
+                    headers=headers,
+                    json={
+                        "email": email,
+                        "firstname": first_name,
+                        "lastname": last_name,
+                        "tags": ["hiddenridge", "newsletter"],
+                        "owner": owner_id,
+                    },
+                )
+                r.raise_for_status()
+                contact_id = r.json().get("contact", {}).get("id")
 
             if not contact_id:
                 return
