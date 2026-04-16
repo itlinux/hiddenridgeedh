@@ -6,7 +6,7 @@ from datetime import datetime
 from database import get_db, get_settings
 from models.schemas import NewsletterSubscribe, NewsletterSend
 from middleware.auth import require_super_admin
-from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_unsubscribe_confirmation
+from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_welcome, send_newsletter_unsubscribe_confirmation
 from utils.turnstile import verify_turnstile
 from utils.limiter import limiter
 from utils.mautic import push_to_mautic
@@ -64,6 +64,9 @@ async def confirm(token: str = Query(...)):
         {"_id": sub["_id"]},
         {"$set": {"confirmed": True, "is_active": True, "subscribed_at": datetime.utcnow()}},
     )
+    # Send welcome email to the new subscriber.
+    await send_newsletter_welcome(sub["email"])
+
     # Push confirmed subscriber to Mautic (non-blocking, non-fatal).
     try:
         await push_to_mautic(sub["email"])

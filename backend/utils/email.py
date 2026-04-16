@@ -202,6 +202,36 @@ async def send_newsletter_confirm_email(to_email: str, confirm_token: str):
         logger.error(f"Failed to send email to {to_email}: {e}")
 
 
+async def send_newsletter_welcome(to_email: str):
+    settings = get_settings()
+    html = _build_html(
+        "Welcome to the Neighborhood!",
+        f"""
+        <p>Welcome to the <strong>Hidden Ridge EDH</strong> newsletter! 🎉</p>
+        <p>You're now part of our neighborhood community. Here's what you can expect:</p>
+        <ul style="margin: 16px 0; padding-left: 20px; line-height: 2;">
+            <li><strong>Community Updates</strong> — HOA decisions, maintenance schedules, and policy changes</li>
+            <li><strong>Neighborhood Events</strong> — Block parties, seasonal gatherings, and social meetups</li>
+            <li><strong>Safety Alerts</strong> — Important notices to keep our neighborhood safe</li>
+            <li><strong>Local News</strong> — What's happening around El Dorado Hills</li>
+        </ul>
+        <p>Want to get more involved? Visit our community portal to access the forum, photo gallery, events calendar, and member directory.</p>
+        <p style="text-align: center; margin: 24px 0;">
+            <a href="{settings.app_url}" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block; border-radius: 4px;">
+                Visit Hidden Ridge EDH
+            </a>
+        </p>
+        <p style="color: #666; font-size: 13px;">
+            You can unsubscribe at any time by clicking the unsubscribe link in any of our emails.
+        </p>
+        """,
+    )
+    try:
+        await _send_email(to_email, "Welcome to Hidden Ridge EDH! 🏡", html)
+    except Exception as e:
+        logger.error(f"Failed to send welcome email to {to_email}: {e}")
+
+
 async def send_newsletter_unsubscribe_confirmation(to_email: str):
     html = _build_html(
         "You've Been Unsubscribed",
