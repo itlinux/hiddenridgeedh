@@ -31,6 +31,7 @@ export default function GalleryPage() {
   const [items, setItems] = useState<GalleryItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showQR, setShowQR] = useState(false);
 
   // Upload form
@@ -104,6 +105,36 @@ export default function GalleryPage() {
       toast.error('Failed to delete');
     }
   };
+
+  const openLightbox = (item: GalleryItem, index: number) => {
+    setSelectedImage(item);
+    setSelectedIndex(index);
+  };
+
+  const goNext = () => {
+    if (selectedIndex < items.length - 1) {
+      setSelectedImage(items[selectedIndex + 1]);
+      setSelectedIndex(selectedIndex + 1);
+    }
+  };
+
+  const goPrev = () => {
+    if (selectedIndex > 0) {
+      setSelectedImage(items[selectedIndex - 1]);
+      setSelectedIndex(selectedIndex - 1);
+    }
+  };
+
+  useEffect(() => {
+    if (!selectedImage) return;
+    const handler = (e: KeyboardEvent) => {
+      if (e.key === 'ArrowRight') goNext();
+      else if (e.key === 'ArrowLeft') goPrev();
+      else if (e.key === 'Escape') setSelectedImage(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [selectedImage, selectedIndex, items]);
 
   const canDelete = (item: GalleryItem) =>
     user && (item.uploaded_by === user.id || user.role === 'super_admin' || user.role === 'content_admin');
@@ -258,12 +289,12 @@ export default function GalleryPage() {
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <div key={item.id} className="relative group overflow-hidden rounded-sm">
                 {item.media_type === 'youtube' ? (
                   <>
                     <button
-                      onClick={() => setSelectedImage(item)}
+                      onClick={() => openLightbox(item, index)}
                       className="w-full aspect-square"
                     >
                       <div className="relative w-full h-full bg-forest-800">
@@ -295,7 +326,7 @@ export default function GalleryPage() {
                 ) : (
                   <>
                     <button
-                      onClick={() => setSelectedImage(item)}
+                      onClick={() => openLightbox(item, index)}
                       className="w-full aspect-square"
                     >
                       <img
@@ -350,11 +381,35 @@ export default function GalleryPage() {
 
       {/* Lightbox */}
       {selectedImage && (
-        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setSelectedImage(null)}>
-          <button className="absolute top-4 right-4 text-white hover:text-gold-400 transition-colors" onClick={() => setSelectedImage(null)}>
+        <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center" onClick={() => setSelectedImage(null)}>
+          {/* Close */}
+          <button className="absolute top-4 right-4 text-white hover:text-gold-400 transition-colors z-10" onClick={() => setSelectedImage(null)}>
             <X size={32} />
           </button>
-          <div className="max-w-5xl w-full" onClick={e => e.stopPropagation()}>
+          {/* Counter */}
+          <p className="absolute top-4 left-4 text-forest-300 font-sans text-sm z-10">
+            {selectedIndex + 1} of {items.length}
+          </p>
+          {/* Prev */}
+          {selectedIndex > 0 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); goPrev(); }}
+              className="absolute left-4 top-1/2 -translate-y-1/2 text-white hover:text-gold-400 transition-colors z-10 p-2"
+            >
+              <svg viewBox="0 0 24 24" className="w-10 h-10" fill="currentColor"><path d="M15 18l-6-6 6-6" /></svg>
+            </button>
+          )}
+          {/* Next */}
+          {selectedIndex < items.length - 1 && (
+            <button
+              onClick={(e) => { e.stopPropagation(); goNext(); }}
+              className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gold-400 transition-colors z-10 p-2"
+            >
+              <svg viewBox="0 0 24 24" className="w-10 h-10" fill="currentColor"><path d="M9 18l6-6-6-6" /></svg>
+            </button>
+          )}
+          {/* Content */}
+          <div className="max-w-5xl w-full px-16" onClick={e => e.stopPropagation()}>
             {selectedImage.media_type === 'youtube' && selectedImage.embed_url ? (
               <div className="relative" style={{ paddingBottom: '56.25%' }}>
                 <iframe
