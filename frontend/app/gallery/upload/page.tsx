@@ -20,6 +20,8 @@ export default function GalleryUploadPage() {
   const [isPublic, setIsPublic] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [done, setDone] = useState(false);
+  const [mediaType, setMediaType] = useState<'photo' | 'youtube'>('photo');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
 
   if (isLoading) {
     return (
@@ -47,15 +49,27 @@ export default function GalleryUploadPage() {
   };
 
   const handleSubmit = async () => {
-    if (!file) { toast.error('Please select a photo first'); return; }
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      if (title.trim()) fd.append('title', title.trim());
-      if (description.trim()) fd.append('description', description.trim());
-      fd.append('is_public', String(isPublic));
-      await galleryApi.upload(fd);
+      if (mediaType === 'youtube') {
+        if (!youtubeUrl.trim()) { toast.error('Please enter a YouTube URL'); setUploading(false); return; }
+        await galleryApi.uploadYoutube({
+          media_type: 'youtube',
+          youtube_url: youtubeUrl.trim(),
+          title: title.trim(),
+          description: description.trim(),
+          is_public: String(isPublic),
+        });
+      } else {
+        if (!file) { toast.error('Please select a photo first'); setUploading(false); return; }
+        const fd = new FormData();
+        fd.append('file', file);
+        fd.append('media_type', 'photo');
+        if (title.trim()) fd.append('title', title.trim());
+        if (description.trim()) fd.append('description', description.trim());
+        fd.append('is_public', String(isPublic));
+        await galleryApi.upload(fd);
+      }
       setDone(true);
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Upload failed');
@@ -68,7 +82,7 @@ export default function GalleryUploadPage() {
     return (
       <div className="min-h-screen bg-cream-50 flex flex-col items-center justify-center px-6 text-center gap-6">
         <CheckCircle2 size={56} className="text-green-500" />
-        <h1 className="font-serif text-2xl text-forest-800">Photo uploaded!</h1>
+        <h1 className="font-serif text-2xl text-forest-800">Shared to gallery!</h1>
         <p className="font-body text-forest-500 text-sm">Thanks for sharing with the neighborhood.</p>
         <div className="flex gap-3 flex-wrap justify-center">
           <button
@@ -95,7 +109,34 @@ export default function GalleryUploadPage() {
         <h1 className="font-serif text-lg text-cream-100">Upload a Photo</h1>
       </div>
 
+        {/* Tab Switcher */}
+        <div className="flex bg-cream-200 rounded-sm p-1">
+          <button
+            onClick={() => setMediaType('photo')}
+            className={`flex-1 py-2 text-sm font-sans font-medium rounded-sm transition-colors ${
+              mediaType === 'photo'
+                ? 'bg-gold-400 text-forest-800 shadow-sm'
+                : 'text-forest-500 hover:text-forest-700'
+            }`}
+          >
+            Photo
+          </button>
+          <button
+            onClick={() => setMediaType('youtube')}
+            className={`flex-1 py-2 text-sm font-sans font-medium rounded-sm transition-colors ${
+              mediaType === 'youtube'
+                ? 'bg-gold-400 text-forest-800 shadow-sm'
+                : 'text-forest-500 hover:text-forest-700'
+            }`}
+          >
+            YouTube Video
+          </button>
+        </div>
+
       <div className="max-w-lg mx-auto px-4 py-8 space-y-6">
+
+        {mediaType === 'photo' && (
+          <div className="space-y-6">
 
         {/* Photo picker */}
         <div>
@@ -185,8 +226,82 @@ export default function GalleryUploadPage() {
           disabled={!file || uploading}
           className="btn-gold w-full py-4 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {uploading ? <><Loader2 size={18} className="animate-spin" /> Uploading…</> : <><Camera size={18} /> Share to Gallery</>}
+          {uploading ? <><Loader2 size={18} className="animate-spin" /> Uploading…</> : <><Camera size={18} /> Upload Photo</>}
         </button>
+          </div>
+        )}
+
+        {mediaType === 'youtube' && (
+          <div className="space-y-6">
+            {/* YouTube URL */}
+            <div>
+              <label className="section-label block mb-2 text-xs">YouTube URL <span className="text-red-500">*</span></label>
+              <input
+                value={youtubeUrl}
+                onChange={e => setYoutubeUrl(e.target.value)}
+                className="input-field w-full"
+                placeholder="https://youtube.com/watch?v=..."
+              />
+            </div>
+            {/* Title */}
+            <div>
+              <label className="section-label block mb-2 text-xs">Title <span className="text-forest-400 font-normal">(optional)</span></label>
+              <input
+                value={title}
+                onChange={e => setTitle(e.target.value)}
+                className="input-field w-full"
+                placeholder="e.g. Neighborhood block party"
+                maxLength={120}
+              />
+            </div>
+            {/* Description */}
+            <div>
+              <label className="section-label block mb-2 text-xs">Description <span className="text-forest-400 font-normal">(optional)</span></label>
+              <textarea
+                value={description}
+                onChange={e => setDescription(e.target.value)}
+                className="input-field w-full resize-none"
+                rows={3}
+                placeholder="Tell neighbors about this video..."
+                maxLength={500}
+              />
+            </div>
+            {/* Public toggle (same as existing) */}
+            <div
+              onClick={() => setIsPublic(!isPublic)}
+              className={`flex items-center gap-3 p-4 rounded-sm border cursor-pointer transition-colors ${
+                isPublic
+                  ? 'bg-blue-50 border-blue-200'
+                  : 'bg-cream-100 border-cream-200'
+              }`}
+            >
+              {isPublic
+                ? <Globe size={18} className="text-blue-500 flex-shrink-0" />
+                : <Lock size={18} className="text-forest-400 flex-shrink-0" />}
+              <div>
+                <p className="font-sans text-sm font-semibold text-forest-700">
+                  {isPublic ? 'Public — visible to everyone' : 'Members only — neighbors only'}
+                </p>
+                <p className="font-body text-xs text-forest-500">
+                  {isPublic
+                    ? 'Anyone visiting the site can see this photo'
+                    : 'Only approved Hidden Ridge members can see this photo'}
+                </p>
+              </div>
+              <div className={`ml-auto w-10 h-6 rounded-full transition-colors flex-shrink-0 ${isPublic ? 'bg-blue-500' : 'bg-forest-300'}`}>
+                <div className={`w-5 h-5 bg-white rounded-full shadow m-0.5 transition-transform ${isPublic ? 'translate-x-4' : ''}`} />
+              </div>
+            </div>
+            {/* Submit */}
+            <button
+              onClick={handleSubmit}
+              disabled={!youtubeUrl.trim() || uploading}
+              className="btn-gold w-full py-4 text-base flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              {uploading ? <><Loader2 size={18} className="animate-spin" /> Uploading…</> : <><Camera size={18} /> Share to Gallery</>}
+            </button>
+          </div>
+        )}
 
         <p className="text-center font-sans text-xs text-forest-400">
           Uploading as <strong>{user.full_name}</strong>
