@@ -86,7 +86,7 @@ export default function GalleryUploadPage() {
         <p className="font-body text-forest-500 text-sm">Thanks for sharing with the neighborhood.</p>
         <div className="flex gap-3 flex-wrap justify-center">
           <button
-            onClick={() => { setDone(false); setFile(null); setPreview(null); setTitle(''); setDescription(''); }}
+            onClick={() => { setDone(false); setFile(null); setPreview(null); setTitle(''); setDescription(''); setYoutubeUrl(''); setMediaType('photo'); }}
             className="btn-secondary text-sm px-6 py-3"
           >
             Upload another

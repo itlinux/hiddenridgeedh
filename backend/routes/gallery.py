@@ -16,7 +16,7 @@ ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
 
 YOUTUBE_PATTERNS = [
-    re.compile(r'^(?:https?://)?(?:www\.)?youtube\.com/watch\?.*v=([\w-]+)'),
+    re.compile(r'^(?:https?://)?(?:www\.)?youtube\.com/watch\?(?:.*[?&])?v=([\w-]+)'),
     re.compile(r'^(?:https?://)?(?:www\.)?youtu\.be/([\w-]+)'),
     re.compile(r'^(?:https?://)?(?:www\.)?youtube\.com/embed/([\w-]+)'),
     re.compile(r'^(?:https?://)?(?:www\.)?youtube\.com/shorts/([\w-]+)'),
@@ -68,12 +68,12 @@ async def upload_photo(
     current_user: dict = Depends(require_member),
 ):
     if media_type == "youtube":
-        if not youtube_url:
+        if not youtube_url.strip():
             raise HTTPException(400, "YouTube URL is required")
         try:
             canonical_url = normalize_youtube_url(youtube_url)
         except ValueError:
-            raise HTTPException(400, "Invalid YouTube URL")
+            raise HTTPException(400, "Invalid YouTube URL. Please provide a valid YouTube link.")
         video_id = canonical_url.split("v=")[1]
         embed_url = f"https://www.youtube.com/embed/{video_id}"
         tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
