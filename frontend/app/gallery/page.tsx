@@ -312,11 +312,14 @@ export default function GalleryPage() {
                         </div>
                       </div>
                     </button>
-                    {item.title && (
-                      <p className="px-2 py-1.5 text-xs font-sans text-forest-700 truncate bg-cream-50">
-                        {item.title}
+                    <div className="px-2 py-1.5 bg-cream-50 space-y-0.5">
+                      {item.title && (
+                        <p className="text-xs font-sans text-forest-700 truncate leading-tight">{item.title}</p>
+                      )}
+                      <p className="text-[11px] font-sans text-forest-400 leading-tight">
+                        {format(new Date(item.created_at), 'MMM d, yyyy')}
                       </p>
-                    )}
+                    </div>
                     <div className="absolute top-2 left-2">
                       {item.is_public
                         ? <span title="Public"><Globe size={14} className="text-white drop-shadow" /></span>
