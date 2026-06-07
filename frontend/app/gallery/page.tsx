@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { galleryApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { Camera, X, Loader2, Upload, QrCode, Globe, Lock, Trash2 } from 'lucide-react';
+import { Camera, X, Loader2, Upload, QrCode, Globe, Lock, Trash2, Search } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import { QRCodeSVG } from 'qrcode.react';
@@ -33,6 +33,15 @@ export default function GalleryPage() {
   const [selectedImage, setSelectedImage] = useState<GalleryItem | null>(null);
   const [selectedIndex, setSelectedIndex] = useState(-1);
   const [showQR, setShowQR] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
+
+  const filteredItems = searchQuery.trim()
+    ? items.filter(i =>
+        (i.title || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (i.description || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (i.uploaded_by_name || '').toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : items;
 
   // Upload form
   const [showUpload, setShowUpload] = useState(false);
@@ -112,15 +121,15 @@ export default function GalleryPage() {
   };
 
   const goNext = () => {
-    if (selectedIndex < items.length - 1) {
-      setSelectedImage(items[selectedIndex + 1]);
+    if (selectedIndex < filteredItems.length - 1) {
+      setSelectedImage(filteredItems[selectedIndex + 1]);
       setSelectedIndex(selectedIndex + 1);
     }
   };
 
   const goPrev = () => {
     if (selectedIndex > 0) {
-      setSelectedImage(items[selectedIndex - 1]);
+      setSelectedImage(filteredItems[selectedIndex - 1]);
       setSelectedIndex(selectedIndex - 1);
     }
   };
@@ -134,7 +143,7 @@ export default function GalleryPage() {
     };
     window.addEventListener('keydown', handler);
     return () => window.removeEventListener('keydown', handler);
-  }, [selectedImage, selectedIndex, items]);
+  }, [selectedImage, selectedIndex, filteredItems]);
 
   const canDelete = (item: GalleryItem) =>
     user && (item.uploaded_by === user.id || user.role === 'super_admin' || user.role === 'content_admin');
@@ -277,19 +286,30 @@ export default function GalleryPage() {
           </form>
         )}
 
+        {/* Search */}
+        <div className="relative mb-6">
+          <Search size="16" className="absolute left-3 top-1/2 -translate-y-1/2 text-forest-400 pointer-events-none" />
+          <input
+            value={searchQuery}
+            onChange={e => setSearchQuery(e.target.value)}
+            className="input-field w-full pl-9 pr-4 py-2 text-sm"
+            placeholder="Search photos and videos..."
+          />
+        </div>
+
         {/* Gallery grid */}
         {loading ? (
           <div className="flex justify-center py-20">
             <Loader2 className="animate-spin text-forest-400" size={32} />
           </div>
-        ) : items.length === 0 ? (
+        ) : filteredItems.length === 0 ? (
           <div className="text-center py-20">
             <Camera className="text-forest-300 mx-auto mb-4" size={48} />
             <p className="font-body text-forest-400 text-lg">No photos yet. Be the first to share!</p>
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {items.map((item, index) => (
+            {filteredItems.map((item, index) => (
               <div key={item.id} className="relative group overflow-hidden rounded-sm">
                 {item.media_type === 'youtube' ? (
                   <>
@@ -391,7 +411,7 @@ export default function GalleryPage() {
           </button>
           {/* Counter */}
           <p className="absolute top-4 left-4 text-forest-300 font-sans text-sm z-10">
-            {selectedIndex + 1} of {items.length}
+            {selectedIndex + 1} of {filteredItems.length}
           </p>
           {/* Prev */}
           {selectedIndex > 0 && (
@@ -403,7 +423,7 @@ export default function GalleryPage() {
             </button>
           )}
           {/* Next */}
-          {selectedIndex < items.length - 1 && (
+          {selectedIndex < filteredItems.length - 1 && (
             <button
               onClick={(e) => { e.stopPropagation(); goNext(); }}
               className="absolute right-4 top-1/2 -translate-y-1/2 text-white hover:text-gold-400 transition-colors z-10 p-2"
