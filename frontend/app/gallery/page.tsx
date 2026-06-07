@@ -259,43 +259,60 @@ export default function GalleryPage() {
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {items.map((item) => (
-              <div key={item.id} className="relative group aspect-square overflow-hidden rounded-sm">
-                <button
-                  onClick={() => setSelectedImage(item)}
-                  className="w-full h-full"
-                >
-                  {item.media_type === 'youtube' ? (
-                    <div className="relative w-full h-full bg-forest-800">
-                      <img
-                        src={`https://img.youtube.com/vi/${extractVideoId(item.youtube_url || '')}/mqdefault.jpg`}
-                        alt={item.title || 'YouTube video'}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                      />
-                      <div className="absolute inset-0 flex items-center justify-center">
-                        <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
-                          <svg viewBox="0 0 24 24" className="w-6 h-6 text-white ml-0.5" fill="currentColor">
-                            <path d="M8 5v14l11-7z" />
-                          </svg>
+              <div key={item.id} className="relative group overflow-hidden rounded-sm">
+                {item.media_type === 'youtube' ? (
+                  <>
+                    <button
+                      onClick={() => setSelectedImage(item)}
+                      className="w-full aspect-square"
+                    >
+                      <div className="relative w-full h-full bg-forest-800">
+                        <img
+                          src={`https://img.youtube.com/vi/${extractVideoId(item.youtube_url || '')}/mqdefault.jpg`}
+                          alt={item.title || 'YouTube video'}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                            <svg viewBox="0 0 24 24" className="w-6 h-6 text-white ml-0.5" fill="currentColor">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
                         </div>
                       </div>
+                    </button>
+                    {item.title && (
+                      <p className="px-2 py-1.5 text-xs font-sans text-forest-700 truncate bg-cream-50">
+                        {item.title}
+                      </p>
+                    )}
+                    <div className="absolute top-2 left-2">
+                      {item.is_public
+                        ? <span title="Public"><Globe size={14} className="text-white drop-shadow" /></span>
+                        : <span title="Members only"><Lock size={14} className="text-white drop-shadow" /></span>}
                     </div>
-                  ) : (
-                    <>
+                  </>
+                ) : (
+                  <>
+                    <button
+                      onClick={() => setSelectedImage(item)}
+                      className="w-full aspect-square"
+                    >
                       <img
                         src={item.thumbnail_url || item.image_url}
                         alt={item.title || ''}
                         className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                       />
                       <div className="absolute inset-0 bg-forest-800/0 group-hover:bg-forest-800/30 transition-colors" />
-                    </>
-                  )}
-                </button>
-                {/* Visibility badge */}
-                <div className="absolute top-2 left-2">
-                  {item.is_public
-                    ? <span title="Public"><Globe size={14} className="text-white drop-shadow" /></span>
-                    : <span title="Members only"><Lock size={14} className="text-white drop-shadow" /></span>}
-                </div>
+                    </button>
+                    {/* Visibility badge */}
+                    <div className="absolute top-2 left-2">
+                      {item.is_public
+                        ? <span title="Public"><Globe size={14} className="text-white drop-shadow" /></span>
+                        : <span title="Members only"><Lock size={14} className="text-white drop-shadow" /></span>}
+                    </div>
+                  </>
+                )}
                 {/* Delete */}
                 {canDelete(item) && (
                   <button
