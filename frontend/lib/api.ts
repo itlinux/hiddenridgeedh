@@ -95,6 +95,10 @@ export const galleryApi = {
   upload: (formData: FormData) => api.post('/api/gallery/upload', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
+  uploadYoutube: (data: { media_type: string; youtube_url: string; title?: string; description?: string; is_public?: string }) =>
+    api.post('/api/gallery/upload', data, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
   delete: (id: string) => api.delete(`/api/gallery/${id}`),
 };
 
