@@ -96,13 +96,15 @@ export const galleryApi = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   uploadYoutube: (data: { media_type: string; youtube_url: string; title?: string; description?: string; is_public?: string }) => {
-    const fd = new FormData();
-    fd.append('media_type', data.media_type);
-    fd.append('youtube_url', data.youtube_url);
-    if (data.title) fd.append('title', data.title);
-    if (data.description) fd.append('description', data.description);
-    fd.append('is_public', data.is_public || 'false');
-    return api.post('/api/gallery/upload', fd);
+    const p = new URLSearchParams();
+    p.append('media_type', data.media_type);
+    p.append('youtube_url', data.youtube_url);
+    if (data.title) p.append('title', data.title);
+    if (data.description) p.append('description', data.description);
+    p.append('is_public', data.is_public || 'false');
+    return api.post('/api/gallery/upload', p, {
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    });
   },
   delete: (id: string) => api.delete(`/api/gallery/${id}`),
 };
