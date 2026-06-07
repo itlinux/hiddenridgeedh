@@ -35,9 +35,11 @@ export default function GalleryPage() {
 
   // Upload form
   const [showUpload, setShowUpload] = useState(false);
+  const [uploadMediaType, setUploadMediaType] = useState<'photo' | 'youtube'>('photo');
   const [uploadFile, setUploadFile] = useState<File | null>(null);
   const [uploadTitle, setUploadTitle] = useState('');
   const [uploadDesc, setUploadDesc] = useState('');
+  const [youtubeUrl, setYoutubeUrl] = useState('');
   const [isPublic, setIsPublic] = useState(false);
   const [uploading, setUploading] = useState(false);
 
@@ -54,20 +56,34 @@ export default function GalleryPage() {
 
   const handleUpload = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!uploadFile) { toast.error('Please select a file'); return; }
     setUploading(true);
     try {
-      const fd = new FormData();
-      fd.append('file', uploadFile);
-      if (uploadTitle.trim()) fd.append('title', uploadTitle.trim());
-      if (uploadDesc.trim()) fd.append('description', uploadDesc.trim());
-      fd.append('is_public', String(isPublic));
-      await galleryApi.upload(fd);
-      toast.success('Photo uploaded!');
+      if (uploadMediaType === 'youtube') {
+        if (!youtubeUrl.trim()) { toast.error('Please enter a YouTube URL'); setUploading(false); return; }
+        await galleryApi.uploadYoutube({
+          media_type: 'youtube',
+          youtube_url: youtubeUrl.trim(),
+          title: uploadTitle.trim(),
+          description: uploadDesc.trim(),
+          is_public: String(isPublic),
+        });
+      } else {
+        if (!uploadFile) { toast.error('Please select a file'); setUploading(false); return; }
+        const fd = new FormData();
+        fd.append('file', uploadFile);
+        fd.append('media_type', 'photo');
+        if (uploadTitle.trim()) fd.append('title', uploadTitle.trim());
+        if (uploadDesc.trim()) fd.append('description', uploadDesc.trim());
+        fd.append('is_public', String(isPublic));
+        await galleryApi.upload(fd);
+      }
+      toast.success('Shared to gallery!');
       setShowUpload(false);
       setUploadFile(null);
       setUploadTitle('');
       setUploadDesc('');
+      setYoutubeUrl('');
+      setUploadMediaType('photo');
       setIsPublic(false);
       fetchItems();
     } catch (err: any) {
@@ -121,17 +137,62 @@ export default function GalleryPage() {
         {/* Desktop upload form */}
         {showUpload && user && (
           <form onSubmit={handleUpload} className="card p-6 mb-8 space-y-4">
-            <h3 className="font-serif text-xl text-forest-800">Share a Photo</h3>
-            <div>
-              <label className="section-label block mb-1 text-xs">Photo <span className="text-red-500">*</span></label>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={e => setUploadFile(e.target.files?.[0] || null)}
-                className="input-field w-full text-sm"
-                required
-              />
+            <div className="flex items-center justify-between">
+              <h3 className="font-serif text-xl text-forest-800">Share to Gallery</h3>
+              <Link href="/gallery/upload" className="text-forest-400 hover:text-gold-500 text-xs font-sans underline">
+                Full upload page
+              </Link>
             </div>
+            {/* Tab Switcher */}
+            <div className="flex bg-cream-200 rounded-sm p-1">
+              <button
+                type="button"
+                onClick={() => setUploadMediaType('photo')}
+                className={`flex-1 py-1.5 text-xs font-sans font-medium rounded-sm transition-colors ${
+                  uploadMediaType === 'photo'
+                    ? 'bg-gold-400 text-forest-800 shadow-sm'
+                    : 'text-forest-500 hover:text-forest-700'
+                }`}
+              >
+                Photo
+              </button>
+              <button
+                type="button"
+                onClick={() => setUploadMediaType('youtube')}
+                className={`flex-1 py-1.5 text-xs font-sans font-medium rounded-sm transition-colors ${
+                  uploadMediaType === 'youtube'
+                    ? 'bg-gold-400 text-forest-800 shadow-sm'
+                    : 'text-forest-500 hover:text-forest-700'
+                }`}
+              >
+                YouTube Video
+              </button>
+            </div>
+            {uploadMediaType === 'photo' && (
+              <>
+                <div>
+                  <label className="section-label block mb-1 text-xs">Photo <span className="text-red-500">*</span></label>
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={e => setUploadFile(e.target.files?.[0] || null)}
+                    className="input-field w-full text-sm"
+                    required
+                  />
+                </div>
+              </>
+            )}
+            {uploadMediaType === 'youtube' && (
+              <div>
+                <label className="section-label block mb-1 text-xs">YouTube URL <span className="text-red-500">*</span></label>
+                <input
+                  value={youtubeUrl}
+                  onChange={e => setYoutubeUrl(e.target.value)}
+                  className="input-field w-full text-sm"
+                  placeholder="https://youtube.com/watch?v=..."
+                />
+              </div>
+            )}
             <div>
               <label className="section-label block mb-1 text-xs">Title <span className="text-forest-400 font-normal">(optional)</span></label>
               <input value={uploadTitle} onChange={e => setUploadTitle(e.target.value)} className="input-field w-full" maxLength={120} />
