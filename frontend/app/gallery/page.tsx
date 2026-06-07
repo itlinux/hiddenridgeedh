@@ -183,15 +183,37 @@ export default function GalleryPage() {
               </>
             )}
             {uploadMediaType === 'youtube' && (
-              <div>
-                <label className="section-label block mb-1 text-xs">YouTube URL <span className="text-red-500">*</span></label>
-                <input
-                  value={youtubeUrl}
-                  onChange={e => setYoutubeUrl(e.target.value)}
-                  className="input-field w-full text-sm"
-                  placeholder="https://youtube.com/watch?v=..."
-                />
-              </div>
+              <>
+                <div>
+                  <label className="section-label block mb-1 text-xs">YouTube URL <span className="text-red-500">*</span></label>
+                  <input
+                    value={youtubeUrl}
+                    onChange={e => setYoutubeUrl(e.target.value)}
+                    className="input-field w-full text-sm"
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                </div>
+                {(() => {
+                  const vid = extractVideoId(youtubeUrl);
+                  if (!vid) return null;
+                  return (
+                    <div className="relative rounded-sm overflow-hidden bg-forest-800 aspect-video">
+                      <img
+                        src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`}
+                        alt="Video preview"
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-10 h-10 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                          <svg viewBox="0 0 24 24" className="w-5 h-5 text-white ml-0.5" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })()}
+              </>
             )}
             <div>
               <label className="section-label block mb-1 text-xs">Title <span className="text-forest-400 font-normal">(optional)</span></label>

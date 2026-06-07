@@ -243,6 +243,27 @@ export default function GalleryUploadPage() {
                 placeholder="https://youtube.com/watch?v=..."
               />
             </div>
+            {/* YouTube thumbnail preview */}
+            {(() => {
+              const vid = extractVideoId(youtubeUrl);
+              if (!vid) return null;
+              return (
+                <div className="relative rounded-sm overflow-hidden bg-forest-800">
+                  <img
+                    src={`https://img.youtube.com/vi/${vid}/mqdefault.jpg`}
+                    alt="Video preview"
+                    className="w-full object-cover"
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="w-14 h-14 bg-red-600 rounded-full flex items-center justify-center shadow-lg">
+                      <svg viewBox="0 0 24 24" className="w-7 h-7 text-white ml-0.5" fill="currentColor">
+                        <path d="M8 5v14l11-7z" />
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              );
+            })()}
             {/* Title */}
             <div>
               <label className="section-label block mb-2 text-xs">Title <span className="text-forest-400 font-normal">(optional)</span></label>
@@ -309,4 +330,18 @@ export default function GalleryUploadPage() {
       </div>
     </div>
   );
+}
+
+function extractVideoId(url: string): string {
+  const patterns = [
+    /(?:youtube\.com\/watch\?(?:.*[?&])?v=)([\w-]+)/,
+    /(?:youtu\.be\/)([\w-]+)/,
+    /(?:youtube\.com\/embed\/)([\w-]+)/,
+    /(?:youtube\.com\/shorts\/)([\w-]+)/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return '';
 }
