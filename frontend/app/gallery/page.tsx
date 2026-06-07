@@ -150,7 +150,7 @@ export default function GalleryPage() {
 
   return (
     <div className="min-h-screen bg-cream-50">
-      <PageHeader label="Our Neighborhood" title="Photo Gallery" />
+      <PageHeader label="Our Neighborhood" title="Photo and Video Gallery" />
 
       <div className="max-w-7xl mx-auto px-4 py-12">
 

@@ -17,7 +17,7 @@ toc::[]
 | Feature | Description
 
 | Blog / News | Admin-authored posts with rich text, categories, tags, cover images
-| Photo Gallery | Member-uploaded photos with auto-thumbnails, tags, lightbox
+| Photo & Video Gallery | Member-uploaded photos with auto-thumbnails, tags, lightbox
 | Events Calendar | Create events, RSVP, max attendees, status tracking
 | Forum | Threaded discussions, pinning, locking
 | Member Directory | Approved neighbor profiles (login required)

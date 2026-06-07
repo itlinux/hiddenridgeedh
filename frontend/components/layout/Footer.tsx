@@ -45,7 +45,7 @@ export default function Footer() {
               {[
                 { href: '/blog', label: 'News & Blog' },
                 { href: '/events', label: 'Events Calendar' },
-                { href: '/gallery', label: 'Photo Gallery' },
+                { href: '/gallery', label: 'Gallery' },
                 { href: '/forum', label: 'Neighborhood Forum' },
                 { href: '/members', label: 'Meet the Neighbors' },
               ].map((link) => (
