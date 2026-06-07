@@ -1,4 +1,5 @@
 import os
+import re
 import uuid
 from fastapi import APIRouter, HTTPException, Depends, Query, Request, UploadFile, File, Form
 from datetime import datetime
@@ -13,6 +14,21 @@ router = APIRouter(prefix="/api/gallery", tags=["gallery"])
 
 ALLOWED_TYPES = {"image/jpeg", "image/png", "image/webp", "image/gif"}
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10MB
+
+YOUTUBE_PATTERNS = [
+    re.compile(r'^(?:https?://)?(?:www\.)?youtube\.com/watch\?.*v=([\w-]+)'),
+    re.compile(r'^(?:https?://)?(?:www\.)?youtu\.be/([\w-]+)'),
+    re.compile(r'^(?:https?://)?(?:www\.)?youtube\.com/embed/([\w-]+)'),
+    re.compile(r'^(?:https?://)?(?:www\.)?youtube\.com/shorts/([\w-]+)'),
+]
+
+
+def normalize_youtube_url(url: str) -> str:
+    for pat in YOUTUBE_PATTERNS:
+        m = pat.match(url.strip())
+        if m:
+            return f"https://www.youtube.com/watch?v={m.group(1)}"
+    raise ValueError("Invalid YouTube URL")
 
 
 def serialize_item(item: dict) -> dict:
@@ -42,12 +58,44 @@ async def list_gallery(
 @limiter.limit("20/hour")
 async def upload_photo(
     request: Request,
-    file: UploadFile = File(...),
-    title: str = Form(...),
+    file: UploadFile | None = File(None),
+    media_type: str = Form("photo"),
+    youtube_url: str = Form(""),
+    title: str = Form(""),
     description: str = Form(""),
+    is_public: str = Form("false"),
     tags: str = Form(""),
     current_user: dict = Depends(require_member),
 ):
+    if media_type == "youtube":
+        if not youtube_url:
+            raise HTTPException(400, "YouTube URL is required")
+        try:
+            canonical_url = normalize_youtube_url(youtube_url)
+        except ValueError:
+            raise HTTPException(400, "Invalid YouTube URL")
+        video_id = canonical_url.split("v=")[1]
+        embed_url = f"https://www.youtube.com/embed/{video_id}"
+        tag_list = [t.strip() for t in tags.split(",") if t.strip()] if tags else []
+        db = get_db()
+        item_doc = {
+            "media_type": "youtube",
+            "title": title,
+            "description": description,
+            "tags": tag_list,
+            "youtube_url": canonical_url,
+            "embed_url": embed_url,
+            "is_public": is_public.lower() == "true",
+            "uploaded_by": str(current_user["_id"]),
+            "uploader_name": current_user.get("full_name", current_user.get("username")),
+            "created_at": datetime.utcnow(),
+        }
+        result = await db.gallery.insert_one(item_doc)
+        item_doc["id"] = str(result.inserted_id)
+        return serialize_item(item_doc)
+
+    if file is None:
+        raise HTTPException(400, "File is required for photo upload")
     if file.content_type not in ALLOWED_TYPES:
         raise HTTPException(400, "File type not allowed. Use JPEG, PNG, WebP, or GIF.")
 
@@ -72,11 +120,13 @@ async def upload_photo(
 
     db = get_db()
     item_doc = {
+        "media_type": "photo",
         "title": title,
         "description": description,
         "tags": tag_list,
         "image_url": f"/uploads/{filename}",
         "thumbnail_url": f"/uploads/thumbnails/{filename}",
+        "is_public": is_public.lower() == "true",
         "uploaded_by": str(current_user["_id"]),
         "uploader_name": current_user.get("full_name", current_user.get("username")),
         "created_at": datetime.utcnow(),
