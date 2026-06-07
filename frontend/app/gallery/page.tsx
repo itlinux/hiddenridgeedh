@@ -14,8 +14,11 @@ interface GalleryItem {
   id: string;
   title?: string;
   description?: string;
-  image_url: string;
+  media_type?: 'photo' | 'youtube';
+  image_url?: string;
   thumbnail_url?: string;
+  youtube_url?: string;
+  embed_url?: string;
   tags?: string[];
   uploaded_by_name?: string;
   uploaded_by?: string;
@@ -178,12 +181,31 @@ export default function GalleryPage() {
                   onClick={() => setSelectedImage(item)}
                   className="w-full h-full"
                 >
-                  <img
-                    src={item.thumbnail_url || item.image_url}
-                    alt={item.title || ''}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                  />
-                  <div className="absolute inset-0 bg-forest-800/0 group-hover:bg-forest-800/30 transition-colors" />
+                  {item.media_type === 'youtube' ? (
+                    <div className="relative w-full h-full bg-forest-800">
+                      <img
+                        src={`https://img.youtube.com/vi/${extractVideoId(item.youtube_url || '')}/mqdefault.jpg`}
+                        alt={item.title || 'YouTube video'}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 flex items-center justify-center">
+                        <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                          <svg viewBox="0 0 24 24" className="w-6 h-6 text-white ml-0.5" fill="currentColor">
+                            <path d="M8 5v14l11-7z" />
+                          </svg>
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <img
+                        src={item.thumbnail_url || item.image_url}
+                        alt={item.title || ''}
+                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                      />
+                      <div className="absolute inset-0 bg-forest-800/0 group-hover:bg-forest-800/30 transition-colors" />
+                    </>
+                  )}
                 </button>
                 {/* Visibility badge */}
                 <div className="absolute top-2 left-2">
@@ -232,8 +254,23 @@ export default function GalleryPage() {
           <button className="absolute top-4 right-4 text-white hover:text-gold-400 transition-colors" onClick={() => setSelectedImage(null)}>
             <X size={32} />
           </button>
-          <div className="max-w-4xl max-h-[90vh]" onClick={e => e.stopPropagation()}>
-            <img src={selectedImage.image_url} alt={selectedImage.title || ''} className="max-w-full max-h-[80vh] object-contain" />
+          <div className="max-w-5xl w-full" onClick={e => e.stopPropagation()}>
+            {selectedImage.media_type === 'youtube' && selectedImage.embed_url ? (
+              <div className="relative" style={{ paddingBottom: '56.25%' }}>
+                <iframe
+                  src={selectedImage.embed_url}
+                  className="absolute inset-0 w-full h-full rounded-sm"
+                  allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                  allowFullScreen
+                />
+              </div>
+            ) : (
+              <img
+                src={selectedImage.image_url}
+                alt={selectedImage.title || ''}
+                className="max-w-full max-h-[80vh] object-contain mx-auto"
+              />
+            )}
             {(selectedImage.title || selectedImage.uploaded_by_name) && (
               <div className="text-center mt-4">
                 {selectedImage.title && <p className="text-cream-100 font-serif text-lg">{selectedImage.title}</p>}
@@ -254,4 +291,18 @@ export default function GalleryPage() {
       )}
     </div>
   );
+}
+
+function extractVideoId(url: string): string {
+  const patterns = [
+    /(?:youtube\.com\/watch\?.*v=)([\w-]+)/,
+    /(?:youtu\.be\/)([\w-]+)/,
+    /(?:youtube\.com\/embed\/)([\w-]+)/,
+    /(?:youtube\.com\/shorts\/)([\w-]+)/,
+  ];
+  for (const p of patterns) {
+    const m = url.match(p);
+    if (m) return m[1];
+  }
+  return '';
 }
