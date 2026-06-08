@@ -6,7 +6,7 @@ import { alertsApi, safetyLinksApi } from '@/lib/api';
 import { toast } from 'sonner';
 import {
   ShieldAlert, Phone, AlertTriangle, Loader2, MessageSquare,
-  Trash2, Plus, X, Send, Smartphone, Lock, Bug,
+  Trash2, Plus, X, Send, Smartphone, Lock, Bug, PawPrint,
 } from 'lucide-react';
 import PageHeader from '@/components/layout/PageHeader';
 
@@ -272,13 +272,58 @@ export default function SafetyPage() {
               { label: 'El Dorado Hills Fire Department', number: '(916) 933-6623' },
               { label: 'PG&E Power Outage', number: '1-800-743-5000' },
               { label: 'EID Water Emergency', number: '(530) 642-4000' },
-              { label: 'Animal Control', number: '(916) 368-7387' },
+              { label: 'El Dorado County Animal Services (West Slope)', number: '(530) 621-5795' },
             ].map((contact) => (
               <div key={contact.label} className="bg-cream-100 rounded-sm p-4">
                 <p className="text-forest-400 text-xs font-sans mb-1">{contact.label}</p>
                 <p className="text-forest-800 font-sans font-semibold text-lg">{contact.number}</p>
               </div>
             ))}
+          </div>
+        </div>
+
+        {/* ── Wildlife Resources (public) ──────────────────────────── */}
+        <div className="card p-8 mb-8">
+          <div className="flex items-center gap-3 mb-6">
+            <PawPrint className="text-gold-500" size={24} />
+            <h2 className="font-serif text-2xl text-forest-800">Wildlife Resources</h2>
+          </div>
+          <p className="font-body text-forest-600 text-sm leading-relaxed mb-5">
+            El Dorado Hills is home to deer, coyotes, rattlesnakes, and other wildlife.
+            If you encounter an injured, orphaned, or problematic animal, here's who to call:
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
+            <div className="bg-cream-100 rounded-sm p-4">
+              <p className="font-sans text-xs font-semibold text-forest-700 mb-2 uppercase tracking-wide">🐾 Injured / Orphaned Wildlife</p>
+              <p className="text-forest-400 text-xs font-sans">Wildlife Care Association</p>
+              <p className="text-forest-800 font-sans font-semibold text-lg"><a href="tel:9169659453" className="hover:text-gold-600">(916) 965-9453</a></p>
+              <p className="text-forest-400 text-xs font-sans mt-1">Open daily 8am–6pm | 5211 Patrol Rd, McClellan</p>
+              <p className="text-forest-400 text-xs font-sans">Handles deer, birds, squirrels, raccoons, opossums, reptiles</p>
+            </div>
+            <div className="bg-cream-100 rounded-sm p-4">
+              <p className="font-sans text-xs font-semibold text-forest-700 mb-2 uppercase tracking-wide">🚔 24/7 Wildlife Emergencies</p>
+              <p className="text-forest-400 text-xs font-sans">CDFW CalTIP (24/7)</p>
+              <p className="text-forest-800 font-sans font-semibold text-lg"><a href="tel:18883342258" className="hover:text-gold-600">1-888-334-2258</a></p>
+              <p className="text-forest-400 text-xs font-sans mt-1">CA Dept of Fish & Wildlife — poaching, injured wildlife, orphaned animals</p>
+            </div>
+            <div className="bg-cream-100 rounded-sm p-4">
+              <p className="font-sans text-xs font-semibold text-forest-700 mb-2 uppercase tracking-wide">🏢 Animal Services (Business Hours)</p>
+              <p className="text-forest-400 text-xs font-sans">El Dorado County Animal Services — West Slope</p>
+              <p className="text-forest-800 font-sans font-semibold text-lg"><a href="tel:5306215795" className="hover:text-gold-600">(530) 621-5795</a></p>
+              <p className="text-forest-400 text-xs font-sans mt-1">Domestic animal control, wildlife complaints, safe removal</p>
+            </div>
+            <div className="bg-cream-100 rounded-sm p-4">
+              <p className="font-sans text-xs font-semibold text-forest-700 mb-2 uppercase tracking-wide">🌲 CDFW Regional Office</p>
+              <p className="text-forest-400 text-xs font-sans">North Central Region (Region 2) — covers El Dorado County</p>
+              <p className="text-forest-800 font-sans font-semibold text-lg"><a href="tel:9163582900" className="hover:text-gold-600">(916) 358-2900</a></p>
+              <p className="text-forest-400 text-xs font-sans mt-1">Mon–Fri, information and guidance on wildlife issues</p>
+            </div>
+          </div>
+          <div className="bg-amber-50 border border-amber-200 rounded-sm p-4">
+            <p className="font-sans text-xs text-amber-700 leading-relaxed">
+              <strong>🐝 Snake advisories:</strong> For rattlesnake removal, call El Dorado County Animal Services at <a href="tel:5306215795" className="text-amber-800 underline">(530) 621-5795</a>.
+              For a bite emergency, call <strong>911</strong> immediately. See the Rattlesnake Safety section below for more detail.
+            </p>
           </div>
         </div>
 
@@ -367,8 +412,8 @@ export default function SafetyPage() {
                 <p className="text-red-700 font-sans font-bold text-lg">911</p>
               </div>
               <div>
-                <p className="text-forest-400 text-xs font-sans">Animal Control (removal)</p>
-                <p className="text-forest-800 font-sans font-semibold">(916) 368-7387</p>
+                <p className="text-forest-400 text-xs font-sans">El Dorado County Animal Services (removal)</p>
+                <p className="text-forest-800 font-sans font-semibold">(530) 621-5795</p>
               </div>
               <div>
                 <p className="text-forest-400 text-xs font-sans">CA Poison Control</p>
