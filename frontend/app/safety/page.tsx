@@ -300,12 +300,7 @@ export default function SafetyPage() {
               <p className="text-forest-400 text-xs font-sans mt-1">Open daily 8am–6pm | 5211 Patrol Rd, McClellan</p>
               <p className="text-forest-400 text-xs font-sans">Handles deer, birds, squirrels, raccoons, opossums, reptiles</p>
             </div>
-            <div className="bg-cream-100 rounded-sm p-4">
-              <p className="font-sans text-xs font-semibold text-forest-700 mb-2 uppercase tracking-wide">🚔 24/7 Wildlife Emergencies</p>
-              <p className="text-forest-400 text-xs font-sans">CDFW CalTIP (24/7)</p>
-              <p className="text-forest-800 font-sans font-semibold text-lg"><a href="tel:18883342258" className="hover:text-gold-600">1-888-334-2258</a></p>
-              <p className="text-forest-400 text-xs font-sans mt-1">CA Dept of Fish & Wildlife — poaching, injured wildlife, orphaned animals</p>
-            </div>
+
             <div className="bg-cream-100 rounded-sm p-4">
               <p className="font-sans text-xs font-semibold text-forest-700 mb-2 uppercase tracking-wide">🏢 Animal Services (Business Hours)</p>
               <p className="text-forest-400 text-xs font-sans">El Dorado County Animal Services — West Slope</p>
