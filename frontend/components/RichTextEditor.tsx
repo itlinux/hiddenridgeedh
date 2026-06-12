@@ -4,7 +4,7 @@ import dynamic from 'next/dynamic';
 import { useMemo, useRef, useCallback } from 'react';
 import { galleryApi } from '@/lib/api';
 
-const ReactQuill = dynamic(() => import('react-quill'), {
+const ReactQuill = dynamic(() => import('react-quill-new'), {
   ssr: false,
   loading: () => <div className="input-field min-h-[120px] animate-pulse bg-cream-100" />,
 });
