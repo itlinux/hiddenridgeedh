@@ -14,9 +14,10 @@ interface RichTextEditorProps {
   onChange: (value: string) => void;
   placeholder?: string;
   compact?: boolean;
+  uploadImage?: (file: File) => Promise<string>; // returns URL
 }
 
-export default function RichTextEditor({ value, onChange, placeholder, compact }: RichTextEditorProps) {
+export default function RichTextEditor({ value, onChange, placeholder, compact, uploadImage }: RichTextEditorProps) {
   const quillRef = useRef<any>(null);
 
   const onChangeRef = useRef(onChange);
@@ -40,15 +41,19 @@ export default function RichTextEditor({ value, onChange, placeholder, compact }
         return;
       }
 
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('title', file.name);
-      formData.append('description', 'Forum upload');
-      formData.append('tags', 'forum');
-
       try {
-        const res = await galleryApi.upload(formData);
-        const imageUrl = res.data.image_url;
+        let imageUrl: string;
+        if (uploadImage) {
+          imageUrl = await uploadImage(file);
+        } else {
+          const formData = new FormData();
+          formData.append('file', file);
+          formData.append('title', file.name);
+          formData.append('description', 'Inline upload');
+          formData.append('tags', 'inline');
+          const res = await galleryApi.upload(formData);
+          imageUrl = res.data.image_url;
+        }
         const editor = quillRef.current?.getEditor?.() ?? quillRef.current?.editor;
         if (editor) {
           const range = editor.getSelection(true);

@@ -155,6 +155,10 @@ export default function NewEventPage() {
               value={form.description}
               onChange={(val) => setForm({ ...form, description: val })}
               placeholder="Event details, schedule, what to bring..."
+              uploadImage={async (file) => {
+                const res = await eventsApi.uploadImage(file);
+                return res.data.url;
+              }}
             />
           </div>
 
