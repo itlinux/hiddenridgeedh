@@ -52,6 +52,7 @@ export default function ThreadDetailPage() {
   useEffect(() => {
     if (authLoading) return;
     if (!user) { router.push('/login'); return; }
+    if (user.role === 'pending') { router.push('/'); return; }
     if (id) loadThread();
   }, [id, user, authLoading]);
 

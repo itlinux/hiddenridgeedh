@@ -69,6 +69,10 @@ export default function ForumPage() {
       router.push('/login');
       return;
     }
+    if (user.role === 'pending') {
+      router.push('/');
+      return;
+    }
     // Load categories from API
     forumApi.listCategories()
       .then(res => setCategories(res.data.categories || []))
