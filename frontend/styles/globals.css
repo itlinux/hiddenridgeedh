@@ -61,6 +61,9 @@
 /* Rich text content styling */
 .prose-ridge {
   @apply text-forest-700 font-body;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  min-width: 0;
 }
 .prose-ridge h2 {
   @apply font-serif text-2xl text-forest-800 mt-8 mb-4;
