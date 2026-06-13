@@ -159,6 +159,22 @@ export default function EventCalendar({ events, selectedDate, onDateSelect }: Ev
           );
         })}
       </div>
+
+      {/* Legend */}
+      <div className="flex items-center gap-4 mt-4 pt-3 border-t border-cream-200 text-xs font-sans text-forest-400">
+        <span className="flex items-center gap-1.5">
+          <span className="w-2 h-2 rounded-full bg-gold-500 inline-block" />
+          Event scheduled
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-4 h-4 rounded-sm ring-2 ring-gold-400" />
+          Today
+        </span>
+        <span className="flex items-center gap-1.5">
+          <span className="inline-block w-4 h-4 rounded-sm bg-forest-800" />
+          Selected
+        </span>
+      </div>
     </div>
   );
 }
