@@ -28,7 +28,7 @@ export default function EventsPage() {
 
   useEffect(() => {
     setLoading(true);
-    const params = view === 'list' ? { upcoming: true } : { limit: 200 };
+    const params = view === 'list' ? { upcoming: true } : { limit: 100, upcoming: false };
     eventsApi.list(params)
       .then(res => setEvents(res.data.events || []))
       .catch(() => setEvents([]))
