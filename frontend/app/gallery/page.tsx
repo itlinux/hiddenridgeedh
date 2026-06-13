@@ -370,8 +370,8 @@ export default function GalleryPage() {
                 {/* Delete */}
                 {canDelete(item) && (
                   <button
-                    onClick={() => handleDelete(item.id)}
-                    className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
+                    onClick={(e) => { e.stopPropagation(); handleDelete(item.id); }}
+                    className="absolute top-2 right-2 bg-black/60 text-white rounded-full p-1 opacity-100 transition-opacity hover:bg-red-600"
                   >
                     <Trash2 size={13} />
                   </button>
@@ -409,6 +409,15 @@ export default function GalleryPage() {
           <button className="absolute top-4 right-4 text-white hover:text-gold-400 transition-colors z-10" onClick={() => setSelectedImage(null)}>
             <X size={32} />
           </button>
+          {/* Delete from lightbox */}
+          {canDelete(selectedImage) && (
+            <button
+              className="absolute top-4 right-16 bg-red-600 hover:bg-red-700 text-white rounded px-3 py-1.5 text-xs font-sans flex items-center gap-1.5 z-10 transition-colors"
+              onClick={(e) => { e.stopPropagation(); handleDelete(selectedImage.id); setSelectedImage(null); }}
+            >
+              <Trash2 size={13} /> Delete
+            </button>
+          )}
           {/* Counter */}
           <p className="absolute top-4 left-4 text-forest-300 font-sans text-sm z-10">
             {selectedIndex + 1} of {filteredItems.length}

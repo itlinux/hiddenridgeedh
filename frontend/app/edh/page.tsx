@@ -20,6 +20,7 @@ export default function AdminDashboard() {
   const router = useRouter();
   const [stats, setStats] = useState<Stats | null>(null);
   const [pendingUsers, setPendingUsers] = useState<any[]>([]);
+  const [pendingEvents, setPendingEvents] = useState<any[]>([]);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) router.push('/');
@@ -33,11 +34,12 @@ export default function AdminDashboard() {
 
   const loadStats = async () => {
     try {
-      const [membersRes, pendingRes, postsRes, eventsRes] = await Promise.all([
+      const [membersRes, pendingRes, postsRes, eventsRes, pendingEventsRes] = await Promise.all([
         membersApi.list({ per_page: 1 }),
         membersApi.pending(),
         postsApi.listAdmin({ per_page: 1 }),
         eventsApi.list({ per_page: 1 }),
+        eventsApi.listPending(),
       ]);
       setStats({
         totalMembers: membersRes.data.total,
@@ -47,6 +49,7 @@ export default function AdminDashboard() {
         subscribers: 0,
       });
       setPendingUsers((pendingRes.data.pending || pendingRes.data.items || []).slice(0, 5));
+      setPendingEvents((pendingEventsRes.data.events || []).slice(0, 10));
     } catch (err) {
       console.error('Failed to load stats', err);
     }
@@ -151,6 +154,36 @@ export default function AdminDashboard() {
               ))}
             </div>
           </div>
+
+          {/* Pending Events */}
+          {pendingEvents.length > 0 && (
+            <div className="card p-6">
+              <h2 className="font-serif text-xl text-forest-800 mb-1">Pending Event Submissions</h2>
+              <p className="text-xs font-sans text-forest-400 mb-4">{pendingEvents.length} event{pendingEvents.length > 1 ? 's' : ''} awaiting approval</p>
+              <div className="space-y-3">
+                {pendingEvents.map((event) => (
+                  <div key={event.id} className="flex items-center justify-between gap-4 p-3 bg-gold-50 rounded-sm border border-gold-100">
+                    <div className="flex-1 min-w-0">
+                      <p className="font-sans font-medium text-forest-800 text-sm truncate">{event.title}</p>
+                      <p className="text-xs text-forest-400 font-sans">{event.author_name} · {event.start_date ? new Date(event.start_date).toLocaleDateString() : ''}</p>
+                    </div>
+                    <button
+                      onClick={async () => {
+                        try {
+                          const { eventsApi } = await import('@/lib/api');
+                          await eventsApi.approve(event.id);
+                          setPendingEvents(prev => prev.filter(e => e.id !== event.id));
+                        } catch { alert('Failed to approve'); }
+                      }}
+                      className="btn-gold text-xs px-3 py-1.5 whitespace-nowrap"
+                    >
+                      Approve
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
           {/* Quick Actions */}
           <div className="card p-6">

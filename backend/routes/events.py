@@ -30,7 +30,7 @@ async def list_events(
     upcoming: bool = True,
 ):
     db = get_db()
-    query = {}
+    query: dict = {"status": {"$ne": "pending_approval"}}
     if upcoming:
         query["start_date"] = {"$gte": datetime.utcnow()}
 
@@ -47,6 +47,26 @@ async def get_event(event_id: str):
     if not event:
         raise HTTPException(404, "Event not found")
     return serialize_event(event)
+
+
+@router.post("/submit", status_code=201)
+async def submit_event(
+    data: EventCreate,
+    current_user: dict = Depends(require_member),
+):
+    """Members submit events for admin approval."""
+    db = get_db()
+    event_doc = {
+        **data.model_dump(),
+        "status": "pending_approval",
+        "author_id": str(current_user["_id"]),
+        "author_name": current_user.get("full_name", current_user.get("username")),
+        "attendees": [],
+        "created_at": datetime.utcnow(),
+    }
+    result = await db.events.insert_one(event_doc)
+    created = await db.events.find_one({"_id": result.inserted_id})
+    return serialize_event(created)
 
 
 @router.post("", status_code=201)
@@ -92,6 +112,32 @@ async def delete_event(
     result = await db.events.delete_one({"_id": ObjectId(event_id)})
     if result.deleted_count == 0:
         raise HTTPException(404, "Event not found")
+
+
+@router.get("/pending")
+async def list_pending_events(
+    current_user: dict = Depends(require_content_admin),
+):
+    db = get_db()
+    cursor = db.events.find({"status": "pending_approval"}).sort("created_at", -1)
+    events = [serialize_event(e) async for e in cursor]
+    return {"events": events, "total": len(events)}
+
+
+@router.post("/{event_id}/approve")
+async def approve_event(
+    event_id: str,
+    current_user: dict = Depends(require_content_admin),
+):
+    db = get_db()
+    result = await db.events.update_one(
+        {"_id": ObjectId(event_id)},
+        {"$set": {"status": "published"}},
+    )
+    if result.matched_count == 0:
+        raise HTTPException(404, "Event not found")
+    updated = await db.events.find_one({"_id": ObjectId(event_id)})
+    return serialize_event(updated)
 
 
 ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}

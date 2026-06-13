@@ -3,7 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import Link from 'next/link';
 import { eventsApi } from '@/lib/api';
-import { Calendar, CalendarDays, List, MapPin, Users, Clock, Loader2 } from 'lucide-react';
+import { useAuth } from '@/lib/auth';
+import { Calendar, CalendarDays, List, MapPin, Users, Clock, Loader2, Plus } from 'lucide-react';
 import { format, isSameDay } from 'date-fns';
 import PageHeader from '@/components/layout/PageHeader';
 import EventCalendar from '@/components/EventCalendar';
@@ -21,6 +22,7 @@ interface Event {
 }
 
 export default function EventsPage() {
+  const { user } = useAuth();
   const [events, setEvents] = useState<Event[]>([]);
   const [loading, setLoading] = useState(true);
   const [view, setView] = useState<'list' | 'calendar'>('calendar');
@@ -46,8 +48,14 @@ export default function EventsPage() {
       <PageHeader label="What's Happening" title="Events" />
 
       <div className="max-w-4xl mx-auto px-4 py-12">
-        {/* View toggle */}
-        <div className="flex justify-end mb-6 gap-2">
+        {/* View toggle + submit button */}
+        <div className="flex justify-between items-center mb-6">
+        {user && user.role !== 'pending' ? (
+          <Link href="/events/submit" className="btn-gold text-sm px-4 py-2 flex items-center gap-1.5">
+            <Plus size={14} /> Submit an Event
+          </Link>
+        ) : <div />}
+        <div className="flex gap-2">
           <button
             onClick={() => setView('list')}
             className={`flex items-center gap-1.5 px-4 py-2 rounded-sm text-xs font-sans transition-colors ${
@@ -64,6 +72,7 @@ export default function EventsPage() {
           >
             <CalendarDays size={14} /> Calendar
           </button>
+        </div>
         </div>
 
         {loading ? (

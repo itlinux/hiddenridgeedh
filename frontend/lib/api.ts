@@ -77,6 +77,9 @@ export const eventsApi = {
     fd.append('file', file);
     return api.post('/api/events/upload-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
   },
+  submit: (data: any) => api.post('/api/events/submit', data),
+  listPending: () => api.get('/api/events/pending'),
+  approve: (id: string) => api.post(`/api/events/${id}/approve`),
 };
 
 // ─── Forum ────────────────────────────────────────────────────────────────────

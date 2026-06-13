@@ -110,6 +110,7 @@ class EventCreate(BaseModel):
     end_date: Optional[datetime] = None
     max_attendees: Optional[int] = Field(None, ge=1, le=10000)
     cover_image: Optional[str] = None
+    status: str = Field("published", pattern=r"^(published|pending_approval)$")
 
 
 class EventUpdate(BaseModel):
