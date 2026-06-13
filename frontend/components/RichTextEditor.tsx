@@ -2,7 +2,6 @@
 
 import dynamic from 'next/dynamic';
 import { useMemo, useRef, useCallback } from 'react';
-import { galleryApi } from '@/lib/api';
 
 const ReactQuill = dynamic(() => import('react-quill-new'), {
   ssr: false,
@@ -46,13 +45,11 @@ export default function RichTextEditor({ value, onChange, placeholder, compact, 
         if (uploadImage) {
           imageUrl = await uploadImage(file);
         } else {
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('title', file.name);
-          formData.append('description', 'Inline upload');
-          formData.append('tags', 'inline');
-          const res = await galleryApi.upload(formData);
-          imageUrl = res.data.image_url;
+          const { api } = await import('@/lib/api');
+          const fd = new FormData();
+          fd.append('file', file);
+          const res = await api.post('/api/media/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+          imageUrl = res.data.url;
         }
         const editor = quillRef.current?.getEditor?.() ?? quillRef.current?.editor;
         if (editor) {

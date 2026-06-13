@@ -8,7 +8,7 @@ from slowapi.errors import RateLimitExceeded
 import os
 
 from database import connect_db, disconnect_db, get_settings
-from routes import auth, posts, events, forum, gallery, newsletter, members, alerts, news, safety_links
+from routes import auth, posts, events, forum, gallery, newsletter, members, alerts, news, safety_links, media
 from utils.limiter import limiter
 
 
@@ -70,6 +70,7 @@ app.include_router(members.router)
 app.include_router(alerts.router)
 app.include_router(news.router)
 app.include_router(safety_links.router)
+app.include_router(media.router)
 
 
 @app.get("/")
