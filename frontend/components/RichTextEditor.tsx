@@ -19,10 +19,11 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange, placeholder, compact }: RichTextEditorProps) {
   const quillRef = useRef<any>(null);
 
+  const onChangeRef = useRef(onChange);
+  onChangeRef.current = onChange;
   const handleChange = useCallback((val: string) => {
-    console.log('RichTextEditor onChange:', val?.substring(0, 50));
-    onChange(val);
-  }, [onChange]);
+    onChangeRef.current(val);
+  }, []);
 
   const imageHandler = useCallback(() => {
     const input = document.createElement('input');

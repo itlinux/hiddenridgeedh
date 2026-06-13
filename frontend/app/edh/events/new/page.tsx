@@ -61,8 +61,8 @@ export default function NewEventPage() {
     setError(null);
     if (!form.title.trim()) { setError('Event title is required.'); return; }
     if (!startDate) { setError('Start date & time is required.'); return; }
-    const descText = form.description.replace(/<[^>]*>/g, '').trim();
-    if (descText.length < 10) { setError('Description must be at least 10 characters.'); return; }
+    const descText = form.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
+    if (descText.length === 0) { setError('Please enter a description.'); return; }
     setSaving(true);
     try {
       const payload: any = {
