@@ -81,10 +81,6 @@ export default function RichTextEditor({ value, onChange, placeholder, compact }
     },
   }), [compact, imageHandler]);
 
-  const formats = compact
-    ? ['bold', 'italic', 'underline', 'list', 'link']
-    : ['bold', 'italic', 'underline', 'strike', 'list', 'blockquote', 'link'];
-
   return (
     <div className="rich-text-editor">
       <ReactQuill
@@ -94,7 +90,6 @@ export default function RichTextEditor({ value, onChange, placeholder, compact }
         value={value}
         onChange={handleChange}
         modules={modules}
-        formats={formats}
         placeholder={placeholder || 'Write something...'}
       />
     </div>
