@@ -11,8 +11,7 @@ cd "$APP_DIR"
 git pull origin main
 
 echo "Updating backend dependencies..."
-source "$APP_DIR/venv/bin/activate"
-pip install -r backend/requirements.txt
+pip3 install -r "$APP_DIR/backend/requirements.txt"
 
 echo "Rebuilding frontend..."
 cd "$APP_DIR/frontend"
