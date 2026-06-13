@@ -139,7 +139,10 @@ function EventCard({ event }: { event: Event }) {
           {event.title}
         </h2>
         {event.description && (
-          <p className="font-body text-forest-500 text-sm mb-3 line-clamp-2">{event.description}</p>
+          <div
+            className="font-body text-forest-500 text-sm mb-3 line-clamp-2"
+            dangerouslySetInnerHTML={{ __html: event.description }}
+          />
         )}
         <div className="flex flex-wrap gap-4 text-forest-400 text-xs font-sans">
           <span className="flex items-center gap-1">

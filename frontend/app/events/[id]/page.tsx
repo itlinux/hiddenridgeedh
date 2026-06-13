@@ -115,7 +115,7 @@ export default function EventDetailPage() {
           {event.content ? (
             <div dangerouslySetInnerHTML={{ __html: event.content }} />
           ) : event.description ? (
-            <p>{event.description}</p>
+            <div dangerouslySetInnerHTML={{ __html: event.description }} />
           ) : null}
         </div>
       </div>
