@@ -22,9 +22,11 @@ async def upload_inline_media(
     if len(data) > MAX_BYTES:
         raise HTTPException(400, "Image must be under 10 MB")
     settings = get_settings()
+    inline_dir = os.path.join(settings.upload_dir, "inline")
+    os.makedirs(inline_dir, exist_ok=True)
     ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
-    filename = f"inline_{uuid.uuid4().hex}.{ext}"
-    path = os.path.join(settings.upload_dir, filename)
+    filename = f"{uuid.uuid4().hex}.{ext}"
+    path = os.path.join(inline_dir, filename)
     with open(path, "wb") as f:
         f.write(data)
-    return {"url": f"/uploads/{filename}"}
+    return {"url": f"/uploads/inline/{filename}"}
