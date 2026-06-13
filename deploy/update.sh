@@ -11,11 +11,11 @@ cd "$APP_DIR"
 git pull origin main
 
 echo "Updating backend dependencies..."
-pip3 install -r "$APP_DIR/backend/requirements.txt"
+pip3 install --break-system-packages -r "$APP_DIR/backend/requirements.txt"
 
 echo "Rebuilding frontend..."
 cd "$APP_DIR/frontend"
-npm install
+npm install --legacy-peer-deps
 npm run build
 
 echo "Restarting services..."
