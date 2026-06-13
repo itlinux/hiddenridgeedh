@@ -62,7 +62,8 @@ export default function NewEventPage() {
     if (!form.title.trim()) { setError('Event title is required.'); return; }
     if (!startDate) { setError('Start date & time is required.'); return; }
     const descText = form.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-    if (descText.length === 0 && !coverImage) { setError('Add a description or upload a photo.'); return; }
+    const descHasMedia = /<img|<video/i.test(form.description);
+    if (descText.length === 0 && !coverImage && !descHasMedia) { setError('Add a description or upload a photo.'); return; }
     setSaving(true);
     try {
       const payload: any = {
