@@ -45,10 +45,11 @@ export default function RichTextEditor({ value, onChange, placeholder, compact, 
         if (uploadImage) {
           imageUrl = await uploadImage(file);
         } else {
-          const { api } = await import('@/lib/api');
+          const apiModule = await import('@/lib/api');
+          const apiClient = apiModule.default;
           const fd = new FormData();
           fd.append('file', file);
-          const res = await api.post('/api/media/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+          const res = await apiClient.post('/api/media/upload', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
           imageUrl = res.data.url;
         }
         const editor = quillRef.current?.getEditor?.() ?? quillRef.current?.editor;
