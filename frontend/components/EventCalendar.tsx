@@ -110,10 +110,8 @@ export default function EventCalendar({ events, selectedDate, onDateSelect }: Ev
               key={dateKey}
               onClick={() => onDateSelect(day)}
               className={`
-                relative flex flex-col items-center py-2 sm:py-3 min-h-[48px] sm:min-h-[60px] transition-colors
-                ${inCurrentMonth ? 'bg-white' : 'bg-cream-50'}
-                ${isSelected ? 'bg-forest-800 text-cream-100' : inCurrentMonth ? 'hover:bg-cream-100' : ''}
-                ${hasEvents && !isSelected ? 'cursor-pointer' : 'cursor-default'}
+                relative flex flex-col items-center py-2 sm:py-3 min-h-[48px] sm:min-h-[60px] transition-colors cursor-pointer
+                ${isSelected ? 'bg-forest-800 text-cream-100' : hasEvents && inCurrentMonth ? 'bg-gold-50 hover:bg-gold-100' : inCurrentMonth ? 'bg-white hover:bg-cream-100' : 'bg-cream-50'}
               `}
             >
               <span
