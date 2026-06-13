@@ -62,12 +62,12 @@ export default function NewEventPage() {
     if (!form.title.trim()) { setError('Event title is required.'); return; }
     if (!startDate) { setError('Start date & time is required.'); return; }
     const descText = form.description.replace(/<[^>]*>/g, '').replace(/\s+/g, ' ').trim();
-    if (descText.length === 0) { setError('Please enter a description.'); return; }
+    if (descText.length === 0 && !coverImage) { setError('Add a description or upload a photo.'); return; }
     setSaving(true);
     try {
       const payload: any = {
         title: form.title,
-        description: form.description,
+        description: form.description || ' ',
         location: form.location || DEFAULT_LOCATION,
         start_date: startDate.toISOString(),
         cover_image: coverImage ?? undefined,

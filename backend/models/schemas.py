@@ -104,7 +104,7 @@ class PostUpdate(BaseModel):
 
 class EventCreate(BaseModel):
     title: str = Field(..., min_length=3, max_length=200)
-    description: str = Field(..., min_length=10, max_length=10000)
+    description: str = Field(..., min_length=1, max_length=10000)
     location: str = Field(..., min_length=3, max_length=200)
     start_date: datetime
     end_date: Optional[datetime] = None
