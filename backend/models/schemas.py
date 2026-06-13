@@ -109,6 +109,7 @@ class EventCreate(BaseModel):
     start_date: datetime
     end_date: Optional[datetime] = None
     max_attendees: Optional[int] = Field(None, ge=1, le=10000)
+    cover_image: Optional[str] = None
 
 
 class EventUpdate(BaseModel):
@@ -118,6 +119,7 @@ class EventUpdate(BaseModel):
     start_date: Optional[datetime] = None
     end_date: Optional[datetime] = None
     max_attendees: Optional[int] = Field(None, ge=1, le=10000)
+    cover_image: Optional[str] = None
 
 
 # --- Forum ---

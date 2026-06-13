@@ -1,8 +1,9 @@
-from fastapi import APIRouter, HTTPException, Depends, Query
+from fastapi import APIRouter, HTTPException, Depends, Query, UploadFile, File
 from datetime import datetime, timezone
+import os, uuid
 from bson import ObjectId
 
-from database import get_db
+from database import get_db, get_settings
 from models.schemas import EventCreate, EventUpdate
 from middleware.auth import require_member, require_content_admin
 
@@ -61,8 +62,8 @@ async def create_event(
         "created_at": datetime.utcnow(),
     }
     result = await db.events.insert_one(event_doc)
-    event_doc["id"] = str(result.inserted_id)
-    return serialize_event(event_doc)
+    created = await db.events.find_one({"_id": result.inserted_id})
+    return serialize_event(created)
 
 
 @router.put("/{event_id}")
@@ -91,6 +92,29 @@ async def delete_event(
     result = await db.events.delete_one({"_id": ObjectId(event_id)})
     if result.deleted_count == 0:
         raise HTTPException(404, "Event not found")
+
+
+ALLOWED_IMAGE_TYPES = {"image/jpeg", "image/png", "image/webp"}
+MAX_IMAGE_BYTES = 8 * 1024 * 1024  # 8 MB
+
+
+@router.post("/upload-image", status_code=201)
+async def upload_event_image(
+    file: UploadFile = File(...),
+    current_user: dict = Depends(require_content_admin),
+):
+    if file.content_type not in ALLOWED_IMAGE_TYPES:
+        raise HTTPException(400, "Only JPEG, PNG, or WebP images allowed")
+    data = await file.read()
+    if len(data) > MAX_IMAGE_BYTES:
+        raise HTTPException(400, "Image must be under 8 MB")
+    settings = get_settings()
+    ext = file.filename.rsplit(".", 1)[-1].lower() if "." in (file.filename or "") else "jpg"
+    filename = f"event_{uuid.uuid4().hex}.{ext}"
+    path = os.path.join(settings.upload_dir, filename)
+    with open(path, "wb") as f:
+        f.write(data)
+    return {"url": f"/uploads/{filename}"}
 
 
 @router.post("/{event_id}/rsvp")

@@ -72,6 +72,11 @@ export const eventsApi = {
   rsvp: (id: string) => api.post(`/api/events/${id}/rsvp`),
   cancelRsvp: (id: string) => api.delete(`/api/events/${id}/rsvp`),
   delete: (id: string) => api.delete(`/api/events/${id}`),
+  uploadImage: (file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    return api.post('/api/events/upload-image', fd, { headers: { 'Content-Type': 'multipart/form-data' } });
+  },
 };
 
 // ─── Forum ────────────────────────────────────────────────────────────────────
