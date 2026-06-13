@@ -185,6 +185,59 @@ async def toggle_lock(
     return {"locked": new_value}
 
 
+@router.put("/threads/{thread_id}")
+async def update_thread(
+    thread_id: str,
+    data: dict,
+    current_user: dict = Depends(require_member),
+):
+    db = get_db()
+    thread = await db.forum_threads.find_one({"_id": ObjectId(thread_id)})
+    if not thread:
+        raise HTTPException(404, "Thread not found")
+    is_author = thread.get("author_id") == str(current_user["_id"])
+    is_admin = current_user.get("role") in ("super_admin", "content_admin")
+    if not is_author and not is_admin:
+        raise HTTPException(403, "Not authorized to edit this thread")
+    if thread.get("locked") and not is_admin:
+        raise HTTPException(400, "Thread is locked")
+    updates = {}
+    if "content" in data and data["content"].strip():
+        updates["content"] = clean_text(data["content"])
+    if "title" in data and data["title"].strip():
+        updates["title"] = clean_text(data["title"])
+    if not updates:
+        raise HTTPException(400, "Nothing to update")
+    updates["edited_at"] = datetime.utcnow()
+    await db.forum_threads.update_one({"_id": ObjectId(thread_id)}, {"$set": updates})
+    updated = await db.forum_threads.find_one({"_id": ObjectId(thread_id)})
+    return serialize_thread(updated)
+
+
+@router.put("/replies/{reply_id}")
+async def update_reply(
+    reply_id: str,
+    data: dict,
+    current_user: dict = Depends(require_member),
+):
+    db = get_db()
+    reply = await db.forum_replies.find_one({"_id": ObjectId(reply_id)})
+    if not reply:
+        raise HTTPException(404, "Reply not found")
+    is_author = reply.get("author_id") == str(current_user["_id"])
+    is_admin = current_user.get("role") in ("super_admin", "content_admin")
+    if not is_author and not is_admin:
+        raise HTTPException(403, "Not authorized to edit this reply")
+    if not data.get("content", "").strip():
+        raise HTTPException(400, "Content required")
+    await db.forum_replies.update_one(
+        {"_id": ObjectId(reply_id)},
+        {"$set": {"content": clean_text(data["content"]), "edited_at": datetime.utcnow()}},
+    )
+    updated = await db.forum_replies.find_one({"_id": ObjectId(reply_id)})
+    return serialize_reply(updated)
+
+
 @router.delete("/threads/{thread_id}")
 async def delete_thread(
     thread_id: str,

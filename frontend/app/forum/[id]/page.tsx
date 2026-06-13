@@ -5,7 +5,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { forumApi } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
-import { ArrowLeft, Loader2, Lock, Send, Trash2 } from 'lucide-react';
+import { ArrowLeft, Loader2, Lock, Send, Trash2, Pencil, X, Check } from 'lucide-react';
 import { format } from 'date-fns';
 import { toast } from 'sonner';
 import dynamic from 'next/dynamic';
@@ -16,7 +16,9 @@ interface Reply {
   id: string;
   content: string;
   author_name?: string;
+  author_id?: string;
   created_at: string;
+  edited_at?: string;
 }
 
 interface Thread {
@@ -24,9 +26,11 @@ interface Thread {
   title: string;
   content: string;
   author_name?: string;
+  author_id?: string;
   is_locked?: boolean;
   is_pinned?: boolean;
   created_at: string;
+  edited_at?: string;
 }
 
 export default function ThreadDetailPage() {
@@ -38,6 +42,12 @@ export default function ThreadDetailPage() {
   const [loading, setLoading] = useState(true);
   const [replyText, setReplyText] = useState('');
   const [submitting, setSubmitting] = useState(false);
+
+  // Edit state
+  const [editingThread, setEditingThread] = useState(false);
+  const [editThreadContent, setEditThreadContent] = useState('');
+  const [editingReplyId, setEditingReplyId] = useState<string | null>(null);
+  const [editReplyContent, setEditReplyContent] = useState('');
 
   useEffect(() => {
     if (authLoading) return;
@@ -57,6 +67,9 @@ export default function ThreadDetailPage() {
     }
   };
 
+  const canEdit = (authorId?: string) =>
+    user && (user.id === authorId || user.role === 'super_admin' || user.role === 'content_admin');
+
   const handleReply = async (e: React.FormEvent) => {
     e.preventDefault();
     const plainText = replyText.replace(/<[^>]*>/g, '').trim();
@@ -72,6 +85,28 @@ export default function ThreadDetailPage() {
       toast.error(err.response?.data?.detail || 'Failed to post reply');
     } finally {
       setSubmitting(false);
+    }
+  };
+
+  const handleSaveThread = async () => {
+    try {
+      const res = await forumApi.updateThread(id, { content: editThreadContent });
+      setThread(res.data);
+      setEditingThread(false);
+      toast.success('Thread updated');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to update');
+    }
+  };
+
+  const handleSaveReply = async (replyId: string) => {
+    try {
+      const res = await forumApi.updateReply(replyId, { content: editReplyContent });
+      setReplies(prev => prev.map(r => r.id === replyId ? { ...r, ...res.data } : r));
+      setEditingReplyId(null);
+      toast.success('Reply updated');
+    } catch (err: any) {
+      toast.error(err.response?.data?.detail || 'Failed to update');
     }
   };
 
@@ -119,20 +154,36 @@ export default function ThreadDetailPage() {
         <div className="card p-6 mb-6">
           <div className="flex items-start justify-between gap-4">
             <h1 className="font-serif text-3xl text-forest-800 mb-2">{thread.title}</h1>
-            {isSuperAdmin && (
-              <button
-                onClick={handleDeleteThread}
-                className="text-red-400 hover:text-red-600 transition-colors flex-shrink-0 mt-1"
-                title="Delete thread"
-              >
-                <Trash2 size={18} />
-              </button>
-            )}
+            <div className="flex items-center gap-2 flex-shrink-0 mt-1">
+              {canEdit(thread.author_id) && !editingThread && (
+                <button onClick={() => { setEditThreadContent(thread.content); setEditingThread(true); }}
+                  className="text-forest-400 hover:text-gold-500 transition-colors" title="Edit">
+                  <Pencil size={16} />
+                </button>
+              )}
+              {isSuperAdmin && (
+                <button onClick={handleDeleteThread} className="text-red-400 hover:text-red-600 transition-colors" title="Delete">
+                  <Trash2 size={16} />
+                </button>
+              )}
+            </div>
           </div>
           <div className="text-forest-400 text-sm font-sans mb-4">
             {thread.author_name} · {format(new Date(thread.created_at), 'MMM d, yyyy h:mm a')}
+            {thread.edited_at && <span className="ml-2 italic text-xs">(edited)</span>}
           </div>
-          <div className="prose-ridge" dangerouslySetInnerHTML={{ __html: thread.content }} />
+
+          {editingThread ? (
+            <div>
+              <RichTextEditor value={editThreadContent} onChange={setEditThreadContent} />
+              <div className="flex gap-2 mt-3 justify-end">
+                <button onClick={() => setEditingThread(false)} className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1"><X size={12} /> Cancel</button>
+                <button onClick={handleSaveThread} className="btn-gold text-xs px-3 py-1.5 flex items-center gap-1"><Check size={12} /> Save</button>
+              </div>
+            </div>
+          ) : (
+            <div className="prose-ridge" dangerouslySetInnerHTML={{ __html: thread.content }} />
+          )}
         </div>
 
         {/* Replies */}
@@ -143,18 +194,33 @@ export default function ThreadDetailPage() {
               <div className="flex items-center justify-between mb-2">
                 <div className="text-forest-400 text-xs font-sans">
                   {reply.author_name} · {format(new Date(reply.created_at), 'MMM d, yyyy h:mm a')}
+                  {reply.edited_at && <span className="ml-2 italic">(edited)</span>}
                 </div>
-                {isSuperAdmin && (
-                  <button
-                    onClick={() => handleDeleteReply(reply.id)}
-                    className="text-red-400 hover:text-red-600 transition-colors"
-                    title="Delete reply"
-                  >
-                    <Trash2 size={14} />
-                  </button>
-                )}
+                <div className="flex items-center gap-2">
+                  {canEdit(reply.author_id) && editingReplyId !== reply.id && (
+                    <button onClick={() => { setEditReplyContent(reply.content); setEditingReplyId(reply.id); }}
+                      className="text-forest-400 hover:text-gold-500 transition-colors" title="Edit">
+                      <Pencil size={13} />
+                    </button>
+                  )}
+                  {isSuperAdmin && (
+                    <button onClick={() => handleDeleteReply(reply.id)} className="text-red-400 hover:text-red-600 transition-colors" title="Delete">
+                      <Trash2 size={13} />
+                    </button>
+                  )}
+                </div>
               </div>
-              <div className="prose-ridge text-sm" dangerouslySetInnerHTML={{ __html: reply.content }} />
+              {editingReplyId === reply.id ? (
+                <div>
+                  <RichTextEditor value={editReplyContent} onChange={setEditReplyContent} compact />
+                  <div className="flex gap-2 mt-2 justify-end">
+                    <button onClick={() => setEditingReplyId(null)} className="btn-secondary text-xs px-3 py-1.5 flex items-center gap-1"><X size={12} /> Cancel</button>
+                    <button onClick={() => handleSaveReply(reply.id)} className="btn-gold text-xs px-3 py-1.5 flex items-center gap-1"><Check size={12} /> Save</button>
+                  </div>
+                </div>
+              ) : (
+                <div className="prose-ridge text-sm" dangerouslySetInnerHTML={{ __html: reply.content }} />
+              )}
             </div>
           ))}
         </div>
@@ -166,12 +232,7 @@ export default function ThreadDetailPage() {
           </div>
         ) : (
           <form onSubmit={handleReply} className="card p-5">
-            <RichTextEditor
-              value={replyText}
-              onChange={setReplyText}
-              placeholder="Write a reply..."
-              compact
-            />
+            <RichTextEditor value={replyText} onChange={setReplyText} placeholder="Write a reply..." compact />
             <div className="flex justify-end mt-3">
               <button type="submit" disabled={submitting} className="btn-primary flex items-center gap-2 text-sm">
                 {submitting ? <Loader2 size={14} className="animate-spin" /> : <Send size={14} />}
