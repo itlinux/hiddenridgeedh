@@ -13,6 +13,11 @@ import dynamic from 'next/dynamic';
 
 const RichTextEditor = dynamic(() => import('@/components/RichTextEditor'), { ssr: false });
 
+const htmlToPlain = (html: string) =>
+  html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&')
+      .replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"')
+      .replace(/&#39;/g, "'").replace(/\s+/g, ' ').trim();
+
 interface ForumCategory {
   id: string;
   value: string;
@@ -234,7 +239,7 @@ export default function ForumPage() {
                   </div>
                   {thread.content && (
                     <p className="font-body text-forest-500 text-sm mt-1 line-clamp-2">
-                      {thread.content.replace(/<[^>]*>/g, '').slice(0, 200)}
+                      {htmlToPlain(thread.content).slice(0, 200)}
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-2 flex-wrap">
