@@ -77,8 +77,8 @@ export default function RichTextEditor({ value, onChange, placeholder, compact }
   }), [compact, imageHandler]);
 
   const formats = compact
-    ? ['bold', 'italic', 'underline', 'list', 'bullet', 'link']
-    : ['bold', 'italic', 'underline', 'strike', 'list', 'bullet', 'blockquote', 'link', 'image'];
+    ? ['bold', 'italic', 'underline', 'list', 'link']
+    : ['bold', 'italic', 'underline', 'strike', 'list', 'blockquote', 'link', 'image'];
 
   return (
     <div className="rich-text-editor">
