@@ -1,5 +1,5 @@
 from fastapi import APIRouter, HTTPException, Depends, Query
-from datetime import datetime
+from datetime import datetime, timezone
 from bson import ObjectId
 
 from database import get_db
@@ -13,6 +13,12 @@ def serialize_event(event: dict) -> dict:
     event["id"] = str(event["_id"])
     del event["_id"]
     event["attendee_count"] = len(event.get("attendees", []))
+    # Attach UTC tzinfo so JSON serialization produces +00:00 suffix.
+    # Without this, JS treats naive ISO strings as local time, shifting dates.
+    for field in ("start_date", "end_date", "created_at"):
+        val = event.get(field)
+        if isinstance(val, datetime) and val.tzinfo is None:
+            event[field] = val.replace(tzinfo=timezone.utc)
     return event
 
 
