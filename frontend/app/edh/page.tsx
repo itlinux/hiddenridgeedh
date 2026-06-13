@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { membersApi, postsApi, eventsApi, newsletterApi } from '@/lib/api';
-import { Users, FileText, Calendar, Mail, Shield, Clock, CheckCircle, AlertCircle, Image, ExternalLink } from 'lucide-react';
+import { Users, FileText, Calendar, Mail, Shield, Clock, CheckCircle, AlertCircle, Image, ExternalLink, Plus } from 'lucide-react';
 
 interface Stats {
   pendingMembers: number;
@@ -158,7 +158,8 @@ export default function AdminDashboard() {
             <div className="space-y-3">
               {[
                 { href: '/edh/posts/new', label: 'New Blog Post', icon: FileText },
-                { href: '/edh/events/new', label: 'Create Event', icon: Calendar },
+                { href: '/edh/events', label: 'Manage Events', icon: Calendar },
+                { href: '/edh/events/new', label: 'Create Event', icon: Plus },
                 { href: '/edh/newsletter', label: 'Send Newsletter', icon: Mail },
                 { href: '/edh/subscribers', label: 'View Subscribers', icon: Users },
                 { href: '/edh/members', label: 'Manage Members', icon: Users },
