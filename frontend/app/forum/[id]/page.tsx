@@ -29,6 +29,7 @@ interface Thread {
   author_id?: string;
   is_locked?: boolean;
   is_pinned?: boolean;
+  is_public?: boolean;
   created_at: string;
   edited_at?: string;
 }
@@ -51,17 +52,19 @@ export default function ThreadDetailPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) { router.push('/login'); return; }
-    if (user.role === 'pending') { router.push('/'); return; }
     if (id) loadThread();
-  }, [id, user, authLoading]);
+  }, [id, authLoading]);
 
   const loadThread = async () => {
     try {
       const res = await forumApi.getThread(id);
       setThread(res.data);
       setReplies(res.data.replies || []);
-    } catch {
+    } catch (err: any) {
+      if (err.response?.status === 403 && !user) {
+        router.push('/login');
+        return;
+      }
       setThread(null);
     } finally {
       setLoading(false);
@@ -133,7 +136,7 @@ export default function ThreadDetailPage() {
     }
   };
 
-  if (authLoading || !user) return null;
+  if (authLoading) return null;
   if (loading) return <div className="min-h-screen bg-cream-50 flex items-center justify-center"><Loader2 className="animate-spin text-forest-400" size={32} /></div>;
   if (!thread) return (
     <div className="min-h-screen bg-cream-50 flex items-center justify-center">
@@ -230,6 +233,12 @@ export default function ThreadDetailPage() {
         {thread.is_locked ? (
           <div className="flex items-center gap-2 text-forest-400 font-sans text-sm">
             <Lock size={14} /> This thread is locked.
+          </div>
+        ) : !user || user.role === 'pending' ? (
+          <div className="card p-5 text-center">
+            <p className="font-sans text-sm text-forest-500">
+              <Link href="/login" className="text-gold-500 hover:underline">Sign in</Link> as a member to reply.
+            </p>
           </div>
         ) : (
           <form onSubmit={handleReply} className="card p-5">

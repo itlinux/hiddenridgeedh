@@ -34,6 +34,7 @@ interface Thread {
   reply_count?: number;
   is_pinned?: boolean;
   is_locked?: boolean;
+  is_public?: boolean;
   last_activity?: string;
   created_at: string;
 }
@@ -51,6 +52,7 @@ export default function ForumPage() {
   const [newTitle, setNewTitle] = useState('');
   const [newContent, setNewContent] = useState('');
   const [newCategory, setNewCategory] = useState('general');
+  const [newIsPublic, setNewIsPublic] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   const loadThreads = (category?: string) => {
@@ -65,15 +67,6 @@ export default function ForumPage() {
 
   useEffect(() => {
     if (authLoading) return;
-    if (!user) {
-      router.push('/login');
-      return;
-    }
-    if (user.role === 'pending') {
-      router.push('/');
-      return;
-    }
-    // Load categories from API
     forumApi.listCategories()
       .then(res => setCategories(res.data.categories || []))
       .catch(() => setCategories([]));
@@ -94,11 +87,13 @@ export default function ForumPage() {
         title: newTitle.trim(),
         content: newContent.trim(),
         category: newCategory,
+        is_public: newIsPublic,
       });
       toast.success('Discussion posted!');
       setNewTitle('');
       setNewContent('');
       setNewCategory('general');
+      setNewIsPublic(false);
       setShowNewThread(false);
       loadThreads(activeCategory);
     } catch (err: any) {
@@ -121,7 +116,7 @@ export default function ForumPage() {
     return cat ? cat.color : 'bg-forest-200 text-forest-700';
   };
 
-  if (authLoading || !user) return null;
+  if (authLoading) return null;
 
   return (
     <div className="min-h-screen bg-cream-50">
@@ -165,12 +160,14 @@ export default function ForumPage() {
               </button>
             ))}
           </div>
-          <button
-            onClick={() => setShowNewThread(!showNewThread)}
-            className="btn-gold text-xs px-4 py-2 flex items-center gap-1 flex-shrink-0"
-          >
-            {showNewThread ? <><X size={14} /> Cancel</> : <><Plus size={14} /> New Discussion</>}
-          </button>
+          {user && user.role !== 'pending' && (
+            <button
+              onClick={() => setShowNewThread(!showNewThread)}
+              className="btn-gold text-xs px-4 py-2 flex items-center gap-1 flex-shrink-0"
+            >
+              {showNewThread ? <><X size={14} /> Cancel</> : <><Plus size={14} /> New Discussion</>}
+            </button>
+          )}
         </div>
 
         {/* New Thread Form */}
@@ -209,6 +206,15 @@ export default function ForumPage() {
                 placeholder="Share your thoughts with the neighborhood..."
               />
             </div>
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={newIsPublic}
+                onChange={(e) => setNewIsPublic(e.target.checked)}
+                className="w-4 h-4 accent-forest-700"
+              />
+              <span className="font-sans text-xs text-forest-600">Make public (visible without login)</span>
+            </label>
             <button type="submit" disabled={submitting} className="btn-primary text-sm flex items-center gap-2">
               {submitting ? <><Loader2 size={14} className="animate-spin" /> Posting...</> : <><Send size={14} /> Post Discussion</>}
             </button>
@@ -237,6 +243,7 @@ export default function ForumPage() {
                   <div className="flex items-center gap-2 flex-wrap">
                     {thread.is_pinned && <Pin size={12} className="text-gold-500" />}
                     {thread.is_locked && <Lock size={12} className="text-forest-400" />}
+                    {thread.is_public && <span className="px-1.5 py-0.5 rounded-sm text-[9px] font-sans uppercase tracking-wider bg-sky-100 text-sky-700 border border-sky-200">Public</span>}
                     <h3 className="font-serif text-lg text-forest-800 group-hover:text-forest-600 transition-colors">
                       {thread.title}
                     </h3>

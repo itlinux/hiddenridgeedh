@@ -1,12 +1,40 @@
 from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
+from typing import Optional
 from datetime import datetime
 from bson import ObjectId
+from jose import JWTError, jwt
 
-from database import get_db
+from database import get_db, get_settings
 from models.schemas import ThreadCreate, ReplyCreate, ForumCategoryCreate
 from middleware.auth import require_member, require_content_admin, require_super_admin
 from utils.limiter import limiter
 from utils.profanity import clean_text
+
+_optional_bearer = HTTPBearer(auto_error=False)
+
+
+async def optional_member(
+    credentials: HTTPAuthorizationCredentials = Depends(_optional_bearer),
+) -> Optional[dict]:
+    """Returns current user if authenticated member, else None."""
+    if not credentials:
+        return None
+    try:
+        settings = get_settings()
+        payload = jwt.decode(credentials.credentials, settings.secret_key, algorithms=["HS256"])
+        user_id = payload.get("sub")
+        if not user_id:
+            return None
+        db = get_db()
+        user = await db.users.find_one({"_id": ObjectId(user_id)})
+        if not user or not user.get("is_active"):
+            return None
+        if user.get("role") == "pending":
+            return None
+        return user
+    except (JWTError, Exception):
+        return None
 
 router = APIRouter(prefix="/api/forum", tags=["forum"])
 
@@ -45,10 +73,10 @@ async def list_threads(
     skip: int = Query(0, ge=0),
     limit: int = Query(20, ge=1, le=100),
     category: str | None = None,
-    current_user: dict = Depends(require_member),
+    current_user: Optional[dict] = Depends(optional_member),
 ):
     db = get_db()
-    query = {}
+    query: dict = {} if current_user else {"is_public": True}
     if category:
         query["category"] = category
 
@@ -68,12 +96,14 @@ async def get_thread(
     thread_id: str,
     skip: int = Query(0, ge=0),
     limit: int = Query(50, ge=1, le=100),
-    current_user: dict = Depends(require_member),
+    current_user: Optional[dict] = Depends(optional_member),
 ):
     db = get_db()
     thread = await db.forum_threads.find_one({"_id": ObjectId(thread_id)})
     if not thread:
         raise HTTPException(404, "Thread not found")
+    if not current_user and not thread.get("is_public"):
+        raise HTTPException(403, "Login required to view this thread")
 
     cursor = (
         db.forum_replies.find({"thread_id": thread_id})
