@@ -104,14 +104,13 @@ export default function GalleryPage() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this photo?')) return;
     try {
       await galleryApi.delete(id);
       setItems(prev => prev.filter(i => i.id !== id));
       if (selectedImage?.id === id) setSelectedImage(null);
       toast.success('Photo deleted');
-    } catch {
-      toast.error('Failed to delete');
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || 'Failed to delete');
     }
   };
 
