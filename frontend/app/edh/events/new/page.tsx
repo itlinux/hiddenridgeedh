@@ -28,13 +28,18 @@ export default function NewEventPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.title.trim() || !form.start_date) return;
-    // Validate description has content (strip HTML tags)
+    console.log('submit clicked', form);
+    if (!form.title.trim() || !form.start_date) {
+      console.log('validation failed: title or date missing');
+      return;
+    }
     const descText = form.description.replace(/<[^>]*>/g, '').trim();
+    console.log('descText length:', descText.length, 'descText:', descText.substring(0, 50));
     if (descText.length < 10) {
       alert('Description must be at least 10 characters');
       return;
     }
+    console.log('validation passed, calling API');
     setSaving(true);
     try {
       const payload: any = {
