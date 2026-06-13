@@ -19,6 +19,11 @@ interface RichTextEditorProps {
 export default function RichTextEditor({ value, onChange, placeholder, compact }: RichTextEditorProps) {
   const quillRef = useRef<any>(null);
 
+  const handleChange = useCallback((val: string) => {
+    console.log('RichTextEditor onChange:', val?.substring(0, 50));
+    onChange(val);
+  }, [onChange]);
+
   const imageHandler = useCallback(() => {
     const input = document.createElement('input');
     input.setAttribute('type', 'file');
@@ -87,7 +92,7 @@ export default function RichTextEditor({ value, onChange, placeholder, compact }
         ref={quillRef}
         theme="snow"
         value={value}
-        onChange={onChange}
+        onChange={handleChange}
         modules={modules}
         formats={formats}
         placeholder={placeholder || 'Write something...'}
