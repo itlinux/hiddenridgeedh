@@ -135,6 +135,7 @@ class ThreadCreate(BaseModel):
     title: str = Field(..., min_length=3, max_length=200)
     content: str = Field(..., min_length=5, max_length=20000)
     category: str = Field("general", max_length=50)
+    is_public: bool = False
 
 
 class ReplyCreate(BaseModel):

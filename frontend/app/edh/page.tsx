@@ -33,26 +33,26 @@ export default function AdminDashboard() {
   }, [isAdmin]);
 
   const loadStats = async () => {
-    try {
-      const [membersRes, pendingRes, postsRes, eventsRes, pendingEventsRes] = await Promise.all([
-        membersApi.list({ per_page: 1 }),
-        membersApi.pending(),
-        postsApi.listAdmin({ per_page: 1 }),
-        eventsApi.list({ per_page: 1 }),
-        eventsApi.listPending(),
-      ]);
-      setStats({
-        totalMembers: membersRes.data.total,
-        pendingMembers: pendingRes.data.total,
-        totalPosts: postsRes.data.total,
-        totalEvents: eventsRes.data.total,
-        subscribers: 0,
-      });
-      setPendingUsers((pendingRes.data.pending || pendingRes.data.items || []).slice(0, 5));
-      setPendingEvents((pendingEventsRes.data.events || []).slice(0, 10));
-    } catch (err) {
-      console.error('Failed to load stats', err);
-    }
+    const safe = (p: Promise<any>, fallback: any) => p.catch(() => fallback);
+    const [membersRes, pendingRes, postsRes, eventsRes, pendingEventsRes, subsRes] = await Promise.all([
+      safe(membersApi.list({ per_page: 1 }), { data: { total: 0 } }),
+      safe(membersApi.pending(), { data: { pending: [], total: 0 } }),
+      safe(postsApi.listAdmin({ per_page: 1 }), { data: { total: 0 } }),
+      safe(eventsApi.list({ per_page: 1 }), { data: { total: 0 } }),
+      safe(eventsApi.listPending(), { data: { events: [] } }),
+      safe(newsletterApi.listSubscribers(), { data: { subscribers: [] } }),
+    ]);
+    const allSubs: any[] = subsRes.data.subscribers || subsRes.data || [];
+    const activeSubs = allSubs.filter((s: any) => s.is_active && s.confirmed).length;
+    setStats({
+      totalMembers: membersRes.data.total,
+      pendingMembers: pendingRes.data.total,
+      totalPosts: postsRes.data.total,
+      totalEvents: eventsRes.data.total,
+      subscribers: activeSubs,
+    });
+    setPendingUsers((pendingRes.data.pending || pendingRes.data.items || []).slice(0, 5));
+    setPendingEvents((pendingEventsRes.data.events || []).slice(0, 10));
   };
 
   const handleApprove = async (userId: string, name: string) => {
@@ -93,12 +93,13 @@ export default function AdminDashboard() {
 
       <div className="max-w-7xl mx-auto px-4 py-10">
         {/* Stats */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-10">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-4 mb-10">
           {[
             { label: 'Approved Members', value: stats?.totalMembers ?? '—', icon: Users, color: 'text-forest-600' },
             { label: 'Pending Approval', value: stats?.pendingMembers ?? '—', icon: Clock, color: 'text-gold-500', alert: (stats?.pendingMembers ?? 0) > 0 },
             { label: 'Published Posts', value: stats?.totalPosts ?? '—', icon: FileText, color: 'text-forest-600' },
             { label: 'Events', value: stats?.totalEvents ?? '—', icon: Calendar, color: 'text-gold-500' },
+            { label: 'Subscribers', value: stats?.subscribers ?? '—', icon: Mail, color: 'text-forest-600' },
           ].map((stat) => (
             <div key={stat.label} className="card p-5">
               <div className="flex items-center justify-between mb-2">

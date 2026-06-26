@@ -40,10 +40,24 @@ async def list_events(
     return {"events": events, "total": total}
 
 
+@router.get("/pending")
+async def list_pending_events(
+    current_user: dict = Depends(require_content_admin),
+):
+    db = get_db()
+    cursor = db.events.find({"status": "pending_approval"}).sort("created_at", -1)
+    events = [serialize_event(e) async for e in cursor]
+    return {"events": events, "total": len(events)}
+
+
 @router.get("/{event_id}")
 async def get_event(event_id: str):
     db = get_db()
-    event = await db.events.find_one({"_id": ObjectId(event_id)})
+    try:
+        oid = ObjectId(event_id)
+    except Exception:
+        raise HTTPException(404, "Event not found")
+    event = await db.events.find_one({"_id": oid})
     if not event:
         raise HTTPException(404, "Event not found")
     return serialize_event(event)
@@ -112,16 +126,6 @@ async def delete_event(
     result = await db.events.delete_one({"_id": ObjectId(event_id)})
     if result.deleted_count == 0:
         raise HTTPException(404, "Event not found")
-
-
-@router.get("/pending")
-async def list_pending_events(
-    current_user: dict = Depends(require_content_admin),
-):
-    db = get_db()
-    cursor = db.events.find({"status": "pending_approval"}).sort("created_at", -1)
-    events = [serialize_event(e) async for e in cursor]
-    return {"events": events, "total": len(events)}
 
 
 @router.post("/{event_id}/approve")
