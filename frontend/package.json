@@ -20,7 +20,7 @@
     "jose": "^5.6.3",
     "leaflet": "^1.9.4",
     "lucide-react": "^0.395.0",
-    "next": "^15.5.19",
+    "next": "^15.5.22",
     "next-themes": "^0.3.0",
     "qrcode.react": "^4.2.0",
     "react": "^18",
@@ -41,8 +41,12 @@
     "autoprefixer": "^10",
     "eslint": "^8",
     "eslint-config-next": "16.2.1",
-    "postcss": "^8.5.15",
+    "postcss": "^8.5.24",
     "tailwindcss": "^3.4.1",
     "typescript": "^5"
+  },
+  "overrides": {
+    "next": { "postcss": "8.5.24" },
+    "sharp": "0.35.2"
   }
 }
