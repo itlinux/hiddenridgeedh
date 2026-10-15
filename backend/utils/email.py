@@ -1,11 +1,30 @@
 import asyncio
+import html
 import logging
+import re
+from email.charset import Charset, QP
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
+from email.utils import formatdate, make_msgid
 
 from database import get_settings
 
 logger = logging.getLogger(__name__)
+
+
+def _html_to_text(html_content: str) -> str:
+    """Plain-text alternative for the HTML body; links become 'text (url)'."""
+    text = re.sub(r"(?is)<(style|script)\b.*?</\1>", "", html_content)
+    text = re.sub(
+        r'(?is)<a\b[^>]*href="([^"]+)"[^>]*>(.*?)</a>',
+        lambda m: f"{re.sub(r'<[^>]+>', '', m.group(2)).strip()} ({m.group(1)})",
+        text,
+    )
+    text = re.sub(r"(?i)<br\s*/?>|</(p|div|h[1-6]|li|tr)>", "\n", text)
+    text = re.sub(r"(?i)<li\b[^>]*>", "- ", text)
+    text = html.unescape(re.sub(r"<[^>]+>", "", text))
+    lines = [re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines()]
+    return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip() + "\n"
 
 
 def _build_html(title: str, body: str, unsubscribe_url: str = "") -> str:
@@ -58,7 +77,7 @@ async def _send_via_sendgrid(to_email: str, subject: str, html_content: str):
     await asyncio.to_thread(_send)
 
 
-async def _send_via_smtp(to_email: str, subject: str, html_content: str):
+async def _send_via_smtp(to_email: str, subject: str, html_content: str, unsubscribe_url: str = ""):
     import aiosmtplib
 
     settings = get_settings()
@@ -66,7 +85,15 @@ async def _send_via_smtp(to_email: str, subject: str, html_content: str):
     msg["From"] = f"{settings.from_name} <{settings.from_email}>"
     msg["To"] = to_email
     msg["Subject"] = subject
-    msg.attach(MIMEText(html_content, "html"))
+    # qmail-smtpd adds neither header, and mail without them is scored as spam.
+    msg["Date"] = formatdate(localtime=True)
+    msg["Message-ID"] = make_msgid(domain=settings.from_email.split("@")[-1])
+    if unsubscribe_url:
+        msg["List-Unsubscribe"] = f"<{unsubscribe_url}>"
+    utf8_qp = Charset("utf-8")
+    utf8_qp.body_encoding = QP  # base64 text bodies score as spam too
+    msg.attach(MIMEText(_html_to_text(html_content), "plain", utf8_qp))
+    msg.attach(MIMEText(html_content, "html", utf8_qp))
 
     # Port 587 = STARTTLS (connect plain, then upgrade)
     # Port 465 = implicit TLS (connect with SSL from the start)
@@ -84,14 +111,14 @@ async def _send_via_smtp(to_email: str, subject: str, html_content: str):
     )
 
 
-async def _send_email(to_email: str, subject: str, html_content: str):
+async def _send_email(to_email: str, subject: str, html_content: str, unsubscribe_url: str = ""):
     settings = get_settings()
     provider = settings.email_provider.lower()
 
     if provider == "smtp":
         if not settings.smtp_host:
             return
-        await _send_via_smtp(to_email, subject, html_content)
+        await _send_via_smtp(to_email, subject, html_content, unsubscribe_url)
     else:
         if not settings.sendgrid_api_key:
             return
@@ -235,7 +262,7 @@ async def send_newsletter_welcome(to_email: str, unsub_token: str = ""):
         unsubscribe_url=unsub_url,
     )
     try:
-        await _send_email(to_email, "Welcome to Hidden Ridge EDH! 🏡", html)
+        await _send_email(to_email, "Welcome to Hidden Ridge EDH! 🏡", html, unsub_url)
     except Exception as e:
         logger.error(f"Failed to send welcome email to {to_email}: {e}")
 
