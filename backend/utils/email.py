@@ -267,6 +267,28 @@ async def send_newsletter_welcome(to_email: str, unsub_token: str = ""):
         logger.error(f"Failed to send welcome email to {to_email}: {e}")
 
 
+async def send_newsletter_unsubscribe_link(to_email: str, unsub_token: str):
+    settings = get_settings()
+    unsub_url = f"{settings.app_url}/api/newsletter/unsubscribe?token={unsub_token}"
+    html = _build_html(
+        "Unsubscribe From the Newsletter",
+        f"""
+        <p>We received a request to unsubscribe this address from the <strong>Hidden Ridge EDH</strong> newsletter.</p>
+        <p>Click the button below to unsubscribe:</p>
+        <p style="text-align: center; margin: 24px 0;">
+            <a href="{unsub_url}" style="background-color: #C9A84C; color: #1B2E1F; padding: 12px 32px; text-decoration: none; font-weight: bold; display: inline-block;">
+                Unsubscribe
+            </a>
+        </p>
+        <p style="color: #666; font-size: 13px;">If you didn't request this, you can safely ignore this email and you will stay subscribed.</p>
+        """,
+    )
+    try:
+        await _send_email(to_email, "Hidden Ridge EDH — Unsubscribe Link", html, unsub_url)
+    except Exception as e:
+        logger.error(f"Failed to send email to {to_email}: {e}")
+
+
 async def send_newsletter_unsubscribe_confirmation(to_email: str):
     html = _build_html(
         "You've Been Unsubscribed",

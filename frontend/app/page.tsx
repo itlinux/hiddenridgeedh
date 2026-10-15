@@ -188,7 +188,7 @@ export default function HomePage() {
           <div className="flex justify-center mt-3">
             <Turnstile onVerify={setNlTurnstileToken} />
           </div>
-          <p className="text-forest-400 text-xs mt-4 font-sans">No spam. Unsubscribe anytime.</p>
+          <p className="text-forest-400 text-xs mt-4 font-sans">No spam. <Link href="/newsletter/unsubscribe" className="underline hover:text-forest-600">Unsubscribe anytime.</Link></p>
           <div className="mt-10 pt-8 border-t border-forest-200">
             <p className="text-forest-500 text-sm font-body mb-4">
               Want full access to the forum, gallery, and events?

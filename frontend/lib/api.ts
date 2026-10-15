@@ -121,6 +121,7 @@ export const galleryApi = {
 // ─── Newsletter ───────────────────────────────────────────────────────────────
 export const newsletterApi = {
   subscribe: (data: any) => api.post('/api/newsletter/subscribe', data),
+  requestUnsubscribe: (data: any) => api.post('/api/newsletter/unsubscribe-request', data),
   listSubscribers: () => api.get('/api/newsletter/subscribers'),
   send: (data: any) => api.post('/api/newsletter/send', data),
   deleteSubscriber: (id: string) => api.delete(`/api/newsletter/subscribers/${id}`),

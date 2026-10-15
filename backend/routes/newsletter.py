@@ -1,12 +1,12 @@
 import secrets
-from fastapi import APIRouter, HTTPException, Depends, Query, Request
+from fastapi import APIRouter, BackgroundTasks, HTTPException, Depends, Query, Request
 from fastapi.responses import RedirectResponse
 from datetime import datetime
 
 from database import get_db, get_settings
 from models.schemas import NewsletterSubscribe, NewsletterSend
 from middleware.auth import require_super_admin
-from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_welcome, send_newsletter_unsubscribe_confirmation
+from utils.email import send_newsletter, send_newsletter_confirm_email, send_newsletter_welcome, send_newsletter_unsubscribe_confirmation, send_newsletter_unsubscribe_link
 from utils.turnstile import verify_turnstile
 from utils.limiter import limiter
 from utils.mautic import push_to_mautic, remove_from_mautic
@@ -73,6 +73,21 @@ async def confirm(token: str = Query(...)):
     except Exception:
         pass  # Local system works even if Mautic is down
     return RedirectResponse(f"{settings.app_url}/newsletter/confirmed?status=success")
+
+
+@router.post("/unsubscribe-request")
+@limiter.limit("5/hour")
+async def unsubscribe_request(request: Request, data: NewsletterSubscribe, background_tasks: BackgroundTasks):
+    """Email the unsubscribe link. Same reply whether or not the address is subscribed."""
+    if data.turnstile_token:
+        await verify_turnstile(data.turnstile_token)
+
+    db = get_db()
+    sub = await db.newsletter_subscribers.find_one({"email": data.email})
+    if sub and sub.get("is_active") and sub.get("unsubscribe_token"):
+        # Sent after the response, so timing does not reveal whether the address is subscribed.
+        background_tasks.add_task(send_newsletter_unsubscribe_link, sub["email"], sub["unsubscribe_token"])
+    return {"message": "If this address is subscribed, we've emailed it an unsubscribe link."}
 
 
 @router.get("/unsubscribe")
