@@ -27,12 +27,14 @@ async def subscribe(request: Request, data: NewsletterSubscribe):
         if existing.get("is_active"):
             return {"message": "Already subscribed"}
         if existing.get("confirmed"):
-            # Was confirmed before, just reactivate
+            # Unsubscribed earlier: confirm again, so /confirm re-adds them to Mautic.
+            confirm_token = secrets.token_urlsafe(32)
             await db.newsletter_subscribers.update_one(
                 {"email": data.email},
-                {"$set": {"is_active": True, "subscribed_at": datetime.utcnow()}},
+                {"$set": {"confirmed": False, "confirm_token": confirm_token}},
             )
-            return {"message": "Subscription reactivated"}
+            await send_newsletter_confirm_email(data.email, confirm_token)
+            return {"message": "Check your email to confirm your subscription"}
         # Not yet confirmed — resend confirmation
         await send_newsletter_confirm_email(data.email, existing["confirm_token"])
         return {"message": "Check your email to confirm your subscription"}

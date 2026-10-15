@@ -26,8 +26,8 @@ export default function HomePage() {
     if (!nlEmail) return;
     setNlLoading(true);
     try {
-      await newsletterApi.subscribe({ email: nlEmail, turnstile_token: nlTurnstileToken || undefined });
-      toast.success('Check your email to confirm your subscription.');
+      const res = await newsletterApi.subscribe({ email: nlEmail, turnstile_token: nlTurnstileToken || undefined });
+      toast.success(res.data?.message || 'Check your email to confirm your subscription.');
       setNlEmail('');
     } catch (err: any) {
       const msg = err.response?.data?.detail || 'Failed to subscribe. Please try again.';

@@ -61,6 +61,15 @@ async def push_to_mautic(email: str, first_name: str = "", last_name: str = ""):
             if existing:
                 # Contact exists — just add tags + segment, don't change owner
                 contact_id = list(existing.keys())[0]
+                # Re-subscribed after unsubscribing here: lift our own DNC. A DNC
+                # from another list on this shared Mautic (e.g. Olio) stays.
+                for dnc in existing[contact_id].get("doNotContact") or []:
+                    if dnc.get("channel") == "email" and "hiddenridgeedh.com" in (dnc.get("comments") or ""):
+                        await client.post(
+                            f"{base}/api/contacts/{contact_id}/dnc/email/remove",
+                            headers=headers,
+                        )
+                        break
                 await client.patch(
                     f"{base}/api/contacts/{contact_id}/edit",
                     headers=headers,
