@@ -92,24 +92,38 @@ async def unsubscribe_request(request: Request, data: NewsletterSubscribe, backg
     return {"message": "If this address is subscribed, we've emailed it an unsubscribe link."}
 
 
-@router.get("/unsubscribe")
-async def unsubscribe(token: str = Query(...)):
+async def _unsubscribe(token: str) -> bool:
+    """Mark the subscriber inactive, drop them from Mautic, confirm by email (once)."""
     db = get_db()
-    settings = get_settings()
     sub = await db.newsletter_subscribers.find_one({"unsubscribe_token": token})
     if not sub:
-        return RedirectResponse(f"{settings.app_url}/newsletter/unsubscribed?status=invalid")
-    await db.newsletter_subscribers.update_one(
-        {"_id": sub["_id"]},
-        {"$set": {"is_active": False}},
-    )
-    # Remove from Mautic segment + set DNC (non-fatal).
-    try:
-        await remove_from_mautic(sub["email"])
-    except Exception:
-        pass
-    await send_newsletter_unsubscribe_confirmation(sub["email"])
-    return RedirectResponse(f"{settings.app_url}/newsletter/unsubscribed?status=success")
+        return False
+    if sub.get("is_active"):
+        await db.newsletter_subscribers.update_one(
+            {"_id": sub["_id"]},
+            {"$set": {"is_active": False}},
+        )
+        # Remove from Mautic segment + set DNC (non-fatal).
+        try:
+            await remove_from_mautic(sub["email"])
+        except Exception:
+            pass
+        await send_newsletter_unsubscribe_confirmation(sub["email"])
+    return True
+
+
+@router.get("/unsubscribe")
+async def unsubscribe(token: str = Query(...)):
+    settings = get_settings()
+    status = "success" if await _unsubscribe(token) else "invalid"
+    return RedirectResponse(f"{settings.app_url}/newsletter/unsubscribed?status={status}")
+
+
+@router.post("/unsubscribe")
+async def unsubscribe_one_click(token: str = Query(...)):
+    """RFC 8058 one-click target for the List-Unsubscribe-Post header."""
+    await _unsubscribe(token)
+    return {"unsubscribed": True}
 
 
 @router.get("/subscribers")
@@ -151,7 +165,13 @@ async def send(
 ):
     db = get_db()
     cursor = db.newsletter_subscribers.find({"is_active": True, "confirmed": True})
-    subscribers = [sub["email"] async for sub in cursor]
+    subscribers = []
+    async for sub in cursor:
+        token = sub.get("unsubscribe_token")
+        if not token:  # older record without one
+            token = secrets.token_urlsafe(32)
+            await db.newsletter_subscribers.update_one({"_id": sub["_id"]}, {"$set": {"unsubscribe_token": token}})
+        subscribers.append((sub["email"], token))
 
     if not subscribers:
         raise HTTPException(400, "No active subscribers")

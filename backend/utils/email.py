@@ -90,6 +90,7 @@ async def _send_via_smtp(to_email: str, subject: str, html_content: str, unsubsc
     msg["Message-ID"] = make_msgid(domain=settings.from_email.split("@")[-1])
     if unsubscribe_url:
         msg["List-Unsubscribe"] = f"<{unsubscribe_url}>"
+        msg["List-Unsubscribe-Post"] = "List-Unsubscribe=One-Click"
     utf8_qp = Charset("utf-8")
     utf8_qp.body_encoding = QP  # base64 text bodies score as spam too
     msg.attach(MIMEText(_html_to_text(html_content), "plain", utf8_qp))
@@ -367,7 +368,8 @@ async def send_alert_emails_to_opted_in(
             await send_alert_email(email, author_name, message, category, source)
 
 
-async def send_newsletter(subscribers: list[str], subject: str, html_content: str):
+async def send_newsletter(subscribers: list[tuple[str, str]], subject: str, html_content: str):
+    """Send to (email, unsubscribe_token) pairs; each copy carries its own unsubscribe link."""
     settings = get_settings()
     provider = settings.email_provider.lower()
 
@@ -377,9 +379,16 @@ async def send_newsletter(subscribers: list[str], subject: str, html_content: st
         return 0
 
     sent = 0
-    for email in subscribers:
+    for email, unsub_token in subscribers:
+        unsub_url = f"{settings.app_url}/api/newsletter/unsubscribe?token={unsub_token}"
+        footer = f"""
+        <p style="color: #8B7355; font-size: 11px; text-align: center; margin-top: 32px;">
+            Hidden Ridge &middot; El Dorado Hills, CA<br>
+            <a href="{unsub_url}" style="color: #8B7355; text-decoration: underline;">Unsubscribe</a> from this newsletter
+        </p>
+        """
         try:
-            await _send_email(email, subject, html_content)
+            await _send_email(email, subject, html_content + footer, unsub_url)
             sent += 1
         except Exception:
             continue
