@@ -8,6 +8,8 @@ APP_DIR="/var/www/hiddenridgeedh"
 
 echo "Pulling latest code..."
 cd "$APP_DIR"
+# npm install below rewrites the lockfile on this server; drop that drift so the pull applies cleanly.
+git checkout -- frontend/package-lock.json
 git pull origin main
 
 echo "Updating backend dependencies..."
