@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { membersApi } from '@/lib/api';
+import { membersApi, type Dog as DogType } from '@/lib/api';
 import { useAuth } from '@/lib/auth';
 import { ArrowLeft, Loader2, Dog, GraduationCap, Users, MapPin, Phone, Mail, MessageSquare, ExternalLink } from 'lucide-react';
 
@@ -30,9 +30,7 @@ interface Member {
   school?: string;
   has_dog?: boolean;
   dog_friendly?: boolean;
-  dog_name?: string;
-  dog_bio?: string;
-  dog_photo_url?: string;
+  dogs?: DogType[];
   house_photo_url?: string;
   family_members?: FamilyMember[];
   latitude?: number;
@@ -67,6 +65,7 @@ export default function MemberProfilePage() {
   );
 
   const familyMembers = member.family_members || [];
+  const dogs = member.dogs || [];
 
   const apiKey = process.env.NEXT_PUBLIC_GOOGLE_MAPS_KEY || '';
   const mapQuery = member.latitude && member.longitude
@@ -190,7 +189,7 @@ export default function MemberProfilePage() {
         </div>
 
         {/* Family Members + Pet — two columns */}
-        {(familyMembers.length > 0 || member.has_dog) && (
+        {(familyMembers.length > 0 || dogs.length > 0) && (
           <div className="card p-8 mt-6">
             <div className="flex items-center gap-3 mb-6">
               <Users size={20} className="text-gold-500" />
@@ -225,35 +224,54 @@ export default function MemberProfilePage() {
                 </div>
               )}
 
-              {/* Right — pet */}
-              {member.has_dog && (
+              {/* Right — dogs (a dog who has passed stays here, in loving memory) */}
+              {dogs.length > 0 && (
                 <div>
-                  <p className="section-label text-xs mb-3">Pets</p>
-                  <div className="flex flex-col items-center text-center gap-3">
-                    {member.dog_photo_url ? (
-                      <img
-                        src={member.dog_photo_url}
-                        alt="Family dog"
-                        className="w-32 h-32 object-cover rounded-sm border border-cream-200"
-                      />
-                    ) : (
-                      <div className="w-32 h-32 bg-gold-50 border border-gold-200 rounded-sm flex items-center justify-center">
-                        <Dog size={40} className="text-gold-400" />
-                      </div>
-                    )}
-                    <div>
-                      <div className="flex items-center justify-center gap-2 flex-wrap">
-                        <p className="font-sans text-forest-800 font-medium text-sm">{member.dog_name || 'Family Dog'}</p>
-                        {member.dog_friendly && (
-                          <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
-                            Friendly
-                          </span>
+                  <p className="section-label text-xs mb-3">{dogs.length > 1 ? 'Dogs' : 'Pets'}</p>
+                  <div className="space-y-6">
+                    {dogs.map((dog, i) => (
+                      <div key={i} className="flex flex-col items-center text-center gap-3">
+                        {dog.photo_url ? (
+                          <img
+                            src={dog.photo_url}
+                            alt={dog.name || 'Family dog'}
+                            className={`w-32 h-32 object-cover rounded-sm border ${dog.in_memory ? 'border-gold-300' : 'border-cream-200'}`}
+                          />
+                        ) : (
+                          <div className="w-32 h-32 bg-gold-50 border border-gold-200 rounded-sm flex items-center justify-center">
+                            <Dog size={40} className="text-gold-400" />
+                          </div>
                         )}
+                        <div>
+                          <div className="flex items-center justify-center gap-2 flex-wrap">
+                            <p className="font-sans text-forest-800 font-medium text-sm">{dog.name || 'Family Dog'}</p>
+                            {!dog.in_memory && member.dog_friendly && (
+                              <span className="inline-flex items-center gap-1 bg-green-50 text-green-700 text-xs font-sans px-2 py-0.5 rounded-sm">
+                                Friendly
+                              </span>
+                            )}
+                          </div>
+                          {dog.in_memory && (
+                            <p className="font-sans text-gold-600 text-xs mt-1">
+                              In loving memory{dog.memorial_years ? ` · ${dog.memorial_years}` : ''}
+                            </p>
+                          )}
+                          {dog.bio && (
+                            <p className="font-body text-forest-500 text-xs mt-1 italic">{dog.bio}</p>
+                          )}
+                          {dog.in_memory && dog.memorial_url && /^https?:\/\//i.test(dog.memorial_url) && (
+                            <a
+                              href={dog.memorial_url}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="inline-block mt-2 text-gold-500 hover:text-gold-600 text-xs font-sans underline"
+                            >
+                              Visit {dog.name ? `${dog.name}'s` : 'the'} memorial page
+                            </a>
+                          )}
+                        </div>
                       </div>
-                      {member.dog_bio && (
-                        <p className="font-body text-forest-500 text-xs mt-1 italic">{member.dog_bio}</p>
-                      )}
-                    </div>
+                    ))}
                   </div>
                 </div>
               )}

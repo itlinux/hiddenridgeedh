@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { authApi } from './api';
+import { authApi, type Dog } from './api';
 
 interface User {
   id: string;
@@ -22,9 +22,7 @@ interface User {
   school?: string;
   has_dog?: boolean;
   dog_friendly?: boolean;
-  dog_name?: string;
-  dog_bio?: string;
-  dog_photo_url?: string;
+  dogs?: Dog[];
   house_photo_url?: string;
   family_members?: { name: string; bio?: string; photo_url?: string }[];
   totp_enabled?: boolean;

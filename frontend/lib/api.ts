@@ -148,6 +148,23 @@ export const safetyLinksApi = {
   seed: () => api.post('/api/safety-links/seed'),
 };
 
+export interface Dog {
+  name: string;
+  bio?: string;
+  photo_url?: string | null;
+  in_memory?: boolean;
+  memorial_years?: string;
+  memorial_url?: string;
+}
+
+export interface DogInput {
+  name: string;
+  bio?: string;
+  in_memory?: boolean;
+  memorial_years?: string;
+  memorial_url?: string;
+}
+
 // ─── Members ──────────────────────────────────────────────────────────────────
 export const membersApi = {
   list: (params?: any) => api.get('/api/members', { params }),
@@ -167,11 +184,14 @@ export const membersApi = {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
   deleteAvatar: () => api.delete('/api/members/me/avatar'),
-  // Dog photo
-  uploadDogPhoto: (formData: FormData) => api.post('/api/members/me/dog-photo', formData, {
+  // Dogs (up to 2, each optionally "in loving memory")
+  addDog: (data: DogInput) => api.post('/api/members/me/dogs', data),
+  updateDog: (index: number, data: DogInput) => api.put(`/api/members/me/dogs/${index}`, data),
+  deleteDog: (index: number) => api.delete(`/api/members/me/dogs/${index}`),
+  uploadDogPhoto: (index: number, formData: FormData) => api.post(`/api/members/me/dogs/${index}/photo`, formData, {
     headers: { 'Content-Type': 'multipart/form-data' },
   }),
-  deleteDogPhoto: () => api.delete('/api/members/me/dog-photo'),
+  deleteDogPhoto: (index: number) => api.delete(`/api/members/me/dogs/${index}/photo`),
   // House photo
   uploadHousePhoto: (formData: FormData) => api.post('/api/members/me/house-photo', formData, {
     headers: { 'Content-Type': 'multipart/form-data' },

@@ -8,6 +8,7 @@ from utils.email import send_pending_notification, send_admin_new_user_alert, se
 from utils.turnstile import verify_turnstile
 from utils.rate_limit import is_ip_blocked, record_failed_login, record_successful_login, get_all_blocked_ips, unblock_ip
 from utils.limiter import limiter
+from utils.dogs import household_dogs
 import pyotp
 import qrcode
 import io
@@ -27,6 +28,7 @@ def serialize_user(user: dict) -> dict:
     data["totp_enabled"] = data.get("totp_enabled", False)
     data["sms_opt_in"] = data.get("sms_opt_in", False)
     data["email_opt_in"] = data.get("email_opt_in", False)
+    data["dogs"] = household_dogs(user)
     return data
 
 
