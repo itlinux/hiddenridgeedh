@@ -190,6 +190,20 @@ class ProfileUpdate(BaseModel):
     longitude: Optional[float] = None
 
 
+class AdminMemberUpdate(BaseModel):
+    """Fields a super admin may correct on another member's profile.
+    Not consent (sms/email opt-in), login (email/username) or role."""
+    full_name: Optional[str] = Field(None, min_length=2, max_length=100)
+    address: Optional[str] = Field(None, max_length=200)
+    phone: Optional[str] = Field(None, max_length=20)
+    alt_phone: Optional[str] = Field(None, max_length=20)
+    alt_phone_name: Optional[str] = Field(None, max_length=60)
+    bio: Optional[str] = Field(None, max_length=500)
+    school: Optional[str] = Field(None, max_length=200)
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
+
 class FamilyMemberCreate(BaseModel):
     name: str = Field(..., min_length=1, max_length=100)
     bio: Optional[str] = Field(None, max_length=300)

@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useAuth } from '@/lib/auth';
 import { useRouter } from 'next/navigation';
 import { membersApi } from '@/lib/api';
-import { ArrowLeft, Users, CheckCircle, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search, ChevronDown, ChevronUp, MapPin, Phone, Mail, MessageSquare, Eye } from 'lucide-react';
+import { ArrowLeft, Users, CheckCircle, Trash2, Loader2, Clock, XCircle, PauseCircle, PlayCircle, Search, ChevronDown, ChevronUp, MapPin, Phone, Mail, MessageSquare, Eye, Pencil, Save } from 'lucide-react';
 import Link from 'next/link';
 import { format } from 'date-fns';
 
@@ -51,6 +51,7 @@ export default function ManageMembersPage() {
   const [tab, setTab] = useState<'all' | 'pending' | 'rejected'>('all');
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [editingId, setEditingId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!isLoading && !isAdmin) router.push('/');
@@ -201,10 +202,15 @@ export default function ManageMembersPage() {
         </div>
       </div>
       {m.bio && <p className="text-forest-500 text-xs mt-3 italic">{m.bio}</p>}
-      <div className="mt-3">
+      <div className="mt-3 flex items-center gap-4">
         <Link href={`/members/${m.id}`} className="text-gold-500 hover:text-gold-600 text-xs font-sans transition-colors flex items-center gap-1">
           <Eye size={12} /> View public profile
         </Link>
+        {isSuperAdmin && editingId !== m.id && (
+          <button onClick={() => setEditingId(m.id)} className="text-gold-500 hover:text-gold-600 text-xs font-sans transition-colors flex items-center gap-1">
+            <Pencil size={12} /> Edit details
+          </button>
+        )}
       </div>
     </div>
   );
@@ -298,6 +304,13 @@ export default function ManageMembersPage() {
                     </div>
                   </div>
                   {expandedId === m.id && <MemberDetails m={m} />}
+                  {editingId === m.id && (
+                    <AdminEditMember
+                      member={m}
+                      onCancel={() => setEditingId(null)}
+                      onSaved={async () => { setEditingId(null); await loadAll(); }}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -333,6 +346,13 @@ export default function ManageMembersPage() {
                     </div>
                   </div>
                   {expandedId === m.id && <MemberDetails m={m} />}
+                  {editingId === m.id && (
+                    <AdminEditMember
+                      member={m}
+                      onCancel={() => setEditingId(null)}
+                      onSaved={async () => { setEditingId(null); await loadAll(); }}
+                    />
+                  )}
                 </div>
               ))}
             </div>
@@ -400,12 +420,103 @@ export default function ManageMembersPage() {
                     </div>
                   </div>
                   {expandedId === m.id && <MemberDetails m={m} />}
+                  {editingId === m.id && (
+                    <AdminEditMember
+                      member={m}
+                      onCancel={() => setEditingId(null)}
+                      onSaved={async () => { setEditingId(null); await loadAll(); }}
+                    />
+                  )}
                 </div>
               ))}
             </div>
           );
           })()
         )}
+      </div>
+    </div>
+  );
+}
+
+// ── Super admin: correct another member's details (e.g. an old address) ──
+const ADMIN_EDIT_FIELDS: { key: string; label: string; type?: string; wide?: boolean }[] = [
+  { key: 'full_name', label: 'Full name' },
+  { key: 'address', label: 'Address', wide: true },
+  { key: 'phone', label: 'Phone', type: 'tel' },
+  { key: 'alt_phone', label: 'Second phone (spouse/partner)', type: 'tel' },
+  { key: 'alt_phone_name', label: 'Second phone belongs to' },
+  { key: 'school', label: "Kids' school" },
+  { key: 'latitude', label: 'Latitude' },
+  { key: 'longitude', label: 'Longitude' },
+  { key: 'bio', label: 'Bio', wide: true },
+];
+
+function AdminEditMember({ member, onCancel, onSaved }: { member: Record<string, any>; onCancel: () => void; onSaved: () => Promise<void> }) {
+  const memberId: string = member.id;
+  const [form, setForm] = useState<Record<string, string>>(() =>
+    Object.fromEntries(ADMIN_EDIT_FIELDS.map(({ key }) => [key, member[key] == null ? '' : String(member[key])])),
+  );
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState('');
+
+  const save = async () => {
+    setSaving(true);
+    setError('');
+    try {
+      const payload: Record<string, any> = {};
+      for (const { key } of ADMIN_EDIT_FIELDS) {
+        const v = form[key].trim();
+        if (key === 'latitude' || key === 'longitude') {
+          if (v) payload[key] = parseFloat(v);
+        } else if (key === 'full_name') {
+          if (v) payload[key] = v;
+        } else {
+          payload[key] = v;
+        }
+      }
+      await membersApi.adminUpdate(memberId, payload);
+      await onSaved();
+    } catch (err: any) {
+      const detail = err.response?.data?.detail;
+      setError(Array.isArray(detail) ? detail[0]?.msg || 'Invalid value' : detail || 'Failed to save');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <div className="px-5 pb-5 pt-3 bg-cream-100 border-t border-cream-200">
+      <p className="section-label text-xs mb-3">Edit member details (super admin)</p>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {ADMIN_EDIT_FIELDS.map(({ key, label, type, wide }) => (
+          <div key={key} className={wide ? 'sm:col-span-2' : ''}>
+            <label htmlFor={`admin_${memberId}_${key}`} className="section-label text-xs block mb-1">{label}</label>
+            {key === 'bio' ? (
+              <textarea
+                id={`admin_${memberId}_${key}`}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                className="input-field w-full text-sm h-16 resize-none"
+                maxLength={500}
+              />
+            ) : (
+              <input
+                id={`admin_${memberId}_${key}`}
+                type={type || 'text'}
+                value={form[key]}
+                onChange={(e) => setForm({ ...form, [key]: e.target.value })}
+                className="input-field w-full text-sm"
+              />
+            )}
+          </div>
+        ))}
+      </div>
+      {error && <p className="text-red-600 text-xs font-sans mt-2">{error}</p>}
+      <div className="flex gap-2 mt-3">
+        <button onClick={save} disabled={saving} className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
+          {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} Save
+        </button>
+        <button onClick={onCancel} className="btn-secondary text-xs px-3 py-1.5">Cancel</button>
       </div>
     </div>
   );

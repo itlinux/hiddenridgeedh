@@ -170,6 +170,7 @@ export const membersApi = {
   list: (params?: any) => api.get('/api/members', { params }),
   pending: () => api.get('/api/members/pending'),
   get: (id: string) => api.get(`/api/members/${id}`),
+  adminUpdate: (id: string, data: any) => api.put(`/api/members/${id}`, data),
   updateMe: (data: any) => api.put('/api/members/me', data),
   approve: (id: string) => api.put(`/api/members/${id}/approve`),
   reject: (id: string) => api.put(`/api/members/${id}/reject`),
