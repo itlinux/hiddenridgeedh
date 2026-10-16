@@ -25,6 +25,7 @@ export default function ProfilePage() {
     phone: '',
     school: '',
     alt_phone: '',
+    alt_phone_name: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
     has_dog: false,
@@ -49,6 +50,7 @@ export default function ProfilePage() {
         phone: user.phone || '',
         school: user.school || '',
         alt_phone: user.alt_phone || '',
+        alt_phone_name: user.alt_phone_name || '',
         emergency_contact_name: user.emergency_contact_name || '',
         emergency_contact_phone: user.emergency_contact_phone || '',
         has_dog: user.has_dog || false,
@@ -136,22 +138,45 @@ export default function ProfilePage() {
               />
             </div>
             <div>
-              <label className="section-label block mb-2">Phone</label>
+              <label htmlFor="phone" className="section-label block mb-2">Phone</label>
               <input
+                id="phone"
+                type="tel"
                 value={form.phone}
                 onChange={(e) => setForm({ ...form, phone: e.target.value })}
                 className="input-field w-full"
               />
             </div>
-            <div>
-              <label className="section-label block mb-2">Alternative Phone</label>
-              <input
-                value={form.alt_phone}
-                onChange={(e) => setForm({ ...form, alt_phone: e.target.value })}
-                className="input-field w-full"
-                placeholder="e.g. work or cell"
-              />
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label htmlFor="alt_phone" className="section-label block mb-2">Second phone (spouse/partner)</label>
+                <input
+                  id="alt_phone"
+                  type="tel"
+                  value={form.alt_phone}
+                  onChange={(e) => setForm({ ...form, alt_phone: e.target.value })}
+                  className="input-field w-full"
+                  placeholder="e.g. (916) 555-0100"
+                />
+              </div>
+              <div>
+                <label htmlFor="alt_phone_name" className="section-label block mb-2">Second phone belongs to</label>
+                <input
+                  id="alt_phone_name"
+                  value={form.alt_phone_name}
+                  onChange={(e) => setForm({ ...form, alt_phone_name: e.target.value })}
+                  className="input-field w-full"
+                  placeholder="e.g. Maria"
+                  maxLength={60}
+                />
+              </div>
             </div>
+            <p className="text-forest-400 text-xs font-sans -mt-2">
+              Both <strong>Phone</strong> and <strong>Second phone</strong> can text neighborhood alerts to the
+              Hidden Ridge number. An alert from the second phone shows that name, e.g. &ldquo;Maria
+              ({(form.full_name || 'Smith').trim().split(' ').slice(-1)[0]} household)&rdquo;. Use each number on
+              one account only.
+            </p>
 
             {/* Emergency Contact */}
             <div className="bg-cream-100 rounded-sm p-4 space-y-3">

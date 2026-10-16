@@ -23,6 +23,7 @@ interface Member {
   email?: string;
   phone?: string;
   alt_phone?: string;
+  alt_phone_name?: string;
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   sms_opt_in?: boolean;
@@ -169,7 +170,7 @@ export default function MemberProfilePage() {
                 <div className="flex items-center gap-3 text-forest-600 font-body text-sm">
                   <Phone size={16} className="text-forest-400 flex-shrink-0" />
                   <a href={`tel:${member.alt_phone}`} className="hover:text-gold-500 transition-colors">{member.alt_phone}</a>
-                  <span className="text-forest-400 text-xs font-sans">alt</span>
+                  <span className="text-forest-400 text-xs font-sans">{member.alt_phone_name || 'second phone'}</span>
                 </div>
               )}
               {(member.emergency_contact_name || member.emergency_contact_phone) && (

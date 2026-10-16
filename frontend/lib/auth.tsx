@@ -15,6 +15,7 @@ interface User {
   address?: string;
   phone?: string;
   alt_phone?: string;
+  alt_phone_name?: string;
   emergency_contact_name?: string;
   emergency_contact_phone?: string;
   latitude?: number;
