@@ -148,7 +148,7 @@ export default function SafetyPage() {
             <div className="bg-cream-100 border border-cream-200 rounded-sm p-4 mb-5">
               <p className="font-sans text-xs text-forest-600 leading-relaxed mb-2">
                 <Smartphone size={13} className="inline text-gold-500 mr-1" />
-                <strong>SMS Alerts:</strong> Text alerts directly to the neighborhood number and they'll appear here automatically.
+                <strong>SMS Alerts:</strong> Text alerts directly to the neighborhood number from the phone or second phone (spouse/partner) on your profile and they'll appear here automatically.
               </p>
               <p className="font-sans text-xs text-forest-600 leading-relaxed">
                 <AlertTriangle size={13} className="inline text-gold-500 mr-1" />

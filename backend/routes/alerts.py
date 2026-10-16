@@ -2,9 +2,11 @@
 Neighborhood Safety Alerts — CRUD + Twilio inbound SMS webhook.
 
 Flow:
-1. Registered user (with sms_opt_in + phone on file) sends SMS to the Twilio number.
+1. Registered user sends SMS to the Twilio number from the account's phone or
+   second (household) phone.
 2. Twilio POSTs to /api/alerts/sms/inbound with the message body + sender phone.
-3. Backend matches the phone to a registered user → auto-creates an alert.
+3. Backend matches the phone to exactly one registered user → auto-creates an alert.
+   A number on two accounts is rejected (never posts as the wrong person).
 4. Alert appears on the /safety page for all logged-in members.
 5. Admins (or the alert author) can delete alerts.
 """
@@ -15,6 +17,7 @@ import hashlib
 import hmac
 import logging
 from urllib.parse import urlencode
+from xml.sax.saxutils import escape as xml_escape
 from fastapi import APIRouter, HTTPException, Depends, Query, Request, Form, Response
 from datetime import datetime
 from bson import ObjectId
@@ -42,6 +45,49 @@ def _normalize_phone(phone: str) -> str:
     if len(digits) == 10:
         digits = "1" + digits
     return f"+{digits}"
+
+
+def _last10(phone: str) -> str:
+    """Last 10 digits of a phone (US number without country code), or "" if too short."""
+    digits = re.sub(r"\D", "", phone or "")
+    return digits[-10:] if len(digits) >= 10 else ""
+
+
+async def _find_sms_senders(db, from_phone: str) -> list:
+    """
+    Return [(user, "phone" | "alt_phone"), ...] for every active, approved
+    account whose main or second phone matches the sender (last 10 digits).
+    Note: sms_opt_in controls receiving notifications, not sending alerts.
+    """
+    sender = _last10(from_phone)
+    if not sender:
+        return []
+    matches = []
+    async for u in db.users.find({
+        "is_active": True,
+        "is_approved": True,
+        "$or": [
+            {"phone": {"$exists": True, "$nin": ["", None]}},
+            {"alt_phone": {"$exists": True, "$nin": ["", None]}},
+        ],
+    }):
+        for field in ("phone", "alt_phone"):
+            if _last10(u.get(field, "")) == sender:
+                matches.append((u, field))
+    return matches
+
+
+def _sms_author_names(user: dict, via: str) -> tuple:
+    """
+    (author_name shown on the alert, name used in the reply).
+    Main phone: the account holder. Second phone with a name: "Maria (Smith household)".
+    """
+    full_name = user.get("full_name") or user.get("username") or "Neighbor"
+    alt_name = (user.get("alt_phone_name") or "").strip()
+    if via == "alt_phone" and alt_name:
+        household = full_name.split()[-1]
+        return f"{alt_name} ({household} household)", alt_name
+    return full_name, full_name
 
 
 def _get_public_url(request: Request) -> str:
@@ -188,27 +234,20 @@ async def sms_inbound(
     if len(message_body) > 1000:
         message_body = message_body[:1000]
 
-    # Look up user by phone number
+    # Look up the sender: an account's main phone or its second (household) phone
     db = get_db()
+    matches = await _find_sms_senders(db, From)
 
-    # Try matching with different phone formats
-    phone_digits = re.sub(r"\D", "", From)
-    user = None
+    account_ids = {str(u["_id"]) for u, _ in matches}
+    if len(account_ids) > 1:
+        # Same number on two accounts — never post as the wrong person
+        logger.warning(f"SMS from {sender_phone} matches {len(account_ids)} accounts — not posted")
+        return Response(
+            content='<?xml version="1.0" encoding="UTF-8"?><Response><Message>This phone number is on more than one Hidden Ridge EDH account, so your alert was not posted. Please keep each number on only one account (Profile at hiddenridgeedh.com) and try again.</Message></Response>',
+            media_type="application/xml",
+        )
 
-    # Search for the user by normalized phone patterns
-    # Note: sms_opt_in controls receiving notifications, not sending alerts
-    async for u in db.users.find({
-        "is_active": True,
-        "is_approved": True,
-        "phone": {"$exists": True, "$ne": ""},
-    }):
-        user_phone_digits = re.sub(r"\D", "", u.get("phone", ""))
-        # Match last 10 digits (ignore country code)
-        if user_phone_digits[-10:] == phone_digits[-10:] and len(user_phone_digits) >= 10:
-            user = u
-            break
-
-    if not user:
+    if not matches:
         logger.warning(f"SMS from unregistered phone: {sender_phone}")
         # Unknown number — reply with rejection
         return Response(
@@ -216,13 +255,17 @@ async def sms_inbound(
             media_type="application/xml",
         )
 
+    # Prefer the main phone if the account lists the same number twice
+    user, via = min(matches, key=lambda m: m[1] != "phone")
+    author_name, greet_name = _sms_author_names(user, via)
+
     # Create the alert
     now = datetime.utcnow()
     alert_doc = {
         "message": message_body,
         "category": "sms-alert",
         "author_id": str(user["_id"]),
-        "author_name": user.get("full_name", user.get("username")),
+        "author_name": author_name,
         "source": "sms",
         "phone_from": sender_phone,
         "created_at": now,
@@ -240,8 +283,7 @@ async def sms_inbound(
     ))
 
     # Reply with confirmation TwiML
-    author_name = user.get("full_name", "Neighbor")
     return Response(
-        content=f'<?xml version="1.0" encoding="UTF-8"?><Response><Message>Thanks {author_name}! Your alert has been posted to the Hidden Ridge neighborhood.</Message></Response>',
+        content=f'<?xml version="1.0" encoding="UTF-8"?><Response><Message>Thanks {xml_escape(greet_name)}! Your alert has been posted to the Hidden Ridge neighborhood.</Message></Response>',
         media_type="application/xml",
     )

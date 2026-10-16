@@ -195,6 +195,10 @@ export default function RegisterPage() {
                 className="input-field"
                 placeholder="(916) 555-0123"
               />
+              <p className="text-forest-400 text-xs mt-1 font-sans">
+                This phone can text neighborhood alerts to the Hidden Ridge number. After approval you can add a
+                second phone (spouse/partner) in your profile so it can text alerts too.
+              </p>
             </div>
 
             {/* SMS opt-in */}

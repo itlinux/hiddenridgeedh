@@ -177,6 +177,10 @@ class ProfileUpdate(BaseModel):
     bio: Optional[str] = Field(None, max_length=500)
     address: Optional[str] = Field(None, max_length=200)
     phone: Optional[str] = Field(None, max_length=20)
+    alt_phone: Optional[str] = Field(None, max_length=20)
+    alt_phone_name: Optional[str] = Field(None, max_length=60)
+    emergency_contact_name: Optional[str] = Field(None, max_length=100)
+    emergency_contact_phone: Optional[str] = Field(None, max_length=20)
     school: Optional[str] = Field(None, max_length=200)
     has_dog: Optional[bool] = None
     dog_friendly: Optional[bool] = None
