@@ -7,7 +7,7 @@ from bson import ObjectId
 from PIL import Image
 
 from database import get_db, get_settings
-from models.schemas import RoleUpdate, ProfileUpdate, FamilyMemberCreate, DogCreate
+from models.schemas import RoleUpdate, ProfileUpdate, AdminMemberUpdate, FamilyMemberCreate, DogCreate
 from middleware.auth import require_member, require_super_admin, get_current_user
 from utils.email import send_approval_notification
 from utils.dogs import MAX_DOGS, household_dogs, has_living_dog
@@ -497,6 +497,31 @@ async def get_member(
     if not user:
         raise HTTPException(404, "Member not found")
     return serialize_member(user, include_email=True)
+
+
+@router.put("/{user_id}")
+async def admin_update_member(
+    user_id: str,
+    data: AdminMemberUpdate,
+    current_user: dict = Depends(require_super_admin),
+):
+    """Super admin corrects another member's details (e.g. an old address)."""
+    if not ObjectId.is_valid(user_id):
+        raise HTTPException(404, "User not found")
+    db = get_db()
+    user = await db.users.find_one({"_id": ObjectId(user_id)})
+    if not user:
+        raise HTTPException(404, "User not found")
+
+    update_fields = data.model_dump(exclude_none=True)
+    if not update_fields:
+        raise HTTPException(400, "No fields to update")
+    update_fields["updated_at"] = datetime.utcnow()
+    update_fields["updated_by"] = str(current_user["_id"])
+
+    await db.users.update_one({"_id": ObjectId(user_id)}, {"$set": update_fields})
+    updated = await db.users.find_one({"_id": ObjectId(user_id)})
+    return serialize_member(updated, include_email=True)
 
 
 @router.put("/{user_id}/approve")
