@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth';
-import { membersApi, authApi } from '@/lib/api';
+import { membersApi, authApi, type Dog as DogType, type DogInput } from '@/lib/api';
 import {
   Loader2, Save, Lock, Eye, EyeOff, ShieldCheck, ShieldOff, Copy, Check,
   Camera, Home, Dog, GraduationCap, Users, Plus, Trash2, Upload, X, Pencil,
@@ -28,10 +28,7 @@ export default function ProfilePage() {
     alt_phone_name: '',
     emergency_contact_name: '',
     emergency_contact_phone: '',
-    has_dog: false,
     dog_friendly: false,
-    dog_name: '',
-    dog_bio: '',
     latitude: '',
     longitude: '',
   });
@@ -53,10 +50,7 @@ export default function ProfilePage() {
         alt_phone_name: user.alt_phone_name || '',
         emergency_contact_name: user.emergency_contact_name || '',
         emergency_contact_phone: user.emergency_contact_phone || '',
-        has_dog: user.has_dog || false,
         dog_friendly: user.dog_friendly || false,
-        dog_name: user.dog_name || '',
-        dog_bio: user.dog_bio || '',
         latitude: user.latitude?.toString() || '',
         longitude: user.longitude?.toString() || '',
       });
@@ -214,62 +208,24 @@ export default function ProfilePage() {
               />
             </div>
 
-            {/* Dog Info */}
-            <div className="bg-cream-100 rounded-sm p-4 space-y-3">
-              <p className="section-label text-xs mb-1 flex items-center gap-2">
-                <Dog size={14} className="text-gold-500" /> Dog Info
-              </p>
-              <div className="flex items-start gap-3">
-                <input
-                  type="checkbox"
-                  id="has_dog"
-                  checked={form.has_dog}
-                  onChange={(e) => setForm({ ...form, has_dog: e.target.checked, dog_friendly: e.target.checked ? form.dog_friendly : false })}
-                  className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
-                />
-                <label htmlFor="has_dog" className="text-forest-600 font-sans text-sm leading-relaxed cursor-pointer">
-                  I have a dog
-                </label>
+            {/* Dog friendly (the dogs themselves are in the Dogs card below) */}
+            {user?.has_dog && (
+              <div className="bg-cream-100 rounded-sm p-4">
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="dog_friendly"
+                    checked={form.dog_friendly}
+                    onChange={(e) => setForm({ ...form, dog_friendly: e.target.checked })}
+                    className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
+                  />
+                  <label htmlFor="dog_friendly" className="text-forest-600 font-sans text-sm leading-relaxed cursor-pointer">
+                    <Dog size={14} className="inline text-gold-500 mr-1" />
+                    Our dog is friendly with other dogs
+                  </label>
+                </div>
               </div>
-              {form.has_dog && (
-                <>
-                  <div className="flex items-start gap-3 ml-7">
-                    <input
-                      type="checkbox"
-                      id="dog_friendly"
-                      checked={form.dog_friendly}
-                      onChange={(e) => setForm({ ...form, dog_friendly: e.target.checked })}
-                      className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
-                    />
-                    <label htmlFor="dog_friendly" className="text-forest-600 font-sans text-sm leading-relaxed cursor-pointer">
-                      My dog is friendly
-                    </label>
-                  </div>
-                  <DogPhotoUpload user={user} onUpdated={refreshUser} />
-                  <div>
-                    <label className="section-label text-xs block mb-1">Dog&apos;s Name</label>
-                    <input
-                      value={form.dog_name}
-                      onChange={(e) => setForm({ ...form, dog_name: e.target.value })}
-                      className="input-field w-full"
-                      placeholder="e.g. Buddy"
-                      maxLength={50}
-                    />
-                  </div>
-                  <div>
-                    <label className="section-label text-xs block mb-1">About my dog</label>
-                    <textarea
-                      value={form.dog_bio}
-                      onChange={(e) => setForm({ ...form, dog_bio: e.target.value })}
-                      rows={3}
-                      maxLength={500}
-                      className="input-field w-full resize-none"
-                      placeholder="e.g. Friendly with other dogs, loves kids, name is Buddy..."
-                    />
-                  </div>
-                </>
-              )}
-            </div>
+            )}
 
             {/* Alert Notifications */}
             <div className="bg-cream-100 rounded-sm p-4 space-y-3">
@@ -335,6 +291,7 @@ export default function ProfilePage() {
 
         <HousePhotoCard user={user} onUpdated={refreshUser} />
         <FamilyMembersCard user={user} onUpdated={refreshUser} />
+        <DogsCard user={user} onUpdated={refreshUser} />
         <ChangePasswordCard />
         <TwoFactorCard />
       </div>
@@ -498,82 +455,230 @@ function HousePhotoCard({ user, onUpdated }: { user: any; onUpdated: () => Promi
   );
 }
 
-// ── Dog Photo Upload (inline in dog section) ────────────────────
-function DogPhotoUpload({ user, onUpdated }: { user: any; onUpdated: () => Promise<void> }) {
-  const fileRef = useRef<HTMLInputElement>(null);
-  const [uploading, setUploading] = useState(false);
+// ── Dogs Card (up to 2, each optionally "in loving memory") ─────
+const MAX_DOGS = 2;
+const EMPTY_DOG: DogInput = { name: '', bio: '', in_memory: false, memorial_years: '', memorial_url: '' };
 
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    setUploading(true);
+function DogsCard({ user, onUpdated }: { user: any; onUpdated: () => Promise<void> }) {
+  const [dogs, setDogs] = useState<DogType[]>(user.dogs || []);
+  const [adding, setAdding] = useState(false);
+  const [editIndex, setEditIndex] = useState<number | null>(null);
+  const [draft, setDraft] = useState<DogInput>(EMPTY_DOG);
+  const [saving, setSaving] = useState(false);
+
+  useEffect(() => {
+    setDogs(user.dogs || []);
+  }, [user.dogs]);
+
+  const payload = (): DogInput => ({
+    name: draft.name.trim(),
+    bio: draft.bio?.trim() || undefined,
+    in_memory: !!draft.in_memory,
+    memorial_years: draft.in_memory ? draft.memorial_years?.trim() || undefined : undefined,
+    memorial_url: draft.in_memory ? draft.memorial_url?.trim() || undefined : undefined,
+  });
+
+  const run = async (action: () => Promise<any>, success: string) => {
+    setSaving(true);
     try {
-      const fd = new FormData();
-      fd.append('file', file);
-      await membersApi.uploadDogPhoto(fd);
+      const res = await action();
+      setDogs(res.data.dogs);
       await onUpdated();
-      toast.success('Dog photo updated');
+      cancelForm();
+      toast.success(success);
+    } catch (err: any) {
+      const detail = err.response?.data?.detail;
+      toast.error(Array.isArray(detail) ? detail[0]?.msg?.replace(/^Value error, /, '') : detail || 'Something went wrong');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePhotoUpload = async (index: number, file: File) => {
+    const fd = new FormData();
+    fd.append('file', file);
+    try {
+      const res = await membersApi.uploadDogPhoto(index, fd);
+      setDogs(res.data.dogs);
+      await onUpdated();
+      toast.success('Photo updated');
     } catch (err: any) {
       toast.error(err.response?.data?.detail || 'Upload failed');
-    } finally {
-      setUploading(false);
-      if (fileRef.current) fileRef.current.value = '';
     }
   };
 
-  const handleRemove = async () => {
-    setUploading(true);
+  const handlePhotoRemove = async (index: number) => {
     try {
-      await membersApi.deleteDogPhoto();
+      const res = await membersApi.deleteDogPhoto(index);
+      setDogs(res.data.dogs);
       await onUpdated();
-      toast.success('Dog photo removed');
+      toast.success('Photo removed');
     } catch (err: any) {
-      toast.error('Failed to remove dog photo');
-    } finally {
-      setUploading(false);
+      toast.error('Failed to remove photo');
     }
   };
+
+  const startEdit = (index: number) => {
+    const d = dogs[index];
+    setEditIndex(index);
+    setAdding(false);
+    setDraft({
+      name: d.name || '',
+      bio: d.bio || '',
+      in_memory: !!d.in_memory,
+      memorial_years: d.memorial_years || '',
+      memorial_url: d.memorial_url || '',
+    });
+  };
+
+  const startAdd = () => {
+    setAdding(true);
+    setEditIndex(null);
+    setDraft(EMPTY_DOG);
+  };
+
+  function cancelForm() {
+    setAdding(false);
+    setEditIndex(null);
+    setDraft(EMPTY_DOG);
+  }
+
+  const dogForm = (onSave: () => void, saveLabel: string) => (
+    <div className="flex-1 space-y-2">
+      <input
+        value={draft.name}
+        onChange={(e) => setDraft({ ...draft, name: e.target.value })}
+        className="input-field w-full text-sm"
+        placeholder="Dog's name"
+        aria-label="Dog's name"
+        maxLength={50}
+        autoFocus
+      />
+      <textarea
+        value={draft.bio}
+        onChange={(e) => setDraft({ ...draft, bio: e.target.value })}
+        className="input-field w-full text-sm h-16 resize-none"
+        placeholder="About this dog (optional)"
+        aria-label="About this dog"
+        maxLength={500}
+      />
+      <div className="flex items-start gap-2">
+        <input
+          type="checkbox"
+          id={`dog_in_memory_${editIndex ?? 'new'}`}
+          checked={!!draft.in_memory}
+          onChange={(e) => setDraft({ ...draft, in_memory: e.target.checked })}
+          className="mt-1 h-4 w-4 rounded border-forest-300 text-gold-500 focus:ring-gold-400"
+        />
+        <label htmlFor={`dog_in_memory_${editIndex ?? 'new'}`} className="text-forest-600 font-sans text-sm cursor-pointer">
+          In loving memory
+        </label>
+      </div>
+      {draft.in_memory && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          <input
+            value={draft.memorial_years}
+            onChange={(e) => setDraft({ ...draft, memorial_years: e.target.value })}
+            className="input-field w-full text-sm"
+            placeholder="Years (optional), e.g. 2014 – 2026"
+            aria-label="Years"
+            maxLength={30}
+          />
+          <input
+            type="url"
+            value={draft.memorial_url}
+            onChange={(e) => setDraft({ ...draft, memorial_url: e.target.value })}
+            className="input-field w-full text-sm"
+            placeholder="Memorial page (optional), https://…"
+            aria-label="Memorial page web address"
+            maxLength={300}
+          />
+        </div>
+      )}
+      <div className="flex gap-2">
+        <button onClick={onSave} disabled={saving || !draft.name.trim()} className="btn-primary text-xs px-3 py-1.5 flex items-center gap-1">
+          {saving ? <Loader2 size={12} className="animate-spin" /> : <Save size={12} />} {saveLabel}
+        </button>
+        <button onClick={cancelForm} className="btn-secondary text-xs px-3 py-1.5">Cancel</button>
+        {editIndex !== null && dogs[editIndex]?.photo_url && (
+          <button onClick={() => handlePhotoRemove(editIndex)} className="text-forest-400 hover:text-red-500 text-xs font-sans ml-auto">
+            Remove photo
+          </button>
+        )}
+      </div>
+    </div>
+  );
 
   return (
-    <div className="ml-7 mt-2">
-      {user.dog_photo_url ? (
-        <div className="relative inline-block">
-          <img
-            src={user.dog_photo_url}
-            alt="Dog"
-            className="w-20 h-20 object-cover rounded-sm border border-forest-200"
-          />
-          <button
-            onClick={handleRemove}
-            disabled={uploading}
-            className="absolute -top-1.5 -right-1.5 bg-white hover:bg-red-50 text-forest-500 hover:text-red-500 rounded-full p-0.5 shadow-sm border border-cream-200 transition-colors"
-          >
-            {uploading ? <Loader2 size={10} className="animate-spin" /> : <X size={10} />}
-          </button>
-          <button
-            onClick={() => fileRef.current?.click()}
-            className="text-gold-500 hover:text-gold-600 text-xs font-sans mt-1 flex items-center gap-1"
-          >
-            <Camera size={10} /> Change
-          </button>
+    <div className="card p-8">
+      <div className="flex items-center justify-between mb-6">
+        <div className="flex items-center gap-3">
+          <Dog size={20} className="text-gold-500" />
+          <h2 className="font-serif text-xl text-forest-800">Dogs</h2>
         </div>
-      ) : (
-        <button
-          onClick={() => fileRef.current?.click()}
-          disabled={uploading}
-          className="w-20 h-20 border-2 border-dashed border-forest-200 rounded-sm flex flex-col items-center justify-center gap-1 text-forest-400 hover:border-gold-400 hover:text-gold-500 transition-colors"
-        >
-          {uploading ? (
-            <Loader2 size={16} className="animate-spin" />
-          ) : (
-            <>
-              <Camera size={16} />
-              <span className="text-[10px] font-sans">Dog photo</span>
-            </>
-          )}
-        </button>
+        {!adding && editIndex === null && dogs.length < MAX_DOGS && (
+          <button onClick={startAdd} className="text-gold-500 hover:text-gold-600 text-sm font-sans flex items-center gap-1">
+            <Plus size={14} /> Add
+          </button>
+        )}
+      </div>
+
+      {dogs.length === 0 && !adding && (
+        <p className="text-forest-400 text-sm font-sans text-center py-4">
+          No dogs added yet. You can add up to {MAX_DOGS}, and keep a dog who has passed as &ldquo;In loving memory&rdquo;.
+        </p>
       )}
-      <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleFile} />
+
+      <div className="space-y-4">
+        {dogs.map((d, i) => (
+          <div key={i} className="flex items-start gap-4 p-3 bg-cream-50 rounded-sm">
+            <FamilyPhotoUpload
+              photoUrl={d.photo_url}
+              name={d.name || 'D'}
+              onUpload={(file) => handlePhotoUpload(i, file)}
+              onRemove={() => handlePhotoRemove(i)}
+            />
+            {editIndex === i ? (
+              dogForm(() => run(() => membersApi.updateDog(i, payload()), 'Dog updated'), 'Save')
+            ) : (
+              <div className="flex-1">
+                <p className="font-sans text-forest-800 font-medium text-sm">{d.name || 'Family Dog'}</p>
+                {d.in_memory && (
+                  <p className="font-sans text-gold-600 text-xs mt-0.5">
+                    In loving memory{d.memorial_years ? ` · ${d.memorial_years}` : ''}
+                  </p>
+                )}
+                {d.bio && <p className="font-body text-forest-500 text-xs mt-1">{d.bio}</p>}
+              </div>
+            )}
+            {editIndex !== i && (
+              <div className="flex gap-1">
+                <button onClick={() => startEdit(i)} className="text-forest-400 hover:text-gold-500 p-1" aria-label={`Edit ${d.name || 'dog'}`}>
+                  <Pencil size={14} />
+                </button>
+                <button
+                  onClick={() => {
+                    if (confirm(`Remove ${d.name || 'this dog'} from your profile? This cannot be undone.`)) {
+                      run(() => membersApi.deleteDog(i), 'Dog removed');
+                    }
+                  }}
+                  disabled={saving}
+                  className="text-forest-400 hover:text-red-500 p-1"
+                  aria-label={`Remove ${d.name || 'dog'}`}
+                >
+                  <Trash2 size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        ))}
+
+        {adding && (
+          <div className="p-3 bg-cream-50 rounded-sm">
+            {dogForm(() => run(() => membersApi.addDog(payload()), 'Dog added'), 'Add')}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

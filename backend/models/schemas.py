@@ -195,6 +195,22 @@ class FamilyMemberCreate(BaseModel):
     bio: Optional[str] = Field(None, max_length=300)
 
 
+class DogCreate(BaseModel):
+    name: str = Field(..., min_length=1, max_length=50)
+    bio: Optional[str] = Field(None, max_length=500)
+    in_memory: bool = False
+    memorial_years: Optional[str] = Field(None, max_length=30)   # e.g. "2014 – 2026"
+    memorial_url: Optional[str] = Field(None, max_length=300)    # optional memorial page
+
+    @field_validator("memorial_url")
+    @classmethod
+    def memorial_url_http(cls, v: str | None) -> str | None:
+        v = (v or "").strip()
+        if v and not re.match(r"^https?://[^\s]+$", v, re.IGNORECASE):
+            raise ValueError("Memorial page must be a web address starting with https://")
+        return v or None
+
+
 class RoleUpdate(BaseModel):
     role: UserRole
 

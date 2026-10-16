@@ -7,9 +7,10 @@ from bson import ObjectId
 from PIL import Image
 
 from database import get_db, get_settings
-from models.schemas import RoleUpdate, ProfileUpdate, FamilyMemberCreate
+from models.schemas import RoleUpdate, ProfileUpdate, FamilyMemberCreate, DogCreate
 from middleware.auth import require_member, require_super_admin, get_current_user
 from utils.email import send_approval_notification
+from utils.dogs import MAX_DOGS, household_dogs, has_living_dog
 
 AVATAR_TYPES = {"image/jpeg", "image/png", "image/webp"}
 AVATAR_MAX_SIZE = 5 * 1024 * 1024  # 5MB
@@ -34,7 +35,7 @@ def serialize_member(user: dict, include_email: bool = False) -> dict:
         "school": user.get("school"),
         "has_dog": user.get("has_dog", False),
         "dog_friendly": user.get("dog_friendly", False),
-        "dog_photo_url": user.get("dog_photo_url"),
+        "dogs": household_dogs(user),
         "house_photo_url": user.get("house_photo_url"),
         "family_members": user.get("family_members", []),
     }
@@ -287,34 +288,90 @@ async def delete_house_photo(
     return {"message": "House photo removed"}
 
 
-# ── Dog photo upload ─────────────────────────────────────────────
-@router.post("/me/dog-photo", status_code=200)
+# ── Dogs CRUD (up to MAX_DOGS, each optionally "in loving memory") ──
+def _dog_doc(data: DogCreate, photo_url=None) -> dict:
+    return {
+        "name": data.name.strip(),
+        "bio": (data.bio or "").strip(),
+        "photo_url": photo_url,
+        "in_memory": data.in_memory,
+        "memorial_years": (data.memorial_years or "").strip() if data.in_memory else "",
+        "memorial_url": (data.memorial_url or "") if data.in_memory else "",
+    }
+
+
+async def _save_dogs(user_id, dogs: list) -> dict:
+    """Write the list and keep has_dog (members list icon) in step: only living dogs count."""
+    living = has_living_dog(dogs)
+    fields = {"dogs": dogs, "has_dog": living, "updated_at": datetime.utcnow()}
+    if not living:
+        fields["dog_friendly"] = False
+    await get_db().users.update_one({"_id": user_id}, {"$set": fields})
+    return {"dogs": dogs, "has_dog": living}
+
+
+def _dog_at(user: dict, index: int) -> list:
+    dogs = household_dogs(user)
+    if index < 0 or index >= len(dogs):
+        raise HTTPException(404, "Dog not found")
+    return dogs
+
+
+@router.post("/me/dogs", status_code=201)
+async def add_dog(
+    data: DogCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    dogs = household_dogs(current_user)
+    if len(dogs) >= MAX_DOGS:
+        raise HTTPException(400, f"Maximum {MAX_DOGS} dogs allowed")
+    dogs.append(_dog_doc(data))
+    return await _save_dogs(current_user["_id"], dogs)
+
+
+@router.put("/me/dogs/{index}")
+async def update_dog(
+    index: int,
+    data: DogCreate,
+    current_user: dict = Depends(get_current_user),
+):
+    dogs = _dog_at(current_user, index)
+    dogs[index] = _dog_doc(data, photo_url=dogs[index].get("photo_url"))
+    return await _save_dogs(current_user["_id"], dogs)
+
+
+@router.delete("/me/dogs/{index}")
+async def delete_dog(
+    index: int,
+    current_user: dict = Depends(get_current_user),
+):
+    dogs = _dog_at(current_user, index)
+    _delete_upload(dogs[index].get("photo_url"))
+    dogs.pop(index)
+    return await _save_dogs(current_user["_id"], dogs)
+
+
+@router.post("/me/dogs/{index}/photo", status_code=200)
 async def upload_dog_photo(
+    index: int,
     file: UploadFile = File(...),
     current_user: dict = Depends(get_current_user),
 ):
-    _delete_upload(current_user.get("dog_photo_url"))
-
-    url = await _save_upload(file, "dogs")
-    db = get_db()
-    await db.users.update_one(
-        {"_id": current_user["_id"]},
-        {"$set": {"dog_photo_url": url, "updated_at": datetime.utcnow()}},
-    )
-    return {"dog_photo_url": url}
+    dogs = _dog_at(current_user, index)
+    _delete_upload(dogs[index].get("photo_url"))
+    dogs[index]["photo_url"] = await _save_upload(file, "dogs")
+    return await _save_dogs(current_user["_id"], dogs)
 
 
-@router.delete("/me/dog-photo", status_code=200)
+@router.delete("/me/dogs/{index}/photo", status_code=200)
 async def delete_dog_photo(
+    index: int,
     current_user: dict = Depends(get_current_user),
 ):
-    _delete_upload(current_user.get("dog_photo_url"))
-    db = get_db()
-    await db.users.update_one(
-        {"_id": current_user["_id"]},
-        {"$set": {"dog_photo_url": None, "updated_at": datetime.utcnow()}},
-    )
-    return {"message": "Dog photo removed"}
+    dogs = _dog_at(current_user, index)
+    _delete_upload(dogs[index].get("photo_url"))
+    dogs[index]["photo_url"] = None
+    return await _save_dogs(current_user["_id"], dogs)
 
 
 # ── Family members CRUD ──────────────────────────────────────────
@@ -583,6 +640,8 @@ async def delete_member(
     _delete_upload(user.get("avatar_url"))
     _delete_upload(user.get("house_photo_url"))
     _delete_upload(user.get("dog_photo_url"))
+    for dog in user.get("dogs") or []:
+        _delete_upload(dog.get("photo_url"))
     for fm in user.get("family_members", []):
         _delete_upload(fm.get("photo_url"))
 
