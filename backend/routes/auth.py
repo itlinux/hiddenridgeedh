@@ -308,15 +308,15 @@ async def verify_2fa(data: dict):
     if not temp_token or not code:
         raise HTTPException(400, "Token and code are required")
 
-    from jose import JWTError, jwt as jose_jwt
+    import jwt as pyjwt
     settings = get_settings()
 
     try:
-        payload = jose_jwt.decode(temp_token, settings.secret_key, algorithms=["HS256"])
+        payload = pyjwt.decode(temp_token, settings.secret_key, algorithms=["HS256"])
         user_id = payload.get("sub")
         if not user_id or not payload.get("2fa_pending"):
             raise HTTPException(401, "Invalid token")
-    except JWTError:
+    except pyjwt.InvalidTokenError:
         raise HTTPException(401, "Invalid or expired token")
 
     db = get_db()

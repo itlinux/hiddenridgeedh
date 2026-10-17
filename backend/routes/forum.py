@@ -3,7 +3,8 @@ from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 from typing import Optional
 from datetime import datetime
 from bson import ObjectId
-from jose import JWTError, jwt
+import jwt
+from jwt import InvalidTokenError
 
 from database import get_db, get_settings
 from models.schemas import ThreadCreate, ReplyCreate, ForumCategoryCreate
@@ -33,7 +34,7 @@ async def optional_member(
         if user.get("role") == "pending":
             return None
         return user
-    except (JWTError, Exception):
+    except (InvalidTokenError, Exception):
         return None
 
 router = APIRouter(prefix="/api/forum", tags=["forum"])
